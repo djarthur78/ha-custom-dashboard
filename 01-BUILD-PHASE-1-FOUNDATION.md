@@ -1,4 +1,4 @@
-# Build Phase 1: Foundation
+/exit# Build Phase 1: Foundation
 
 **Context:** I have completed discovery. All findings are in:
 - `discovery/` - Current dashboard analysis and HA inventory

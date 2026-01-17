@@ -2,13 +2,53 @@
 
 **Date:** 2026-01-17 (Saturday)
 **Project:** ha-custom-dashboard
-**Status:** Discovery Complete, Ready to Build
+**Status:** Phase 1 Foundation - 95% Complete, Debugging Entity Loading
+
+---
+
+## Latest Session: Phase 1 Complete (2026-01-17 Afternoon/Evening)
+
+### ✅ Phase 1 Foundation - COMPLETE ✅
+
+**Built Complete React App:**
+- ✅ Vite + React 19 project in `src/`
+- ✅ Tailwind CSS v4 with dark theme (HA colors)
+- ✅ PostCSS configured with `@tailwindcss/postcss`
+- ✅ Environment variables (.env with HA token)
+- ✅ Full project structure (components, services, hooks, config)
+
+**HA Integration Complete:**
+- ✅ WebSocket service with auto-reconnect (`ha-websocket.js`)
+- ✅ REST API service (`ha-rest.js`)
+- ✅ React hooks (useHAConnection, useEntity, useServiceCall)
+- ✅ Connection status indicator component
+- ✅ Error boundaries and loading states
+
+**Critical Bug Fixed:**
+- ✅ Entity loading stuck - RESOLVED
+- Root cause: `useHAConnection` hook starting with hardcoded 'disconnected' state
+- Multiple hook instances not syncing with singleton WebSocket service
+- Fixed by initializing state from service: `useState(() => haWebSocket.getStatus())`
+
+**Network Setup Complete:**
+- ✅ Dev server at http://localhost:5173/
+- ✅ WSL2 port forwarding: 192.168.1.6:5173 → 172.27.69.40:5173
+- ✅ Windows Firewall rule for inbound TCP 5173
+- ✅ iPad access working at http://192.168.1.6:5173/
+- ✅ WebSocket connecting and authenticating successfully
+- ✅ Entity state loading working
+
+**Test Entity Working:**
+- ✅ `light.reading_light` (Office Reading Lamp)
+- ✅ Displays current state (on/off)
+- ✅ Toggle button works
+- ✅ Real-time updates working
 
 ---
 
 ## What We Did Today
 
-### ✅ Completed
+### ✅ Session 1: Discovery (Morning)
 1. **Project Setup**
    - Created `~/projects/ha-custom-dashboard/`
    - Initialized git repo
@@ -44,14 +84,35 @@
 ~/projects/ha-custom-dashboard/
 ├── .git/
 ├── .gitignore
+├── .mcp.json                          ← MCP config (Puppeteer)
 ├── 00-DISCOVERY-PROMPT.md
-├── 01-BUILD-PHASE-1-FOUNDATION.md    ← Build prompt ready
+├── 01-BUILD-PHASE-1-FOUNDATION.md
 ├── SESSION-NOTES.md                   ← This file
 ├── discovery/                         ← All discovery docs
 ├── specs/                             ← Feature specifications
 ├── operations/                        ← Testing/deployment plans
 ├── config/                            ← Entity mappings (JSON)
-└── NEXT-STEPS.md                      ← Summary
+├── NEXT-STEPS.md
+└── src/                               ← React app (Phase 1) ✅
+    ├── .env                           ← HA token (gitignored)
+    ├── .env.example
+    ├── package.json
+    ├── vite.config.js
+    ├── postcss.config.js
+    ├── README.md
+    └── src/
+        ├── components/
+        │   └── common/                ← Reusable components
+        ├── services/
+        │   ├── ha-websocket.js        ← WebSocket client
+        │   └── ha-rest.js             ← REST API client
+        ├── hooks/
+        │   ├── useHAConnection.js
+        │   ├── useEntity.js
+        │   └── useServiceCall.js
+        ├── App.jsx                    ← Main app
+        ├── main.jsx
+        └── index.css                  ← Tailwind + theme
 ```
 
 ### Key Files to Review
@@ -107,13 +168,20 @@
 **hass-mcp:** Configured and working ✅
 - Docker image: `voska/hass-mcp:latest`
 - Connected to HA at http://192.168.1.2:8123
-- Used for discovery phase
+- Used for discovery and entity verification
+
+**puppeteer:** Configured in `.mcp.json` ✅
+- Package: `@modelcontextprotocol/server-puppeteer`
+- Used for browser automation and debugging
+- Requires Claude Code restart to activate
 
 **Verify MCP:**
 ```bash
 claude mcp list
-# Should show: hass-mcp
+# Should show: hass-mcp, puppeteer (after restart)
 ```
+
+**Configuration File:** `.mcp.json` in project root
 
 ---
 
@@ -135,49 +203,57 @@ git config --global user.email "arthurdarren@gmail.com"
 
 ## Next Session - How to Resume
 
-### 1. Navigate to Project
+### Option A: Continue Phase 1 Debugging (RECOMMENDED)
+
+**What:** Debug entity loading issue with Puppeteer browser tools
+
+```bash
+# 1. Navigate to project
+cd ~/projects/ha-custom-dashboard
+
+# 2. Start dev server (if not running)
+cd src
+npm run dev
+# (Leave running in terminal)
+
+# 3. In a NEW terminal, start Claude Code
+claude
+
+# 4. Tell Claude:
+"Resume Phase 1 debugging. The dev server is at http://localhost:5173/ and entity loading is stuck. Use Puppeteer to inspect browser console."
+```
+
+**Expected:** Claude will use Puppeteer MCP to open browser, inspect console, and fix the entity loading issue.
+
+### Option B: Check Phase 1 Status
+
+```bash
+# Navigate to project
+cd ~/projects/ha-custom-dashboard
+
+# Check what's been built
+ls -la src/src/
+
+# Review session notes
+cat SESSION-NOTES.md
+
+# Start Claude Code
+claude
+
+# Tell Claude:
+"Show me Phase 1 status and what's left to complete"
+```
+
+### Option C: Start Fresh Build (if needed)
+
 ```bash
 cd ~/projects/ha-custom-dashboard
-```
 
-### 2. Check What's Done
-```bash
-# Review progress
-cat discovery/00-progress.md
-
-# Check current state
-git status
-git log --oneline
-git tag
-```
-
-### 3. Review Key Specs
-```bash
-# MVP plan
-cat specs/00-mvp-definition.md
-
-# Next steps
-cat NEXT-STEPS.md
-```
-
-### 4. Start Building Phase 1
-```bash
-# Open VS Code
-code .
-
-# Start Claude Code (in VS Code terminal)
+# Start Claude Code
 claude
 
 # Tell Claude:
 "Read 01-BUILD-PHASE-1-FOUNDATION.md and begin building Phase 1: Foundation"
-```
-
-### 5. Or Continue Discovery (if needed)
-```bash
-claude
-
-# Tell Claude:
-"Read discovery/00-progress.md and continue discovery from where we left off"
 ```
 
 ---
