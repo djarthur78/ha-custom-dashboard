@@ -3,6 +3,8 @@
 **Project:** Home Assistant Custom Dashboard
 **Last Updated:** 2026-01-17 (Phase 1 Complete)
 
+> 📊 **Visual Diagrams:** See `DIAGRAMS.md` for professional Mermaid diagrams (system architecture, data flow, sequence diagrams, etc.)
+
 ---
 
 ## System Overview

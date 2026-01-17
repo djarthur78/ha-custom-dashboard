@@ -61,6 +61,7 @@ npm run dev
 | `ARCHITECTURE.md` | Technical design, decisions | Engineers (reference) |
 | `DEVELOPMENT.md` | Setup guide, how to build | Engineers (daily use) |
 | `CHANGELOG.md` | Features built, bugs fixed | Everyone (track progress) |
+| `DIAGRAMS.md` | Architecture diagrams (Mermaid) | Everyone (visual reference) |
 
 ---
 
