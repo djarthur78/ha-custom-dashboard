@@ -1,0 +1,27 @@
+# Sensitive data
+.env
+.env.local
+*.token
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.vite/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Backups
+*-backup-*/
+*.bak
+
+# Optional: Keep markdown, skip large JSON
+# config/*.json
