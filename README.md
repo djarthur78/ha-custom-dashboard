@@ -2,6 +2,30 @@
 
 Modern, tablet-optimized web application replacing the existing HA "family calendar - panel" dashboard.
 
+**Primary Device:** iPad (Kitchen Calendar tablet)
+**Started:** 2026-01-17
+**Current Phase:** Phase 1 Complete ✅
+
+---
+
+## 📌 Quick Start
+
+**For Original Developer (Arthu) - Resuming Work:**
+1. Read `SESSION-NOTES.md` (your personal notes)
+2. Continue from where you left off
+
+**For New Engineers - First Day:**
+1. Read this `README.md` (project overview) ← You are here
+2. Read `ARCHITECTURE.md` (how it's built)
+3. Read `DEVELOPMENT.md` (how to set up and develop)
+4. Read `CHANGELOG.md` (what's been done)
+5. Read `specs/00-mvp-definition.md` (overall plan)
+
+**Not Sure Which File to Read?**
+- See `FILE-GUIDE.md` for quick reference
+
+---
+
 ## Project Status
 
 - ✅ **Phase 1: Foundation** - React + Vite + HA WebSocket (COMPLETE)
@@ -26,6 +50,19 @@ npm run dev
 ### Home Assistant
 - **URL:** http://192.168.1.2:8123
 - **Token:** Stored in `src/.env` (not in git)
+
+## Documentation
+
+| Document | Purpose | For Whom |
+|----------|---------|----------|
+| `README.md` | Project overview, quick start | Everyone (start here) |
+| `FILE-GUIDE.md` | Which file to use when | Everyone (quick reference) |
+| `SESSION-NOTES.md` | Working notes, how to resume | Original developer only |
+| `ARCHITECTURE.md` | Technical design, decisions | Engineers (reference) |
+| `DEVELOPMENT.md` | Setup guide, how to build | Engineers (daily use) |
+| `CHANGELOG.md` | Features built, bugs fixed | Everyone (track progress) |
+
+---
 
 ## File Structure
 
