@@ -1,0 +1,303 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "lastUpdated": "2026-01-17",
+    "haVersion": "2025.12.5",
+    "description": "Entity mappings for Family Calendar Dashboard"
+  },
+  "calendar": {
+    "calendars": {
+      "main": "calendar.99swanlane_gmail_com",
+      "daz": "calendar.arthurdarren_gmail_com",
+      "nic": "calendar.nicholaarthur_gmail_com",
+      "cerys": "calendar.arthurcerys_gmail_com",
+      "dex": "calendar.arthurdexter08_gmail_com",
+      "birthdays": "calendar.birthdays",
+      "holidays": "calendar.holidays_in_the_united_kingdom",
+      "council": "calendar.basildon_council"
+    },
+    "controls": {
+      "view": "input_select.calendar_view",
+      "selectedCalendar": "input_select.calendar_select",
+      "navOffset": "input_number.calendar_nav_offset",
+      "periodLabel": "sensor.calendar_period_label_computed",
+      "periodLabelOverride": "input_text.calendar_period_label"
+    },
+    "eventForm": {
+      "title": "input_text.calendar_event_title",
+      "description": "input_text.calendar_event_description",
+      "start": "input_datetime.calendar_event_start",
+      "end": "input_datetime.calendar_event_end",
+      "allDayStart": "input_datetime.calendar_day_event_start",
+      "allDayEnd": "input_datetime.calendar_day_event_end",
+      "isAllDay": "input_boolean.calendar_all_day_event"
+    },
+    "filters": {
+      "daz": "input_text.daz_calendar_filter",
+      "nic": "input_text.nic_calendar_filter",
+      "cerys": "input_text.cerys_calendar_filter",
+      "dex": "input_text.dex_calendar_filter",
+      "birthdays": "input_text.birthdays_calendar_filter"
+    },
+    "scripts": {
+      "toggleDaz": "script.daz_calendar_visible_filter",
+      "toggleNic": "script.nic_calendar_visible_filter",
+      "toggleCerys": "script.cerys_calendar_visible_filter",
+      "toggleDex": "script.dex_calendar_visible_filter",
+      "navPrev": "script.calendar_nav_prev",
+      "navNext": "script.calendar_nav_next",
+      "navReset": "script.calendar_nav_reset",
+      "addEvent": "script.add_google_calendar_event"
+    }
+  },
+  "mealPlanner": {
+    "weekSelector": "input_select.meal_plan_week",
+    "copyButton": "input_button.meal_copy_next_to_this",
+    "weeks": {
+      "w1": {
+        "label": "This Week",
+        "days": {
+          "thu": {
+            "breakfast": "input_text.meal_w1_thu_breakfast",
+            "lunch": "input_text.meal_w1_thu_lunch",
+            "dinner": "input_text.meal_w1_thu_dinner",
+            "cakes": "input_text.meal_w1_thu_cakes"
+          },
+          "fri": {
+            "breakfast": "input_text.meal_w1_fri_breakfast",
+            "lunch": "input_text.meal_w1_fri_lunch",
+            "dinner": "input_text.meal_w1_fri_dinner",
+            "cakes": "input_text.meal_w1_fri_cakes"
+          },
+          "sat": {
+            "breakfast": "input_text.meal_w1_sat_breakfast",
+            "lunch": "input_text.meal_w1_sat_lunch",
+            "dinner": "input_text.meal_w1_sat_dinner",
+            "cakes": "input_text.meal_w1_sat_cakes"
+          },
+          "sun": {
+            "breakfast": "input_text.meal_w1_sun_breakfast",
+            "lunch": "input_text.meal_w1_sun_lunch",
+            "dinner": "input_text.meal_w1_sun_dinner",
+            "cakes": "input_text.meal_w1_sun_cakes"
+          },
+          "mon": {
+            "breakfast": "input_text.meal_w1_mon_breakfast",
+            "lunch": "input_text.meal_w1_mon_lunch",
+            "dinner": "input_text.meal_w1_mon_dinner",
+            "cakes": "input_text.meal_w1_mon_cakes"
+          },
+          "tue": {
+            "breakfast": "input_text.meal_w1_tue_breakfast",
+            "lunch": "input_text.meal_w1_tue_lunch",
+            "dinner": "input_text.meal_w1_tue_dinner",
+            "cakes": "input_text.meal_w1_tue_cakes"
+          },
+          "wed": {
+            "breakfast": "input_text.meal_w1_wed_breakfast",
+            "lunch": "input_text.meal_w1_wed_lunch",
+            "dinner": "input_text.meal_w1_wed_dinner",
+            "cakes": "input_text.meal_w1_wed_cakes"
+          }
+        }
+      },
+      "w2": {
+        "label": "Next Week",
+        "days": {
+          "thu": {
+            "breakfast": "input_text.meal_w2_thu_breakfast",
+            "lunch": "input_text.meal_w2_thu_lunch",
+            "dinner": "input_text.meal_w2_thu_dinner",
+            "cakes": "input_text.meal_w2_thu_cakes"
+          },
+          "fri": {
+            "breakfast": "input_text.meal_w2_fri_breakfast",
+            "lunch": "input_text.meal_w2_fri_lunch",
+            "dinner": "input_text.meal_w2_fri_dinner",
+            "cakes": "input_text.meal_w2_fri_cakes"
+          },
+          "sat": {
+            "breakfast": "input_text.meal_w2_sat_breakfast",
+            "lunch": "input_text.meal_w2_sat_lunch",
+            "dinner": "input_text.meal_w2_sat_dinner",
+            "cakes": "input_text.meal_w2_sat_cakes"
+          },
+          "sun": {
+            "breakfast": "input_text.meal_w2_sun_breakfast",
+            "lunch": "input_text.meal_w2_sun_lunch",
+            "dinner": "input_text.meal_w2_sun_dinner",
+            "cakes": "input_text.meal_w2_sun_cakes"
+          },
+          "mon": {
+            "breakfast": "input_text.meal_w2_mon_breakfast",
+            "lunch": "input_text.meal_w2_mon_lunch",
+            "dinner": "input_text.meal_w2_mon_dinner",
+            "cakes": "input_text.meal_w2_mon_cakes"
+          },
+          "tue": {
+            "breakfast": "input_text.meal_w2_tue_breakfast",
+            "lunch": "input_text.meal_w2_tue_lunch",
+            "dinner": "input_text.meal_w2_tue_dinner",
+            "cakes": "input_text.meal_w2_tue_cakes"
+          },
+          "wed": {
+            "breakfast": "input_text.meal_w2_wed_breakfast",
+            "lunch": "input_text.meal_w2_wed_lunch",
+            "dinner": "input_text.meal_w2_wed_dinner",
+            "cakes": "input_text.meal_w2_wed_cakes"
+          }
+        }
+      }
+    }
+  },
+  "cameras": {
+    "front": {
+      "right": {
+        "entity": "camera.front_right_high_resolution_channel",
+        "resolution": "3840x2160",
+        "fps": 30,
+        "label": "Front Right"
+      },
+      "left": {
+        "entity": "camera.front_left_high_resolution_channel",
+        "resolution": "3840x2160",
+        "fps": 30,
+        "label": "Front Left"
+      },
+      "door": {
+        "entity": "camera.front_door_high_resolution_channel",
+        "resolution": "1600x1200",
+        "fps": 30,
+        "label": "Front Door"
+      },
+      "doorPackage": {
+        "entity": "camera.front_door_package_camera",
+        "resolution": "1600x1200",
+        "fps": 2,
+        "label": "Package Camera"
+      }
+    },
+    "back": {
+      "shed": {
+        "entity": "camera.back_shed_high_resolution_channel",
+        "resolution": "2688x1512",
+        "fps": 30,
+        "label": "Back Shed"
+      },
+      "gym": {
+        "entity": "camera.back_gym_high_resolution_channel",
+        "resolution": "2688x1512",
+        "fps": 30,
+        "label": "Back Gym"
+      }
+    },
+    "side": {
+      "gate": {
+        "entity": "camera.side_gate_high_resolution_channel",
+        "resolution": "2688x1512",
+        "fps": 30,
+        "label": "Side Gate"
+      }
+    },
+    "indoor": {
+      "kitchen": {
+        "entity": "camera.kitchen_high_resolution_channel",
+        "resolution": "1920x1080",
+        "fps": 30,
+        "label": "Kitchen"
+      },
+      "outdoorKitchen": {
+        "entity": "camera.outdoor_kitchen_high_resolution_channel",
+        "resolution": "2688x1512",
+        "fps": 30,
+        "label": "Outdoor Kitchen"
+      }
+    },
+    "events": {
+      "doorbell": "event.front_door_doorbell",
+      "frontRightVehicle": "event.front_right_vehicle"
+    }
+  },
+  "gamesRoom": {
+    "mediaPlayers": {
+      "tv": "media_player.games_room_tv",
+      "avr": "media_player.denon_avc_x3800h_games_room"
+    },
+    "remote": {
+      "hub": "remote.games_room_harmony",
+      "activities": "select.games_room_harmony_activities"
+    },
+    "climate": {
+      "thermostat": "climate.games_room",
+      "temperatureFeelsLike": "sensor.games_room_temperature_feels_like",
+      "temperatureCalibration": "number.games_room_temperature_calibration",
+      "humidityCalibration": "number.games_room_humidity_calibration",
+      "timer": "switch.games_room_timer",
+      "timerEndTime": "sensor.games_room_timer_end_time",
+      "climateReact": "switch.games_room_climate_react",
+      "filterCleanRequired": "binary_sensor.games_room_filter_clean_required",
+      "filterLastReset": "sensor.games_room_filter_last_reset",
+      "resetFilter": "button.games_room_reset_filter"
+    },
+    "lights": {
+      "apLed": "light.games_room_uap_nanohd_led",
+      "outdoor": "switch.iport_area_4"
+    },
+    "power": {
+      "sonosPort": {
+        "switch": "switch.unnamed_p304m_games_room_kodi",
+        "consumption": "sensor.unnamed_p304m_games_room_kodi_current_consumption",
+        "voltage": "sensor.unnamed_p304m_games_room_kodi_voltage",
+        "autoOff": "switch.unnamed_p304m_games_room_kodi_auto_off_enabled"
+      },
+      "kodi": {
+        "switch": "switch.unnamed_p304m_smart_plug_2",
+        "consumption": "sensor.unnamed_p304m_smart_plug_2_current_consumption",
+        "voltage": "sensor.unnamed_p304m_smart_plug_2_voltage",
+        "autoOff": "switch.unnamed_p304m_smart_plug_2_auto_off_enabled"
+      },
+      "sonosAmp": {
+        "switch": "switch.unnamed_p304m_games_room_sonos_amp",
+        "consumption": "sensor.unnamed_p304m_games_room_sonos_amp_current_consumption",
+        "voltage": "sensor.unnamed_p304m_games_room_sonos_amp_voltage",
+        "autoOff": "switch.unnamed_p304m_games_room_sonos_amp_auto_off_enabled"
+      },
+      "fridge": {
+        "switch": "switch.games_room_fridge",
+        "led": "switch.games_room_fridge_led",
+        "consumption": "sensor.games_room_fridge_current_consumption",
+        "todayConsumption": "sensor.games_room_fridge_today_s_consumption",
+        "monthConsumption": "sensor.games_room_fridge_this_month_s_consumption"
+      },
+      "chromecast": {
+        "switch": "switch.symphony",
+        "led": "switch.symphony_led"
+      },
+      "sky": {
+        "switch": "switch.sky_games_room",
+        "led": "switch.sky_games_room_led"
+      }
+    },
+    "automations": {
+      "turnOff": "automation.turn_off_games_room",
+      "setupMovie": "automation.setup_games_room_for_movie",
+      "startMovie": "automation.games_room_start_movie",
+      "setupSonos": "automation.setup_games_room_for_sonos"
+    },
+    "scripts": {
+      "prepareMovie": "script.prepare_for_movie_in_games_room"
+    },
+    "scenes": {
+      "watchMovie": "scene.watch_movie"
+    }
+  },
+  "people": {
+    "swanlane": "person.swanlane",
+    "daz": "person.darren",
+    "nic": "person.nic"
+  },
+  "other": {
+    "shoppingList": "todo.shopping_list",
+    "sun": "sun.sun"
+  }
+}
