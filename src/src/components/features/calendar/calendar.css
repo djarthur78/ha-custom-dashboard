@@ -1,0 +1,93 @@
+/**
+ * Custom Calendar Styles
+ * Overrides for react-big-calendar to match HA dark theme
+ */
+
+/* Calendar container */
+.rbc-calendar {
+  color: var(--color-text);
+  background: transparent;
+}
+
+/* Header */
+.rbc-header {
+  background: var(--color-surface-variant);
+  color: var(--color-text);
+  border-color: var(--color-border);
+  padding: 12px 4px;
+  font-weight: 600;
+}
+
+/* Time slots */
+.rbc-time-slot {
+  border-color: var(--color-border);
+}
+
+.rbc-time-content {
+  border-color: var(--color-border);
+}
+
+.rbc-timeslot-group {
+  border-color: var(--color-border);
+}
+
+/* Day columns */
+.rbc-day-slot {
+  background: var(--color-background);
+}
+
+.rbc-today {
+  background-color: rgba(78, 205, 196, 0.1);
+}
+
+/* Events */
+.rbc-event {
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rbc-event:hover {
+  opacity: 0.9;
+}
+
+.rbc-event-label {
+  font-size: 0.75rem;
+}
+
+/* Current time indicator */
+.rbc-current-time-indicator {
+  background-color: var(--color-primary);
+  height: 2px;
+}
+
+/* Time labels */
+.rbc-time-header-gutter,
+.rbc-time-gutter {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+.rbc-label {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+/* Scrollbar styling for dark theme */
+.rbc-time-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.rbc-time-content::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+.rbc-time-content::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+.rbc-time-content::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
