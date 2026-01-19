@@ -36,12 +36,21 @@ const CALENDAR_IDS = [
 
 export function CalendarViewList() {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('week'); // 'week', 'day', 'month'
   const [enabledCalendars, setEnabledCalendars] = useState(new Set(CALENDAR_IDS));
   const { isConnected } = useHAConnection();
   const weather = useWeather();
+
+  // Update current time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Fetch events for current week
   const fetchEvents = useCallback(async () => {
@@ -107,10 +116,12 @@ export function CalendarViewList() {
   // Get waste collection events for header
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
   const wasteEvents = filteredEvents.filter(e =>
     e.calendarId === 'calendar.basildon_council' &&
-    e.start >= today
+    e.start >= tomorrow
   ).sort((a, b) => a.start - b.start);
 
   // Get next collection day and all events on that day
@@ -134,8 +145,22 @@ export function CalendarViewList() {
     );
   }
 
+  const headerTitle = (
+    <div className="flex items-center gap-3">
+      <span>Arthur Family</span>
+      <span className="text-lg font-normal text-[var(--color-text-secondary)]">
+        {format(currentTime, 'HH:mm')}
+      </span>
+      {weather.temperature && (
+        <span className="text-lg font-normal text-[var(--color-text-secondary)]">
+          ☀️ {Math.round(weather.temperature)}°C
+        </span>
+      )}
+    </div>
+  );
+
   return (
-    <PageContainer title="Arthur Family" maxWidth="max-w-full">
+    <PageContainer title={headerTitle} maxWidth="max-w-full">
       {/* Header with waste collection info */}
       {nextWasteCollection && nextDayWasteEvents.length > 0 && (
         <div className="mb-4 text-sm text-[var(--color-text-secondary)] flex items-center gap-2">
@@ -161,10 +186,10 @@ export function CalendarViewList() {
                 onClick={() => toggleCalendar(calendar.id)}
                 className="flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm transition-all hover:scale-110"
                 style={{
-                  backgroundColor: isEnabled ? colors.primary : '#1a1a1a',
-                  color: isEnabled ? colors.text : '#666',
-                  border: `2px solid ${isEnabled ? colors.border : '#333'}`,
-                  opacity: isEnabled ? 1 : 0.5,
+                  backgroundColor: isEnabled ? colors.primary : '#e0e0e0',
+                  color: isEnabled ? colors.text : '#999',
+                  border: `2px solid ${isEnabled ? colors.border : '#ccc'}`,
+                  opacity: isEnabled ? 1 : 0.6,
                 }}
                 title={calendar.name}
               >
@@ -174,27 +199,27 @@ export function CalendarViewList() {
           })}
 
           <button
-            className="px-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded hover:bg-[var(--color-surface-variant)] transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-white border border-[var(--color-border)] rounded hover:bg-[var(--color-surface-variant)] transition-colors flex items-center gap-2 text-sm font-medium"
             onClick={() => alert('Add Event - Coming soon')}
           >
             <Plus size={16} />
             Add Event
           </button>
+        </div>
 
+        {/* Right: Today, View selector and navigation */}
+        <div className="flex items-center gap-3">
           <button
             onClick={handleToday}
-            className="px-4 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-dark)] transition-colors"
+            className="px-4 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-dark)] transition-colors text-sm font-medium"
           >
             Today
           </button>
-        </div>
 
-        {/* Right: View selector and navigation */}
-        <div className="flex items-center gap-3">
           <select
             value={viewMode}
             onChange={(e) => setViewMode(e.target.value)}
-            className="px-3 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded text-[var(--color-text)]"
+            className="px-3 py-2 bg-white border border-[var(--color-border)] rounded text-[var(--color-text)] text-sm"
           >
             <option value="week">Week</option>
             <option value="day">Day</option>
@@ -244,15 +269,22 @@ export function CalendarViewList() {
               >
                 {/* Day header */}
                 <div className={`p-3 border-b ${isCurrentDay ? 'border-[var(--color-primary)]' : 'border-[var(--color-border)]'}`}>
-                  <div className={`text-2xl font-bold ${isCurrentDay ? 'text-[var(--color-primary)]' : ''}`}>
-                    {format(day, 'd')}
+                  <div className="flex items-baseline justify-between">
+                    <div className={`text-2xl font-bold ${isCurrentDay ? 'text-[var(--color-primary)]' : ''}`}>
+                      {format(day, 'd')}
+                    </div>
+                    {weather.temperature && (
+                      <div className="text-xs text-[var(--color-text-secondary)]">
+                        ☀️ {Math.round(weather.temperature)}°C
+                      </div>
+                    )}
                   </div>
                   <div className="text-xs text-[var(--color-text-secondary)]">
                     {format(day, 'EEEE')}
                   </div>
-                  {isCurrentDay && weather.temperature && (
+                  {isCurrentDay && (
                     <div className="text-xs text-[var(--color-text-secondary)] mt-1">
-                      Today • {weather.temperature}{weather.temperatureUnit}
+                      Today
                     </div>
                   )}
                 </div>
@@ -264,36 +296,39 @@ export function CalendarViewList() {
                       No events
                     </div>
                   ) : (
-                    dayEvents.map(event => {
-                      const colors = getEventStyle(event.calendarId);
-                      return (
-                        <div
-                          key={event.id}
-                          className="p-2 rounded text-xs bg-white border-l-4 shadow-sm"
-                          style={{
-                            borderLeftColor: colors.backgroundColor,
-                            color: 'var(--color-text)',
-                          }}
-                        >
-                          <div className="font-semibold">{event.title}</div>
-                          {!event.allDay && (
-                            <div className="text-xs text-[var(--color-text-secondary)] mt-0.5">
-                              {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}
-                            </div>
-                          )}
-                          {event.allDay && (
-                            <div className="text-xs text-[var(--color-text-secondary)] mt-0.5">
-                              All day
-                            </div>
-                          )}
-                          {event.location && (
-                            <div className="text-xs text-[var(--color-text-secondary)] mt-0.5">
-                              📍 {event.location}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
+                    dayEvents
+                      .filter(event => event.calendarId !== 'calendar.basildon_council')
+                      .map(event => {
+                        const colors = getEventStyle(event.calendarId);
+                        return (
+                          <div
+                            key={event.id}
+                            className="p-2 rounded text-xs shadow-sm"
+                            style={{
+                              backgroundColor: colors.backgroundColor,
+                              color: colors.color,
+                              border: `1px solid ${colors.borderColor}`,
+                            }}
+                          >
+                            <div className="font-semibold">{event.title}</div>
+                            {!event.allDay && (
+                              <div className="text-xs opacity-90 mt-0.5">
+                                {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}
+                              </div>
+                            )}
+                            {event.allDay && (
+                              <div className="text-xs opacity-90 mt-0.5">
+                                All day
+                              </div>
+                            )}
+                            {event.location && (
+                              <div className="text-xs opacity-90 mt-0.5">
+                                {event.location}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
                   )}
                 </div>
               </div>
