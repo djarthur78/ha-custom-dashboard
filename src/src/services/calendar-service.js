@@ -35,8 +35,21 @@ export async function fetchCalendarEvents(calendarId, start, end) {
 
       console.log(`[Calendar Service] WebSocket response for ${calendarId}:`, result);
 
-      // Check if result has events
-      const events = result?.response?.[calendarId]?.events || [];
+      // Try different response paths (HA API format can vary)
+      let events = [];
+      if (result?.response?.[calendarId]?.events) {
+        events = result.response[calendarId].events;
+      } else if (result?.[calendarId]?.events) {
+        events = result[calendarId].events;
+      } else if (result?.response?.events) {
+        events = result.response.events;
+      } else if (result?.events) {
+        events = result.events;
+      } else if (Array.isArray(result?.response)) {
+        events = result.response;
+      } else if (Array.isArray(result)) {
+        events = result;
+      }
 
       console.log(`[Calendar Service] Got ${events.length} events for ${calendarId}`);
 

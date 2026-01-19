@@ -6,7 +6,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
 import { HomePage } from './pages/HomePage';
-import { CalendarView } from './components/features/calendar/CalendarView';
+import { CalendarViewList } from './components/features/calendar/CalendarViewList';
 import { MealsPage } from './pages/MealsPage';
 import { GamesRoomPage } from './pages/GamesRoomPage';
 import { CamerasPage } from './pages/CamerasPage';
@@ -16,7 +16,7 @@ function App() {
     <Routes>
       <Route path="/" element={<MainLayout />}>
         <Route index element={<HomePage />} />
-        <Route path="calendar" element={<CalendarView />} />
+        <Route path="calendar" element={<CalendarViewList />} />
         <Route path="meals" element={<MealsPage />} />
         <Route path="games-room" element={<GamesRoomPage />} />
         <Route path="cameras" element={<CamerasPage />} />
