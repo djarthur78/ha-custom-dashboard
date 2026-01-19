@@ -11,13 +11,14 @@ import { PageContainer } from '../../layout/PageContainer';
 import { LoadingSpinner } from '../../common/LoadingSpinner';
 import { useHAConnection } from '../../../hooks/useHAConnection';
 import { fetchAllCalendarEvents } from '../../../services/calendar-service';
-import { getEventStyle } from '../../../constants/colors';
+import { getEventStyle, getCalendarColor } from '../../../constants/colors';
+import { enGB } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './calendar.css';
 
 // Configure date-fns localizer
 const locales = {
-  'en-GB': require('date-fns/locale/en-GB'),
+  'en-GB': enGB,
 };
 
 const localizer = dateFnsLocalizer({
@@ -28,22 +29,42 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-// All calendar entity IDs
-const CALENDAR_IDS = [
-  'calendar.99swanlane_gmail_com',
-  'calendar.arthurdarren_gmail_com',
-  'calendar.nicholaarthur_gmail_com',
-  'calendar.arthurcerys_gmail_com',
-  'calendar.arthurdexter08_gmail_com',
-  'calendar.birthdays',
-  'calendar.holidays_in_the_united_kingdom',
-  'calendar.basildon_council',
+// All calendar entity IDs with friendly names
+const CALENDARS = [
+  { id: 'calendar.99swanlane_gmail_com', name: '99 Swan Lane', shortName: '99' },
+  { id: 'calendar.arthurdarren_gmail_com', name: 'Daz', shortName: 'D' },
+  { id: 'calendar.nicholaarthur_gmail_com', name: 'Nic', shortName: 'N' },
+  { id: 'calendar.arthurcerys_gmail_com', name: 'Cerys', shortName: 'C' },
+  { id: 'calendar.arthurdexter08_gmail_com', name: 'Dex', shortName: 'D' },
+  { id: 'calendar.birthdays', name: 'Birthdays', shortName: 'B' },
+  { id: 'calendar.holidays_in_the_united_kingdom', name: 'UK Holidays', shortName: 'UK' },
+  { id: 'calendar.basildon_council', name: 'Basildon', shortName: 'BC' },
 ];
+
+const CALENDAR_IDS = CALENDARS.map(c => c.id);
+
+// Custom event component to show time range
+function CustomEvent({ event }) {
+  const startTime = format(event.start, 'HH:mm');
+  const endTime = format(event.end, 'HH:mm');
+
+  return (
+    <div className="flex flex-col h-full justify-center px-1">
+      <div className="font-semibold text-xs leading-tight">{event.title}</div>
+      {!event.allDay && (
+        <div className="text-xs opacity-80 mt-0.5">
+          {startTime} - {endTime}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [enabledCalendars, setEnabledCalendars] = useState(new Set(CALENDAR_IDS));
   const { isConnected } = useHAConnection();
 
   // Fetch events for current week
@@ -89,6 +110,22 @@ export function CalendarView() {
     setCurrentDate(new Date());
   };
 
+  // Toggle calendar visibility
+  const toggleCalendar = (calendarId) => {
+    setEnabledCalendars(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(calendarId)) {
+        newSet.delete(calendarId);
+      } else {
+        newSet.add(calendarId);
+      }
+      return newSet;
+    });
+  };
+
+  // Filter events by enabled calendars
+  const filteredEvents = events.filter(event => enabledCalendars.has(event.calendarId));
+
   // Event style customization
   const eventStyleGetter = (event) => {
     const style = getEventStyle(event.calendarId);
@@ -123,6 +160,32 @@ export function CalendarView() {
       subtitle="View all family calendars in one place"
       maxWidth="max-w-full"
     >
+      {/* Calendar Filters */}
+      <div className="mb-4 flex items-center gap-3">
+        {CALENDARS.map(calendar => {
+          const colors = getEventStyle(calendar.id);
+          const isEnabled = enabledCalendars.has(calendar.id);
+
+          return (
+            <button
+              key={calendar.id}
+              onClick={() => toggleCalendar(calendar.id)}
+              className="flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm transition-all hover:scale-110 active:scale-95"
+              style={{
+                backgroundColor: isEnabled ? colors.backgroundColor : '#1a1a1a',
+                color: isEnabled ? colors.color : '#666',
+                border: `2px solid ${isEnabled ? colors.borderColor : '#333'}`,
+                opacity: isEnabled ? 1 : 0.5,
+              }}
+              title={calendar.name}
+              aria-label={`Toggle ${calendar.name} calendar`}
+            >
+              {calendar.shortName}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Navigation Bar */}
       <div className="mb-6 flex items-center justify-between bg-[var(--color-surface)] p-4 rounded-lg border border-[var(--color-border)]">
         <div className="flex items-center gap-2">
@@ -165,7 +228,7 @@ export function CalendarView() {
         ) : (
           <Calendar
             localizer={localizer}
-            events={events}
+            events={filteredEvents}
             startAccessor="start"
             endAccessor="end"
             defaultView="week"
@@ -174,6 +237,9 @@ export function CalendarView() {
             onNavigate={setCurrentDate}
             toolbar={false}
             eventPropGetter={eventStyleGetter}
+            components={{
+              event: CustomEvent,
+            }}
             formats={{
               weekdayFormat: (date, culture, localizer) =>
                 localizer.format(date, 'EEE', culture),
