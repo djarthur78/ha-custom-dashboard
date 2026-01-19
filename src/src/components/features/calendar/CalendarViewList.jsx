@@ -52,7 +52,7 @@ export function CalendarViewList() {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch events for current week
+  // Fetch events for current week (+ extra weeks for waste collection header)
   const fetchEvents = useCallback(async () => {
     if (!isConnected) return;
 
@@ -60,11 +60,13 @@ export function CalendarViewList() {
     try {
       const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday
       const weekEnd = addDays(weekStart, 6); // Sunday
+      // Fetch extra 3 weeks ahead for waste collection header
+      const extendedEnd = addWeeks(weekEnd, 3);
 
       const calendarEvents = await fetchAllCalendarEvents(
         CALENDAR_IDS,
         new Date(weekStart.setHours(0, 0, 0, 0)),
-        new Date(weekEnd.setHours(23, 59, 59, 999))
+        new Date(extendedEnd.setHours(23, 59, 59, 999))
       );
 
       setEvents(calendarEvents);
@@ -113,14 +115,16 @@ export function CalendarViewList() {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const weekLabel = `${format(weekStart, 'd MMM')} - ${format(addDays(weekStart, 6), 'd MMM yyyy')}`;
 
-  // Get waste collection events for header
+  // Get waste collection events for header (exclude today, show next collection)
   const now = new Date();
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
 
   const wasteEvents = events.filter(e =>
     e.calendarId === 'calendar.basildon_council' &&
-    e.start >= today
+    e.start >= tomorrow  // Only future collections, not today
   ).sort((a, b) => a.start - b.start);
 
   // Get next collection day and all events on that day
@@ -131,7 +135,7 @@ export function CalendarViewList() {
   );
 
   const daysUntilCollection = nextWasteCollection
-    ? Math.max(0, Math.ceil((nextWasteCollection.start - today) / (1000 * 60 * 60 * 24)))
+    ? Math.ceil((nextWasteCollection.start - today) / (1000 * 60 * 60 * 24))
     : null;
 
   if (!isConnected) {
