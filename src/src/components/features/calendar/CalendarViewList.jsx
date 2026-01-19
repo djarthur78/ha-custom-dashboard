@@ -114,14 +114,13 @@ export function CalendarViewList() {
   const weekLabel = `${format(weekStart, 'd MMM')} - ${format(addDays(weekStart, 6), 'd MMM yyyy')}`;
 
   // Get waste collection events for header
-  const today = new Date();
+  const now = new Date();
+  const today = new Date(now);
   today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const wasteEvents = filteredEvents.filter(e =>
+  const wasteEvents = events.filter(e =>
     e.calendarId === 'calendar.basildon_council' &&
-    e.start >= tomorrow
+    e.start >= today
   ).sort((a, b) => a.start - b.start);
 
   // Get next collection day and all events on that day
@@ -132,7 +131,7 @@ export function CalendarViewList() {
   );
 
   const daysUntilCollection = nextWasteCollection
-    ? Math.ceil((nextWasteCollection.start - today) / (1000 * 60 * 60 * 24))
+    ? Math.max(0, Math.ceil((nextWasteCollection.start - today) / (1000 * 60 * 60 * 24)))
     : null;
 
   if (!isConnected) {
@@ -162,8 +161,8 @@ export function CalendarViewList() {
   return (
     <PageContainer title={headerTitle} maxWidth="max-w-full">
       {/* Header with waste collection info */}
-      {nextWasteCollection && nextDayWasteEvents.length > 0 && (
-        <div className="mb-4 text-sm text-[var(--color-text-secondary)] flex items-center gap-2">
+      {nextDayWasteEvents.length > 0 && (
+        <div className="mb-4 text-sm flex items-center gap-2" style={{ color: '#666666' }}>
           <CalendarIcon size={16} />
           <span>
             {nextDayWasteEvents.map(e => e.title).join(', ')}
@@ -303,26 +302,26 @@ export function CalendarViewList() {
                         return (
                           <div
                             key={event.id}
-                            className="p-2 rounded text-xs shadow-sm"
+                            className="p-2 rounded text-xs shadow-sm bg-white"
                             style={{
-                              backgroundColor: colors.backgroundColor,
-                              color: colors.color,
-                              border: `1px solid ${colors.borderColor}`,
+                              border: `1px solid #e0e0e0`,
+                              borderLeft: `4px solid ${colors.backgroundColor}`,
+                              color: '#111111',
                             }}
                           >
                             <div className="font-semibold">{event.title}</div>
                             {!event.allDay && (
-                              <div className="text-xs opacity-90 mt-0.5">
+                              <div className="text-xs mt-0.5" style={{ color: '#666666' }}>
                                 {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}
                               </div>
                             )}
                             {event.allDay && (
-                              <div className="text-xs opacity-90 mt-0.5">
-                                All day
+                              <div className="text-xs mt-0.5" style={{ color: '#666666' }}>
+                                Entire day
                               </div>
                             )}
                             {event.location && (
-                              <div className="text-xs opacity-90 mt-0.5">
+                              <div className="text-xs mt-0.5" style={{ color: '#666666' }}>
                                 {event.location}
                               </div>
                             )}
