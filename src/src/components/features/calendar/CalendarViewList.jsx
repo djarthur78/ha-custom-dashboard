@@ -269,27 +269,26 @@ export function CalendarViewList() {
                       return (
                         <div
                           key={event.id}
-                          className="p-2 rounded text-xs"
+                          className="p-2 rounded text-xs bg-white border-l-4 shadow-sm"
                           style={{
-                            backgroundColor: colors.backgroundColor,
-                            borderLeft: `3px solid ${colors.borderColor}`,
-                            color: colors.color,
+                            borderLeftColor: colors.backgroundColor,
+                            color: 'var(--color-text)',
                           }}
                         >
                           <div className="font-semibold">{event.title}</div>
                           {!event.allDay && (
-                            <div className="text-xs opacity-80 mt-1">
+                            <div className="text-xs text-[var(--color-text-secondary)] mt-0.5">
                               {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}
                             </div>
                           )}
                           {event.allDay && (
-                            <div className="text-xs opacity-80 mt-1">
+                            <div className="text-xs text-[var(--color-text-secondary)] mt-0.5">
                               All day
                             </div>
                           )}
                           {event.location && (
-                            <div className="text-xs opacity-80 mt-1">
-                              {event.location}
+                            <div className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                              📍 {event.location}
                             </div>
                           )}
                         </div>
