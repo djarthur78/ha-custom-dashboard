@@ -12,7 +12,6 @@ import { useHAConnection } from '../../../hooks/useHAConnection';
 import { useWeather } from '../../../hooks/useWeather';
 import { fetchAllCalendarEvents } from '../../../services/calendar-service';
 import { getEventStyle, getCalendarColor } from '../../../constants/colors';
-import { enGB } from 'date-fns/locale';
 
 // Person calendars for filtering
 const PERSON_CALENDARS = [
@@ -33,6 +32,29 @@ const CALENDAR_IDS = [
   'calendar.holidays_in_the_united_kingdom',
   'calendar.basildon_council',
 ];
+
+// Weather condition to emoji icon mapping
+const getWeatherIcon = (condition) => {
+  const icons = {
+    'clear-night': '🌙',
+    'cloudy': '☁️',
+    'fog': '🌫️',
+    'hail': '🧊',
+    'lightning': '⚡',
+    'lightning-rainy': '⛈️',
+    'partlycloudy': '⛅',
+    'pouring': '🌧️',
+    'rainy': '🌦️',
+    'snowy': '🌨️',
+    'snowy-rainy': '🌨️',
+    'sunny': '☀️',
+    'windy': '💨',
+    'windy-variant': '💨',
+    'exceptional': '❗',
+  };
+  return icons[condition] || '☀️';
+};
+
 
 export function CalendarViewList() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -115,6 +137,7 @@ export function CalendarViewList() {
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const weekLabel = `${format(weekStart, 'd MMM')} - ${format(addDays(weekStart, 6), 'd MMM yyyy')}`;
 
+
   // Get waste collection events for header (exclude today, show next collection)
   const now = new Date();
   const today = new Date(now);
@@ -163,10 +186,22 @@ export function CalendarViewList() {
   );
 
   return (
-    <PageContainer title={headerTitle} maxWidth="max-w-full">
+    <div style={{
+      margin: '-1.5rem -1rem',
+      padding: '1.4rem 5vw',
+      width: 'calc(100% + 2rem)',
+      boxSizing: 'border-box'
+    }}>
+      {/* Header */}
+      <div className="mb-6" style={{ width: '100%' }}>
+        <h2 className="text-3xl font-bold text-[var(--color-text)] mb-2">
+          {headerTitle}
+        </h2>
+      </div>
+
       {/* Header with waste collection info */}
       {nextDayWasteEvents.length > 0 && (
-        <div className="mb-4 text-sm flex items-center gap-2" style={{ color: '#666666' }}>
+        <div className="mb-4 text-sm flex items-center gap-2" style={{ color: '#666666', width: '100%' }}>
           <CalendarIcon size={16} />
           <span>
             {nextDayWasteEvents.map(e => e.title).join(', ')}
@@ -176,9 +211,9 @@ export function CalendarViewList() {
       )}
 
       {/* Top controls */}
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-6 flex items-center justify-between" style={{ gap: '12px', width: '100%' }}>
         {/* Left: Person filters and Add Event */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center" style={{ gap: '8px' }}>
           {PERSON_CALENDARS.map(calendar => {
             const colors = getCalendarColor(calendar.id);
             const isEnabled = enabledCalendars.has(calendar.id);
@@ -187,12 +222,17 @@ export function CalendarViewList() {
               <button
                 key={calendar.id}
                 onClick={() => toggleCalendar(calendar.id)}
-                className="flex items-center justify-center w-10 h-10 rounded-full font-bold text-sm transition-all hover:scale-110"
+                className="flex items-center justify-center rounded-full transition-all hover:opacity-80"
                 style={{
-                  backgroundColor: isEnabled ? colors.primary : '#e0e0e0',
-                  color: isEnabled ? colors.text : '#999',
-                  border: `2px solid ${isEnabled ? colors.border : '#ccc'}`,
-                  opacity: isEnabled ? 1 : 0.6,
+                  width: '44px',
+                  height: '44px',
+                  backgroundColor: isEnabled ? colors.primary : '#e6e6e6',
+                  color: 'black',
+                  border: 'none',
+                  boxShadow: 'none',
+                  padding: 0,
+                  fontSize: '16px',
+                  fontWeight: 800,
                 }}
                 title={calendar.name}
               >
@@ -202,7 +242,18 @@ export function CalendarViewList() {
           })}
 
           <button
-            className="px-4 py-2 bg-white border border-[var(--color-border)] rounded hover:bg-[var(--color-surface-variant)] transition-colors flex items-center gap-2 text-sm font-medium"
+            className="flex items-center gap-2 hover:bg-gray-200 transition-colors"
+            style={{
+              height: '44px',
+              minWidth: '140px',
+              borderRadius: '999px',
+              background: '#efefef',
+              boxShadow: 'none',
+              border: 'none',
+              fontSize: '15px',
+              fontWeight: 700,
+              padding: '0 20px',
+            }}
             onClick={() => alert('Add Event - Coming soon')}
           >
             <Plus size={16} />
@@ -211,10 +262,20 @@ export function CalendarViewList() {
         </div>
 
         {/* Right: Today, View selector and navigation */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center" style={{ gap: '8px' }}>
           <button
             onClick={handleToday}
-            className="px-4 py-2 bg-[var(--color-primary)] text-white rounded hover:bg-[var(--color-primary-dark)] transition-colors text-sm font-medium"
+            className="hover:bg-gray-200 transition-colors"
+            style={{
+              height: '44px',
+              minWidth: '90px',
+              borderRadius: '999px',
+              background: '#efefef',
+              boxShadow: 'none',
+              border: 'none',
+              fontSize: '15px',
+              fontWeight: 700,
+            }}
           >
             Today
           </button>
@@ -222,7 +283,17 @@ export function CalendarViewList() {
           <select
             value={viewMode}
             onChange={(e) => setViewMode(e.target.value)}
-            className="px-3 py-2 bg-white border border-[var(--color-border)] rounded text-[var(--color-text)] text-sm"
+            style={{
+              height: '44px',
+              minWidth: '95px',
+              borderRadius: '999px',
+              background: '#efefef',
+              boxShadow: 'none',
+              border: 'none',
+              fontSize: '15px',
+              fontWeight: 700,
+              padding: '0 15px',
+            }}
           >
             <option value="week">Week</option>
             <option value="day">Day</option>
@@ -231,20 +302,36 @@ export function CalendarViewList() {
 
           <button
             onClick={handlePrevious}
-            className="p-2 hover:bg-[var(--color-surface-variant)] rounded transition-colors"
+            className="flex items-center justify-center hover:bg-gray-200 transition-all"
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              background: '#efefef',
+              boxShadow: 'none',
+              border: 'none',
+            }}
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={26} style={{ color: 'black' }} />
           </button>
 
-          <span className="text-sm font-medium min-w-[140px] text-center">
+          <span style={{ fontSize: '14px', fontWeight: 700, minWidth: '130px', textAlign: 'center' }}>
             {weekLabel}
           </span>
 
           <button
             onClick={handleNext}
-            className="p-2 hover:bg-[var(--color-surface-variant)] rounded transition-colors"
+            className="flex items-center justify-center hover:bg-gray-200 transition-all"
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              background: '#efefef',
+              boxShadow: 'none',
+              border: 'none',
+            }}
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={26} style={{ color: 'black' }} />
           </button>
         </div>
       </div>
@@ -255,45 +342,68 @@ export function CalendarViewList() {
           <LoadingSpinner message="Loading calendar events..." />
         </div>
       ) : (
-        <div className="grid grid-cols-7 gap-4">
+        <div className="grid grid-cols-7" style={{ gap: '4px', width: '100%' }}>
           {weekDays.map(day => {
             const dayEvents = filteredEvents.filter(event =>
               isSameDay(event.start, day)
             ).sort((a, b) => a.start - b.start);
 
             const isCurrentDay = isToday(day);
+            const dayKey = format(day, 'yyyy-MM-dd');
+            const dayWeather = weather.forecastByDate[dayKey];
 
             return (
               <div
                 key={day.toISOString()}
-                className={`border rounded-lg overflow-hidden ${
-                  isCurrentDay ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-[var(--color-border)]'
-                }`}
+                className="overflow-hidden bg-white"
+                style={{
+                  border: 'solid 1px whitesmoke',
+                  borderRadius: '8px',
+                }}
               >
                 {/* Day header */}
-                <div className={`p-3 border-b ${isCurrentDay ? 'border-[var(--color-primary)]' : 'border-[var(--color-border)]'}`}>
-                  <div className="flex items-baseline justify-between">
-                    <div className={`text-2xl font-bold ${isCurrentDay ? 'text-[var(--color-primary)]' : ''}`}>
+                <div style={{ padding: '8px', borderBottom: 'solid 1px whitesmoke' }}>
+                  <div className="flex items-center justify-between">
+                    <div
+                      style={{
+                        fontSize: '3em',
+                        fontWeight: 700,
+                        lineHeight: 1,
+                        ...(isCurrentDay && {
+                          borderRadius: '5px',
+                          backgroundColor: 'orange',
+                          padding: '0 4px',
+                          display: 'inline-block'
+                        })
+                      }}
+                    >
                       {format(day, 'd')}
                     </div>
-                    {weather.temperature && (
-                      <div className="text-xs text-[var(--color-text-secondary)]">
-                        ☀️ {Math.round(weather.temperature)}°C
+                    {dayWeather && (
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '1.2em' }}>
+                          {getWeatherIcon(dayWeather.condition)}
+                        </div>
+                        <div style={{ fontSize: '0.75em', color: '#666', fontWeight: 600 }}>
+                          {Math.round(dayWeather.temperature)}° / {Math.round(dayWeather.templow)}°
+                        </div>
                       </div>
                     )}
                   </div>
-                  <div className="text-xs text-[var(--color-text-secondary)]">
-                    {format(day, 'EEEE')}
+                  <div style={{ fontSize: '1em', fontWeight: 700, color: '#666', marginTop: '4px' }}>
+                    {(() => {
+                      const yesterday = addDays(new Date(), -1);
+                      const tomorrow = addDays(new Date(), 1);
+                      if (isToday(day)) return 'Today';
+                      if (isSameDay(day, yesterday)) return 'Yesterday';
+                      if (isSameDay(day, tomorrow)) return 'Tomorrow';
+                      return format(day, 'EEEE');
+                    })()}
                   </div>
-                  {isCurrentDay && (
-                    <div className="text-xs text-[var(--color-text-secondary)] mt-1">
-                      Today
-                    </div>
-                  )}
                 </div>
 
                 {/* Events list */}
-                <div className="p-2 space-y-2">
+                <div style={{ padding: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {dayEvents.length === 0 ? (
                     <div className="text-xs text-[var(--color-text-secondary)] text-center py-2">
                       No events
@@ -306,26 +416,26 @@ export function CalendarViewList() {
                         return (
                           <div
                             key={event.id}
-                            className="p-2 rounded text-xs shadow-sm bg-white"
                             style={{
-                              border: `1px solid #e0e0e0`,
-                              borderLeft: `4px solid ${colors.backgroundColor}`,
-                              color: '#111111',
+                              backgroundColor: colors.backgroundColor,
+                              padding: '8px',
+                              borderRadius: '10px',
+                              border: 'none',
+                              maxHeight: '80px',
+                              overflow: 'hidden',
                             }}
                           >
-                            <div className="font-semibold">{event.title}</div>
-                            {!event.allDay && (
-                              <div className="text-xs mt-0.5" style={{ color: '#666666' }}>
-                                {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}
-                              </div>
-                            )}
-                            {event.allDay && (
-                              <div className="text-xs mt-0.5" style={{ color: '#666666' }}>
-                                Entire day
-                              </div>
-                            )}
+                            <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#000000', opacity: 0.7, marginBottom: '2px' }}>
+                              {!event.allDay && (
+                                <>{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</>
+                              )}
+                              {event.allDay && <>Entire day</>}
+                            </div>
+                            <div style={{ fontSize: '14px', lineHeight: '1.4', fontWeight: '500', color: '#000000' }}>
+                              {event.title}
+                            </div>
                             {event.location && (
-                              <div className="text-xs mt-0.5" style={{ color: '#666666' }}>
+                              <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#000000', opacity: 0.7, marginTop: '2px' }}>
                                 {event.location}
                               </div>
                             )}
@@ -339,7 +449,7 @@ export function CalendarViewList() {
           })}
         </div>
       )}
-    </PageContainer>
+    </div>
   );
 }
 
