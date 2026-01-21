@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { format, startOfWeek, addWeeks, subWeeks, addDays, subDays, addMonths, subMonths, isSameDay, isToday } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudLightning, Sun, Moon, CloudFog, Wind, Snowflake } from 'lucide-react';
 import { PageContainer } from '../../layout/PageContainer';
 import { LoadingSpinner } from '../../common/LoadingSpinner';
 import { TwoTierSelector } from '../../common/TwoTierSelector';
@@ -44,24 +44,34 @@ const CALENDAR_IDS = [
 
 // Weather condition to emoji icon mapping
 const getWeatherIcon = (condition) => {
-  const icons = {
-    'clear-night': '🌙',
-    'cloudy': '☁️',
-    'fog': '🌫️',
-    'hail': '🧊',
-    'lightning': '⚡',
-    'lightning-rainy': '⛈️',
-    'partlycloudy': '⛅',
-    'pouring': '🌧️',
-    'rainy': '🌦️',
-    'snowy': '🌨️',
-    'snowy-rainy': '🌨️',
-    'sunny': '☀️',
-    'windy': '💨',
-    'windy-variant': '💨',
-    'exceptional': '❗',
+  const iconMap = {
+    'clear-night': { icon: Moon, color: '#FDB813', size: 28 },
+    'cloudy': { icon: Cloud, color: '#78909C', size: 28 },
+    'fog': { icon: CloudFog, color: '#B0BEC5', size: 28 },
+    'hail': { icon: CloudSnow, color: '#81D4FA', size: 28 },
+    'lightning': { icon: CloudLightning, color: '#FDD835', size: 28 },
+    'lightning-rainy': { icon: CloudLightning, color: '#FFA726', size: 28 },
+    'partlycloudy': { icon: Cloud, color: '#90CAF9', size: 28 },
+    'pouring': { icon: CloudRain, color: '#42A5F5', size: 28 },
+    'rainy': { icon: CloudDrizzle, color: '#5C6BC0', size: 28 },
+    'snowy': { icon: Snowflake, color: '#81D4FA', size: 28 },
+    'snowy-rainy': { icon: CloudSnow, color: '#64B5F6', size: 28 },
+    'sunny': { icon: Sun, color: '#FFB300', size: 28 },
+    'windy': { icon: Wind, color: '#90A4AE', size: 28 },
+    'windy-variant': { icon: Wind, color: '#78909C', size: 28 },
+    'exceptional': { icon: Cloud, color: '#FF5722', size: 28 },
   };
-  return icons[condition] || '☀️';
+
+  const config = iconMap[condition] || iconMap['sunny'];
+  const IconComponent = config.icon;
+
+  return (
+    <IconComponent
+      size={config.size}
+      style={{ color: config.color }}
+      strokeWidth={2}
+    />
+  );
 };
 
 

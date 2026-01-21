@@ -24,11 +24,11 @@ export function TimelineView({
   onAddEvent,
   selectedCalendars = [],
 }) {
-  const HOUR_HEIGHT = 80; // pixels per hour (80px * 24 = 1920px total)
+  const HOUR_HEIGHT = 80; // pixels per hour (80px * 17 = 1360px total)
   const TIME_COLUMN_WIDTH = 80; // width of time labels column
 
-  // Generate 24 hours
-  const hours = useMemo(() => Array.from({ length: 24 }, (_, i) => i), []);
+  // Generate hours 7am to midnight (7-23)
+  const hours = useMemo(() => Array.from({ length: 17 }, (_, i) => i + 7), []);
 
   // Filter and sort events for current day
   const dayEvents = useMemo(() => {
@@ -65,7 +65,8 @@ export function TimelineView({
       const endHour = event.end.getHours();
       const endMinute = event.end.getMinutes();
 
-      const top = (startHour + startMinute / 60) * HOUR_HEIGHT;
+      // Adjust position for 7am start (subtract 7 from hours)
+      const top = ((startHour - 7) + startMinute / 60) * HOUR_HEIGHT;
       const duration = ((endHour + endMinute / 60) - (startHour + startMinute / 60)) * HOUR_HEIGHT;
       const height = Math.max(duration, 30); // minimum 30px
 
@@ -114,7 +115,8 @@ export function TimelineView({
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    return (hours + minutes / 60) * HOUR_HEIGHT;
+    // Adjust for 7am start
+    return ((hours - 7) + minutes / 60) * HOUR_HEIGHT;
   }, [currentDate, HOUR_HEIGHT]);
 
   const handlePrevDay = () => {

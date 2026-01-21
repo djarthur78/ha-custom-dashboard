@@ -23,9 +23,9 @@ export function DayView({
   onAddEvent,
   selectedCalendars = [],
 }) {
-  // Generate hourly time slots (24 hours)
+  // Generate hourly time slots (7am to midnight = hours 7-23)
   const timeSlots = useMemo(() => {
-    return Array.from({ length: 24 }, (_, i) => i);
+    return Array.from({ length: 17 }, (_, i) => i + 7);
   }, []);
 
   // Filter and sort events for current day

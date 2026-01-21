@@ -24,7 +24,7 @@ export function MainLayout() {
       <Navigation />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
+      <main className="mx-auto px-4 py-6">
         <Outlet />
       </main>
 
