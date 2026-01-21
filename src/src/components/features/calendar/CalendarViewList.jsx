@@ -3,15 +3,24 @@
  * Calendar with list/card layout matching HA style
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { format, startOfWeek, addWeeks, subWeeks, addDays, isSameDay, isToday } from 'date-fns';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { format, startOfWeek, addWeeks, subWeeks, addDays, subDays, addMonths, subMonths, isSameDay, isToday } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from 'lucide-react';
 import { PageContainer } from '../../layout/PageContainer';
 import { LoadingSpinner } from '../../common/LoadingSpinner';
+import { TwoTierSelector } from '../../common/TwoTierSelector';
 import { useHAConnection } from '../../../hooks/useHAConnection';
 import { useWeather } from '../../../hooks/useWeather';
 import { fetchAllCalendarEvents } from '../../../services/calendar-service';
 import { getEventStyle, getCalendarColor } from '../../../constants/colors';
+import { EventModal } from './EventModal';
+import { EventDetailModal } from './EventDetailModal';
+import { DeleteConfirmDialog } from './DeleteConfirmDialog';
+import { DayView } from './DayView';
+import { DayListView } from './DayListView';
+import { MonthView } from './MonthView';
+import { TimelineView } from './TimelineView';
+import { WeekTimelineView } from './WeekTimelineView';
 
 // Person calendars for filtering
 const PERSON_CALENDARS = [
@@ -61,10 +70,18 @@ export function CalendarViewList() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('week'); // 'week', 'day', 'month'
+  const [period, setPeriod] = useState('week'); // 'day', 'week', 'month'
+  const [layout, setLayout] = useState('list'); // 'list', 'schedule'
   const [enabledCalendars, setEnabledCalendars] = useState(new Set(CALENDAR_IDS));
   const { isConnected } = useHAConnection();
   const weather = useWeather();
+
+  // Modal states
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [newEventDate, setNewEventDate] = useState(null);
 
   // Update current time every minute
   useEffect(() => {
@@ -105,11 +122,23 @@ export function CalendarViewList() {
 
   // Navigation handlers
   const handlePrevious = () => {
-    setCurrentDate(prev => subWeeks(prev, 1));
+    if (period === 'week') {
+      setCurrentDate(prev => subWeeks(prev, 1));
+    } else if (period === 'day') {
+      setCurrentDate(prev => subDays(prev, 1));
+    } else if (period === 'month') {
+      setCurrentDate(prev => subMonths(prev, 1));
+    }
   };
 
   const handleNext = () => {
-    setCurrentDate(prev => addWeeks(prev, 1));
+    if (period === 'week') {
+      setCurrentDate(prev => addWeeks(prev, 1));
+    } else if (period === 'day') {
+      setCurrentDate(prev => addDays(prev, 1));
+    } else if (period === 'month') {
+      setCurrentDate(prev => addMonths(prev, 1));
+    }
   };
 
   const handleToday = () => {
@@ -129,13 +158,55 @@ export function CalendarViewList() {
     });
   };
 
+  // Event handlers for modals
+  const handleEventClick = (event) => {
+    setSelectedEvent(event);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleAddEvent = (date) => {
+    setNewEventDate(date || currentDate);
+    setSelectedEvent(null);
+    setIsEventModalOpen(true);
+  };
+
+  const handleEditEvent = (event) => {
+    setSelectedEvent(event);
+    setIsEventModalOpen(true);
+  };
+
+  const handleDeleteEvent = (event) => {
+    setSelectedEvent(event);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleEventSaved = () => {
+    fetchEvents(); // Refresh after save
+  };
+
+  const handleEventDeleted = () => {
+    fetchEvents(); // Refresh after delete
+  };
+
   // Filter events by enabled calendars
   const filteredEvents = events.filter(event => enabledCalendars.has(event.calendarId));
 
   // Get week days
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const weekLabel = `${format(weekStart, 'd MMM')} - ${format(addDays(weekStart, 6), 'd MMM yyyy')}`;
+
+  // Date label based on period
+  const dateLabel = useMemo(() => {
+    if (period === 'day') {
+      return format(currentDate, 'EEEE, d MMMM yyyy');
+    } else if (period === 'week') {
+      const weekEnd = addDays(weekStart, 6);
+      return `Week ${format(weekStart, 'w')} • ${format(weekStart, 'd MMM')} - ${format(weekEnd, 'd MMM yyyy')}`;
+    } else if (period === 'month') {
+      return format(currentDate, 'MMMM yyyy');
+    }
+    return '';
+  }, [period, currentDate, weekStart]);
 
 
   // Get waste collection events for header (exclude today, show next collection)
@@ -254,15 +325,22 @@ export function CalendarViewList() {
               fontWeight: 700,
               padding: '0 20px',
             }}
-            onClick={() => alert('Add Event - Coming soon')}
+            onClick={() => handleAddEvent(currentDate)}
           >
             <Plus size={16} />
             Add Event
           </button>
         </div>
 
-        {/* Right: Today, View selector and navigation */}
-        <div className="flex items-center" style={{ gap: '8px' }}>
+        {/* Right: View selector and navigation */}
+        <div className="flex items-center" style={{ gap: '12px' }}>
+          <TwoTierSelector
+            period={period}
+            onPeriodChange={setPeriod}
+            layout={layout}
+            onLayoutChange={setLayout}
+          />
+
           <button
             onClick={handleToday}
             className="hover:bg-gray-200 transition-colors"
@@ -280,26 +358,6 @@ export function CalendarViewList() {
             Today
           </button>
 
-          <select
-            value={viewMode}
-            onChange={(e) => setViewMode(e.target.value)}
-            style={{
-              height: '44px',
-              minWidth: '95px',
-              borderRadius: '999px',
-              background: '#efefef',
-              boxShadow: 'none',
-              border: 'none',
-              fontSize: '15px',
-              fontWeight: 700,
-              padding: '0 15px',
-            }}
-          >
-            <option value="week">Week</option>
-            <option value="day">Day</option>
-            <option value="month">Month</option>
-          </select>
-
           <button
             onClick={handlePrevious}
             className="flex items-center justify-center hover:bg-gray-200 transition-all"
@@ -315,8 +373,8 @@ export function CalendarViewList() {
             <ChevronLeft size={26} style={{ color: 'black' }} />
           </button>
 
-          <span style={{ fontSize: '14px', fontWeight: 700, minWidth: '130px', textAlign: 'center' }}>
-            {weekLabel}
+          <span style={{ fontSize: '14px', fontWeight: 700, minWidth: '200px', textAlign: 'center' }}>
+            {dateLabel}
           </span>
 
           <button
@@ -336,10 +394,50 @@ export function CalendarViewList() {
         </div>
       </div>
 
-      {/* Week view */}
+      {/* Calendar views */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <LoadingSpinner message="Loading calendar events..." />
+        </div>
+      ) : period === 'day' && layout === 'schedule' ? (
+        <div style={{ height: 'calc(100vh - 300px)', minHeight: '1400px' }}>
+          <TimelineView
+            currentDate={currentDate}
+            onDateChange={setCurrentDate}
+            events={filteredEvents}
+            onEventClick={handleEventClick}
+            onAddEvent={handleAddEvent}
+            selectedCalendars={Array.from(enabledCalendars)}
+          />
+        </div>
+      ) : period === 'day' && layout === 'list' ? (
+        <div style={{ height: 'calc(100vh - 300px)', minHeight: '800px' }}>
+          <DayListView
+            currentDate={currentDate}
+            events={filteredEvents}
+            onEventClick={handleEventClick}
+            selectedCalendars={Array.from(enabledCalendars)}
+          />
+        </div>
+      ) : period === 'week' && layout === 'schedule' ? (
+        <div style={{ height: 'calc(100vh - 300px)', minHeight: '1200px' }}>
+          <WeekTimelineView
+            currentDate={currentDate}
+            events={filteredEvents}
+            onEventClick={handleEventClick}
+            selectedCalendars={Array.from(enabledCalendars)}
+          />
+        </div>
+      ) : period === 'month' ? (
+        <div style={{ height: 'calc(100vh - 300px)', minHeight: '800px' }}>
+          <MonthView
+            currentDate={currentDate}
+            onDateChange={setCurrentDate}
+            events={filteredEvents}
+            onEventClick={handleEventClick}
+            onAddEvent={handleAddEvent}
+            selectedCalendars={Array.from(enabledCalendars)}
+          />
         </div>
       ) : (
         <div className="grid grid-cols-7" style={{ gap: '4px', width: '100%' }}>
@@ -414,8 +512,10 @@ export function CalendarViewList() {
                       .map(event => {
                         const colors = getEventStyle(event.calendarId);
                         return (
-                          <div
+                          <button
                             key={event.id}
+                            onClick={() => handleEventClick(event)}
+                            className="w-full text-left hover:opacity-80 transition-opacity"
                             style={{
                               backgroundColor: colors.backgroundColor,
                               padding: '8px',
@@ -439,7 +539,7 @@ export function CalendarViewList() {
                                 {event.location}
                               </div>
                             )}
-                          </div>
+                          </button>
                         );
                       })
                   )}
@@ -449,6 +549,41 @@ export function CalendarViewList() {
           })}
         </div>
       )}
+
+      {/* Modals */}
+      <EventModal
+        isOpen={isEventModalOpen}
+        onClose={() => {
+          setIsEventModalOpen(false);
+          setSelectedEvent(null);
+          setNewEventDate(null);
+        }}
+        onSave={handleEventSaved}
+        event={selectedEvent}
+        initialDate={newEventDate || currentDate}
+        initialCalendar="calendar.arthurdarren_gmail_com"
+      />
+
+      <EventDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        event={selectedEvent}
+        onEdit={handleEditEvent}
+        onDelete={handleDeleteEvent}
+      />
+
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setSelectedEvent(null);
+        }}
+        onConfirm={handleEventDeleted}
+        event={selectedEvent}
+      />
     </div>
   );
 }

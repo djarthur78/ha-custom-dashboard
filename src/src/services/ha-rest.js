@@ -113,7 +113,7 @@ export async function ping() {
       },
     });
     return response.ok;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

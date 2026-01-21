@@ -1,0 +1,268 @@
+################################################################################
+# /config/packages/family_calendar.yaml
+################################################################################
+
+input_text:
+  # IMPORTANT: in week-planner-card, filter behaves like "hide matches"
+  # ^$ matches nothing => hides nothing => SHOW
+  # .* matches everything => hides everything => HIDE
+  daz_calendar_filter:
+    name: Daz Filter
+    initial: "^$"
+  nic_calendar_filter:
+    name: Nic Filter
+    initial: "^$"
+  cerys_calendar_filter:
+    name: Cerys Filter
+    initial: "^$"
+  dex_calendar_filter:
+    name: Dex Filter
+    initial: "^$"
+
+  calendar_period_label:
+    name: Calendar Period Label
+    initial: ""
+
+  calendar_event_title:
+    name: Event Title
+    initial: ""
+  calendar_event_description:
+    name: Event Description
+    initial: ""
+
+input_select:
+  calendar_view:
+    name: Calendar View
+    options:
+      - Today
+      - Tomorrow
+      - Week
+      - Biweek
+      - Month
+    initial: Week
+
+  calendar_select:
+    name: Select Calendar
+    options:
+      - Daz
+      - Nic
+      - Cerys
+      - Dex
+    initial: Daz
+
+input_datetime:
+  calendar_event_start:
+    has_date: true
+    has_time: true
+  calendar_event_end:
+    has_date: true
+    has_time: true
+  calendar_day_event_start:
+    has_date: true
+    has_time: false
+  calendar_day_event_end:
+    has_date: true
+    has_time: false
+
+input_boolean:
+  calendar_all_day_event:
+    name: All Day Event
+    initial: false
+
+input_number:
+  calendar_nav_offset:
+    name: Calendar Nav Offset (days)
+    min: -365
+    max: 365
+    step: 1
+    mode: box
+    initial: 0
+
+template:
+  - sensor:
+      - name: Calendar Period Label Computed
+        unique_id: calendar_period_label_computed
+        state: >-
+          {% set view = states('input_select.calendar_view') %}
+          {% set off = states('input_number.calendar_nav_offset') | int(0) %}
+          {% set base = (now().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=off)) %}
+          {% set week_start = base - timedelta(days=base.weekday()) %}
+
+          {% if view == 'Today' %}
+            {% set start = base %}{% set end = base %}
+          {% elif view == 'Tomorrow' %}
+            {% set start = base + timedelta(days=1) %}{% set end = start %}
+          {% elif view == 'Week' %}
+            {% set start = week_start %}{% set end = start + timedelta(days=6) %}
+          {% elif view == 'Biweek' %}
+            {% set start = week_start %}{% set end = start + timedelta(days=13) %}
+          {% elif view == 'Month' %}
+            {% set first = base.replace(day=1) %}
+            {% set start = first - timedelta(days=first.weekday()) %}
+            {% set next_month = (first.replace(day=28) + timedelta(days=4)).replace(day=1) %}
+            {% set last = next_month - timedelta(days=1) %}
+            {% set span = (last - start).days + 1 %}
+            {% set weeks = ((span + 6) // 7) %}
+            {% set days = weeks * 7 %}
+            {% set end = start + timedelta(days=days-1) %}
+          {% else %}
+            {% set start = week_start %}{% set end = start + timedelta(days=6) %}
+          {% endif %}
+
+          {{ start.day }} {{ start.strftime('%b') }} - {{ end.day }} {{ end.strftime('%b') }}
+
+automation:
+  - id: family_calendar_period_label_sync
+    alias: "Family Calendar: sync period label"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id:
+          - input_select.calendar_view
+          - input_number.calendar_nav_offset
+    action:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.calendar_period_label
+        data:
+          value: "{{ states('sensor.calendar_period_label_computed') }}"
+
+script:
+  # Toggle logic FIXED:
+  # SHOW = ^$  (hide nothing)
+  # HIDE = .*  (hide all)
+  daz_calendar_visible_filter:
+    alias: Toggle Daz Calendar
+    mode: single
+    sequence:
+      - service: input_text.set_value
+        target: { entity_id: input_text.daz_calendar_filter }
+        data:
+          value: >
+            {% if states('input_text.daz_calendar_filter') == '^$' %}.*{% else %}^${% endif %}
+
+  nic_calendar_visible_filter:
+    alias: Toggle Nic Calendar
+    mode: single
+    sequence:
+      - service: input_text.set_value
+        target: { entity_id: input_text.nic_calendar_filter }
+        data:
+          value: >
+            {% if states('input_text.nic_calendar_filter') == '^$' %}.*{% else %}^${% endif %}
+
+  cerys_calendar_visible_filter:
+    alias: Toggle Cerys Calendar
+    mode: single
+    sequence:
+      - service: input_text.set_value
+        target: { entity_id: input_text.cerys_calendar_filter }
+        data:
+          value: >
+            {% if states('input_text.cerys_calendar_filter') == '^$' %}.*{% else %}^${% endif %}
+
+  dex_calendar_visible_filter:
+    alias: Toggle Dex Calendar
+    mode: single
+    sequence:
+      - service: input_text.set_value
+        target: { entity_id: input_text.dex_calendar_filter }
+        data:
+          value: >
+            {% if states('input_text.dex_calendar_filter') == '^$' %}.*{% else %}^${% endif %}
+
+  # Navigation
+  calendar_nav_prev:
+    alias: Calendar Nav Prev
+    mode: single
+    sequence:
+      - variables:
+          view: "{{ states('input_select.calendar_view') }}"
+          cur: "{{ states('input_number.calendar_nav_offset')|int(0) }}"
+          minv: "{{ state_attr('input_number.calendar_nav_offset','min')|int(-365) }}"
+          step: >
+            {% if view in ['Today','Tomorrow'] %}1
+            {% elif view == 'Week' %}7
+            {% elif view == 'Biweek' %}14
+            {% elif view == 'Month' %}28
+            {% else %}7{% endif %}
+          nxt: "{{ cur - (step|int(7)) }}"
+      - service: input_number.set_value
+        target: { entity_id: input_number.calendar_nav_offset }
+        data:
+          value: "{{ [nxt, minv] | max }}"
+
+  calendar_nav_next:
+    alias: Calendar Nav Next
+    mode: single
+    sequence:
+      - variables:
+          view: "{{ states('input_select.calendar_view') }}"
+          cur: "{{ states('input_number.calendar_nav_offset')|int(0) }}"
+          maxv: "{{ state_attr('input_number.calendar_nav_offset','max')|int(365) }}"
+          step: >
+            {% if view in ['Today','Tomorrow'] %}1
+            {% elif view == 'Week' %}7
+            {% elif view == 'Biweek' %}14
+            {% elif view == 'Month' %}28
+            {% else %}7{% endif %}
+          nxt: "{{ cur + (step|int(7)) }}"
+      - service: input_number.set_value
+        target: { entity_id: input_number.calendar_nav_offset }
+        data:
+          value: "{{ [nxt, maxv] | min }}"
+
+  calendar_nav_reset:
+    alias: Calendar Nav Reset (This period)
+    mode: single
+    sequence:
+      - service: input_number.set_value
+        target: { entity_id: input_number.calendar_nav_offset }
+        data:
+          value: 0
+
+  # Add event (people calendars only)
+  add_google_calendar_event:
+    alias: Add Calendar Event
+    mode: single
+    sequence:
+      - variables:
+          calendar_map:
+            Daz: "calendar.arthurdarren_gmail_com"
+            Nic: "calendar.nicholaarthur_gmail_com"
+            Cerys: "calendar.arthurcerys_gmail_com"
+            Dex: "calendar.arthurdexter08_gmail_com"
+          target_calendar: "{{ calendar_map.get(states('input_select.calendar_select'), 'calendar.arthurdarren_gmail_com') }}"
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.calendar_all_day_event
+                state: "on"
+            sequence:
+              - service: calendar.create_event
+                target:
+                  entity_id: "{{ target_calendar }}"
+                data:
+                  summary: "{{ states('input_text.calendar_event_title') }}"
+                  description: "{{ states('input_text.calendar_event_description') }}"
+                  start_date: "{{ states('input_datetime.calendar_day_event_start') }}"
+                  end_date: "{{ states('input_datetime.calendar_day_event_end') }}"
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.calendar_all_day_event
+                state: "off"
+            sequence:
+              - service: calendar.create_event
+                target:
+                  entity_id: "{{ target_calendar }}"
+                data:
+                  summary: "{{ states('input_text.calendar_event_title') }}"
+                  description: "{{ states('input_text.calendar_event_description') }}"
+                  start_date_time: "{{ states('input_datetime.calendar_event_start') }}"
+                  end_date_time: "{{ states('input_datetime.calendar_event_end') }}"
+      - service: input_text.set_value
+        target: { entity_id: input_text.calendar_event_title }
+        data: { value: "" }
+      - service: input_text.set_value
+        target: { entity_id: input_text.calendar_event_description }
+        data: { value: "" }

@@ -19,6 +19,7 @@ export function Navigation() {
     <nav className="bg-[var(--color-surface)] border-b border-[var(--color-border)]">
       <div className="container mx-auto px-4">
         <div className="flex gap-1 overflow-x-auto">
+          {/* eslint-disable-next-line no-unused-vars */}
           {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}

@@ -149,6 +149,7 @@ class HAWebSocket {
    * Handle event messages
    */
   handleEvent(message) {
+    // Handle state change events
     if (message.event?.event_type === 'state_changed') {
       const entityId = message.event.data?.entity_id;
       const newState = message.event.data?.new_state;
@@ -158,6 +159,17 @@ class HAWebSocket {
         if (subscribers) {
           subscribers.forEach(callback => callback(newState));
         }
+      }
+    }
+
+    // Handle weather forecast subscription events
+    if (message.event?.forecast && this.weatherSubscribers) {
+      const callback = this.weatherSubscribers.get(message.id);
+      if (callback) {
+        console.log(`[Weather] Received forecast update for subscription ${message.id}:`, message.event.forecast);
+        callback(message.event.forecast);
+      } else {
+        console.log(`[Weather] Received forecast but no callback found for ID ${message.id}`);
       }
     }
   }
@@ -252,6 +264,67 @@ class HAWebSocket {
         }
       }
     };
+  }
+
+  /**
+   * Subscribe to weather forecast updates
+   */
+  subscribeToWeatherForecast(entityId, forecastType = 'daily', callback) {
+    return new Promise((resolve, reject) => {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN || !this.isAuthenticated) {
+        reject(new Error('WebSocket not connected or not authenticated'));
+        return;
+      }
+
+      const id = this.messageId++;
+
+      // Initialize weather subscribers map if needed
+      if (!this.weatherSubscribers) {
+        this.weatherSubscribers = new Map();
+      }
+
+      // Store the callback with the message ID
+      this.weatherSubscribers.set(id, callback);
+      console.log(`[Weather] Subscribing with ID ${id} to ${entityId}`);
+
+      // Set up response listener
+      const timeout = setTimeout(() => {
+        const listener = this.listeners.get(id);
+        if (listener) {
+          this.listeners.delete(id);
+          this.weatherSubscribers.delete(id);
+          reject(new Error('Weather subscription timeout'));
+        }
+      }, 10000);
+
+      this.listeners.set(id, {
+        resolve: () => {
+          clearTimeout(timeout);
+          console.log(`[Weather] Subscription ${id} confirmed`);
+          // Return unsubscribe function
+          resolve(() => {
+            if (this.weatherSubscribers) {
+              this.weatherSubscribers.delete(id);
+              console.log(`[Weather] Unsubscribed ${id}`);
+            }
+          });
+        },
+        reject: (error) => {
+          clearTimeout(timeout);
+          this.weatherSubscribers.delete(id);
+          reject(error);
+        },
+        timeout
+      });
+
+      // Send subscription message
+      this.ws.send(JSON.stringify({
+        id,
+        type: 'weather/subscribe_forecast',
+        entity_id: entityId,
+        forecast_type: forecastType,
+      }));
+    });
   }
 
   /**

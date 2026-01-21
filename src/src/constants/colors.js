@@ -14,30 +14,30 @@ export const CALENDAR_COLORS = {
 
   // Daz (Darren)
   'calendar.arthurdarren_gmail_com': {
-    primary: '#4285f4',    // Blue
-    text: '#ffffff',
-    border: '#1976d2',
+    primary: '#2962FF',    // Blue - from YAML
+    text: '#000000',
+    border: '#2962FF',
   },
 
   // Nic (Nicola)
   'calendar.nicholaarthur_gmail_com': {
-    primary: '#f48fb1',    // Pink/Coral
-    text: '#ffffff',
-    border: '#ec407a',
+    primary: '#F4A6B8',    // Pink - from YAML
+    text: '#000000',
+    border: '#F4A6B8',
   },
 
   // Cerys
   'calendar.arthurcerys_gmail_com': {
-    primary: '#81c784',    // Mint/Teal
-    text: '#ffffff',
-    border: '#66bb6a',
+    primary: '#9DB8A0',    // Green - from YAML
+    text: '#000000',
+    border: '#9DB8A0',
   },
 
   // Dex (Dexter)
   'calendar.arthurdexter08_gmail_com': {
-    primary: '#ffb74d',    // Orange
-    text: '#2d3436',
-    border: '#ffa726',
+    primary: '#FFB703',    // Orange/Yellow - from YAML
+    text: '#000000',
+    border: '#FFB703',
   },
 
   // Birthdays
