@@ -1,7 +1,40 @@
 import { useMemo } from 'react';
 import { format, addDays, subDays, isSameDay, isToday } from 'date-fns';
-import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Clock, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudLightning, Sun, Moon, CloudFog, Wind, Snowflake } from 'lucide-react';
 import { CALENDAR_COLORS } from '../../../constants/colors';
+import { useWeather } from '../../../hooks/useWeather';
+
+// Weather icon mapping (same as other views)
+const getWeatherIcon = (condition) => {
+  const iconMap = {
+    'clear-night': { icon: Moon, color: '#FDB813', size: 32 },
+    'cloudy': { icon: Cloud, color: '#78909C', size: 32 },
+    'fog': { icon: CloudFog, color: '#B0BEC5', size: 32 },
+    'hail': { icon: CloudSnow, color: '#81D4FA', size: 32 },
+    'lightning': { icon: CloudLightning, color: '#FDD835', size: 32 },
+    'lightning-rainy': { icon: CloudLightning, color: '#FFA726', size: 32 },
+    'partlycloudy': { icon: Cloud, color: '#90CAF9', size: 32 },
+    'pouring': { icon: CloudRain, color: '#42A5F5', size: 32 },
+    'rainy': { icon: CloudDrizzle, color: '#5C6BC0', size: 32 },
+    'snowy': { icon: Snowflake, color: '#81D4FA', size: 32 },
+    'snowy-rainy': { icon: CloudSnow, color: '#64B5F6', size: 32 },
+    'sunny': { icon: Sun, color: '#FFB300', size: 32 },
+    'windy': { icon: Wind, color: '#90A4AE', size: 32 },
+    'windy-variant': { icon: Wind, color: '#78909C', size: 32 },
+    'exceptional': { icon: Cloud, color: '#FF5722', size: 32 },
+  };
+
+  const config = iconMap[condition] || iconMap['sunny'];
+  const IconComponent = config.icon;
+
+  return (
+    <IconComponent
+      size={config.size}
+      style={{ color: config.color }}
+      strokeWidth={2}
+    />
+  );
+};
 
 /**
  * TimelineView Component
@@ -24,6 +57,7 @@ export function TimelineView({
   onAddEvent,
   selectedCalendars = [],
 }) {
+  const weather = useWeather();
   const HOUR_HEIGHT = 80; // pixels per hour (80px * 17 = 1360px total)
   const TIME_COLUMN_WIDTH = 80; // width of time labels column
 
@@ -136,37 +170,90 @@ export function TimelineView({
   };
 
   const isDayToday = isToday(currentDate);
+  const dayKey = format(currentDate, 'yyyy-MM-dd');
+  const dayWeather = weather.forecastByDate[dayKey];
+
+  // Get day name
+  const getDayName = () => {
+    const yesterday = addDays(new Date(), -1);
+    const tomorrow = addDays(new Date(), 1);
+    if (isToday(currentDate)) return 'Today';
+    if (isSameDay(currentDate, yesterday)) return 'Yesterday';
+    if (isSameDay(currentDate, tomorrow)) return 'Tomorrow';
+    return format(currentDate, 'EEEE, MMMM d, yyyy');
+  };
 
   return (
     <div className="flex flex-col h-full bg-[var(--color-background)]">
-      {/* Day Header */}
-      <div className="flex items-center justify-between mb-4 px-4 py-2 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)]">
-        <button
-          onClick={handlePrevDay}
-          className="p-2 hover:bg-[var(--color-background)] rounded-lg transition-colors"
-          aria-label="Previous day"
+      {/* Day Header (matching Week view style) */}
+      <div className="mb-4 px-4">
+        <div
+          className="overflow-hidden bg-white"
+          style={{
+            border: 'solid 1px whitesmoke',
+            borderRadius: '8px',
+          }}
         >
-          <ChevronLeft className="w-6 h-6 text-[var(--color-text)]" />
-        </button>
+          <div style={{ padding: '12px' }}>
+            <div className="flex items-center justify-between">
+              {/* Left: Previous button */}
+              <button
+                onClick={handlePrevDay}
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                aria-label="Previous day"
+                style={{ width: '44px', height: '44px' }}
+              >
+                <ChevronLeft size={24} style={{ color: 'black' }} />
+              </button>
 
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-[var(--color-text)]">
-            {format(currentDate, 'EEEE, MMMM d, yyyy')}
-          </h2>
-          {isDayToday && (
-            <span className="text-sm text-[var(--color-primary)] font-medium">
-              Today
-            </span>
-          )}
+              {/* Center: Day number and name */}
+              <div className="flex items-center gap-6">
+                <div>
+                  <div
+                    style={{
+                      fontSize: '3em',
+                      fontWeight: 700,
+                      lineHeight: 1,
+                      ...(isDayToday && {
+                        borderRadius: '5px',
+                        backgroundColor: 'orange',
+                        padding: '0 4px',
+                        display: 'inline-block'
+                      })
+                    }}
+                  >
+                    {format(currentDate, 'd')}
+                  </div>
+                  <div style={{ fontSize: '1em', fontWeight: 700, color: '#666', marginTop: '4px' }}>
+                    {getDayName()}
+                  </div>
+                </div>
+
+                {/* Weather */}
+                {dayWeather && (
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '1.2em', marginBottom: '4px' }}>
+                      {getWeatherIcon(dayWeather.condition)}
+                    </div>
+                    <div style={{ fontSize: '0.85em', color: '#666', fontWeight: 600 }}>
+                      {Math.round(dayWeather.temperature)}° / {Math.round(dayWeather.templow)}°
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Next button */}
+              <button
+                onClick={handleNextDay}
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                aria-label="Next day"
+                style={{ width: '44px', height: '44px' }}
+              >
+                <ChevronRight size={24} style={{ color: 'black' }} />
+              </button>
+            </div>
+          </div>
         </div>
-
-        <button
-          onClick={handleNextDay}
-          className="p-2 hover:bg-[var(--color-background)] rounded-lg transition-colors"
-          aria-label="Next day"
-        >
-          <ChevronRight className="w-6 h-6 text-[var(--color-text)]" />
-        </button>
       </div>
 
       {/* All-Day Events Bar */}
