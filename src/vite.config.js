@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: './', // Use relative paths for assets (required for HA ingress)
   server: {
     host: '0.0.0.0', // Allow network access (iPad)
     port: 5173,
