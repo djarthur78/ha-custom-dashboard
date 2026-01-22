@@ -9,7 +9,41 @@
 
 import { useMemo } from 'react';
 import { format, startOfWeek, addDays, isSameDay, isToday } from 'date-fns';
+import { Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudLightning, Sun, Moon, CloudFog, Wind, Snowflake } from 'lucide-react';
 import { CALENDAR_COLORS } from '../../../constants/colors';
+import { useWeather } from '../../../hooks/useWeather';
+
+// Weather icon mapping (same as other views)
+const getWeatherIcon = (condition, size = 24) => {
+  const iconMap = {
+    'clear-night': { icon: Moon, color: '#FDB813' },
+    'cloudy': { icon: Cloud, color: '#78909C' },
+    'fog': { icon: CloudFog, color: '#B0BEC5' },
+    'hail': { icon: CloudSnow, color: '#81D4FA' },
+    'lightning': { icon: CloudLightning, color: '#FDD835' },
+    'lightning-rainy': { icon: CloudLightning, color: '#FFA726' },
+    'partlycloudy': { icon: Cloud, color: '#90CAF9' },
+    'pouring': { icon: CloudRain, color: '#42A5F5' },
+    'rainy': { icon: CloudDrizzle, color: '#5C6BC0' },
+    'snowy': { icon: Snowflake, color: '#81D4FA' },
+    'snowy-rainy': { icon: CloudSnow, color: '#64B5F6' },
+    'sunny': { icon: Sun, color: '#FFB300' },
+    'windy': { icon: Wind, color: '#90A4AE' },
+    'windy-variant': { icon: Wind, color: '#78909C' },
+    'exceptional': { icon: Cloud, color: '#FF5722' },
+  };
+
+  const config = iconMap[condition] || iconMap['sunny'];
+  const IconComponent = config.icon;
+
+  return (
+    <IconComponent
+      size={size}
+      style={{ color: config.color }}
+      strokeWidth={2}
+    />
+  );
+};
 
 export function WeekTimelineView({
   currentDate,
@@ -17,6 +51,7 @@ export function WeekTimelineView({
   onEventClick,
   selectedCalendars = [],
 }) {
+  const weather = useWeather();
   const HOUR_HEIGHT = 60; // pixels per hour (60px * 17 = 1020px total)
   const TIME_COLUMN_WIDTH = 80; // width of time labels column
 
@@ -128,7 +163,7 @@ export function WeekTimelineView({
           {/* Time Column */}
           <div className="flex flex-col sticky left-0 bg-[var(--color-background)] z-10" style={{ width: `${TIME_COLUMN_WIDTH}px` }}>
             {/* Header spacer */}
-            <div style={{ height: '60px', borderBottom: '2px solid var(--color-border)' }} />
+            <div style={{ height: '100px', borderBottom: '2px solid var(--color-border)' }} />
 
             {/* Hour labels */}
             {hours.map(hour => {
@@ -150,6 +185,7 @@ export function WeekTimelineView({
             const dayKey = format(day, 'yyyy-MM-dd');
             const positionedEvents = positionedEventsByDay[dayKey] || [];
             const isDayToday = isToday(day);
+            const dayWeather = weather.forecastByDate[dayKey];
 
             return (
               <div
@@ -161,31 +197,48 @@ export function WeekTimelineView({
                 <div
                   className="sticky top-0 z-20 flex flex-col items-center justify-center"
                   style={{
-                    height: '60px',
+                    height: '100px',
                     borderBottom: '2px solid var(--color-border)',
-                    backgroundColor: isDayToday ? 'var(--color-primary)' : 'var(--color-surface)',
+                    backgroundColor: 'white',
+                    padding: '8px',
                   }}
                 >
                   <div
                     style={{
-                      fontSize: '12px',
+                      fontSize: '10px',
                       fontWeight: 700,
-                      color: isDayToday ? '#ffffff' : 'var(--color-text-secondary)',
+                      color: '#666',
                       textTransform: 'uppercase',
+                      marginBottom: '4px',
                     }}
                   >
                     {format(day, 'EEE')}
                   </div>
                   <div
                     style={{
-                      fontSize: '20px',
+                      fontSize: '2em',
                       fontWeight: 700,
-                      color: isDayToday ? '#ffffff' : 'var(--color-text)',
-                      marginTop: '2px',
+                      lineHeight: 1,
+                      ...(isDayToday && {
+                        borderRadius: '5px',
+                        backgroundColor: 'orange',
+                        padding: '0 4px',
+                        display: 'inline-block'
+                      })
                     }}
                   >
                     {format(day, 'd')}
                   </div>
+                  {dayWeather && (
+                    <>
+                      <div style={{ fontSize: '0.9em', marginTop: '6px' }}>
+                        {getWeatherIcon(dayWeather.condition, 20)}
+                      </div>
+                      <div style={{ fontSize: '0.7em', color: '#666', fontWeight: 600, marginTop: '2px' }}>
+                        {Math.round(dayWeather.temperature)}° / {Math.round(dayWeather.templow)}°
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Timeline Grid */}
