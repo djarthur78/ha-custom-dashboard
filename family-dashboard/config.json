@@ -19,6 +19,11 @@
   "ports_description": {
     "8099/tcp": "Web interface (not needed with ingress)"
   },
-  "options": {},
-  "schema": {}
+  "options": {
+    "ha_token": ""
+  },
+  "schema": {
+    "ha_token": "str"
+  },
+  "homeassistant_api": true
 }

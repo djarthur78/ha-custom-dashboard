@@ -18,6 +18,10 @@ echo "📋 Copying build to family-dashboard directory..."
 rm -rf family-dashboard/build
 cp -r src/dist family-dashboard/build
 
+# Step 3: Inject config.js script into index.html
+echo "🔧 Injecting runtime config loader..."
+sed -i 's|<head>|<head>\n    <script src="./config.js"></script>|' family-dashboard/build/index.html
+
 # Step 3: Update version in config.json (optional)
 VERSION=$(date +%Y.%m.%d)
 echo "📝 Version: $VERSION"

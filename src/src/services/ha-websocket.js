@@ -15,8 +15,30 @@ class HAWebSocket {
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 10;
     this.reconnectTimeout = null;
-    this.url = import.meta.env.VITE_HA_URL;
-    this.token = import.meta.env.VITE_HA_TOKEN;
+
+    // Auto-detect environment
+    // Priority: window.HA_CONFIG (add-on runtime) > env variables (development)
+    if (window.HA_CONFIG && window.HA_CONFIG.useIngress) {
+      // Running in HA add-on with ingress
+      // Connect through HA instance (ingress proxy)
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      this.url = `${protocol}//${host}/api/websocket`;
+      this.token = window.HA_CONFIG.token;
+      console.log('[HA WebSocket] Running in add-on mode with ingress');
+    } else if (import.meta.env.VITE_HA_URL) {
+      // Development mode
+      this.url = import.meta.env.VITE_HA_URL;
+      this.token = import.meta.env.VITE_HA_TOKEN;
+      console.log('[HA WebSocket] Running in development mode');
+    } else {
+      // Fallback: try to connect to current host
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      this.url = `${protocol}//${host}/api/websocket`;
+      this.token = null;
+      console.warn('[HA WebSocket] No configuration found, attempting connection without token');
+    }
   }
 
   /**
