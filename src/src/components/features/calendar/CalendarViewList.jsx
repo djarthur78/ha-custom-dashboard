@@ -252,20 +252,6 @@ export function CalendarViewList() {
     );
   }
 
-  const headerTitle = (
-    <div className="flex items-center gap-3">
-      <span>Arthur Family</span>
-      <span className="text-lg font-normal text-[var(--color-text-secondary)]">
-        {format(currentTime, 'HH:mm')}
-      </span>
-      {weather.temperature && (
-        <span className="text-lg font-normal text-[var(--color-text-secondary)]">
-          ☀️ {Math.round(weather.temperature)}°C
-        </span>
-      )}
-    </div>
-  );
-
   return (
     <div style={{
       margin: '-1.5rem -1rem',
@@ -275,9 +261,20 @@ export function CalendarViewList() {
     }}>
       {/* Header */}
       <div className="mb-6" style={{ width: '100%' }}>
-        <h2 className="text-3xl font-bold text-[var(--color-text)] mb-2">
-          {headerTitle}
-        </h2>
+        <div className="flex items-center justify-between">
+          {/* Left: Current date */}
+          <h2 className="text-3xl font-bold text-[var(--color-text)]">
+            {format(currentTime, 'EEEE, MMMM d, yyyy')}
+          </h2>
+
+          {/* Right: Time and temperature */}
+          <div className="flex items-center gap-4 text-3xl font-bold text-[var(--color-text-secondary)]">
+            <span>{format(currentTime, 'h:mm a')}</span>
+            {weather.temperature && (
+              <span>{Math.round(weather.temperature)}°</span>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Header with waste collection info */}
