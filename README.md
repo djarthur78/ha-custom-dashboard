@@ -4,7 +4,7 @@ Modern, tablet-optimized web application replacing the existing HA "family calen
 
 **Primary Device:** iPad (Kitchen Calendar tablet)
 **Started:** 2026-01-17
-**Current Phase:** Phase 1 Complete ✅
+**Current Phase:** Calendar Complete + Deployment Ready ✅
 
 ---
 
@@ -29,14 +29,48 @@ Modern, tablet-optimized web application replacing the existing HA "family calen
 ## Project Status
 
 - ✅ **Phase 1: Foundation** - React + Vite + HA WebSocket (COMPLETE)
-- 🔄 **Phase 2A: Calendar** - Family calendar feature (NEXT)
-- ⏳ **Phase 2B: Meal Planner** - Meal planning (Pending)
+- ✅ **Phase 2A: Calendar** - Family calendar feature (COMPLETE)
+- ✅ **Deployment: Add-on** - Home Assistant add-on ready (READY TO DEPLOY)
+- 🔄 **Phase 2B: Meal Planner** - Meal planning (NEXT)
 - ⏳ **Phase 2C: Games Room** - Games room controls (Pending)
 - ⏳ **Phase 2D: Cameras** - Camera feeds (Pending)
 
-## Quick Start
+### Calendar Features (Complete)
+- ✅ 6 view modes: Day/List, Day/Schedule, Week/List, Week/Schedule, Month, Day
+- ✅ Event creation, editing, deletion
+- ✅ Recurring weekly events
+- ✅ Weather integration with colorful icons
+- ✅ 8 Google calendars with filtering
+- ✅ Calendar color coding
+- ✅ Waste collection countdown
+- ✅ Touch-optimized for iPad
+- ✅ Real-time updates via WebSocket
 
-### Development
+## Deployment to Home Assistant
+
+The dashboard is packaged as a Home Assistant add-on and ready to deploy!
+
+### Quick Deploy (Recommended)
+
+1. In Home Assistant: **Settings** → **Add-ons** → **Add-on Store**
+2. Click ⋮ menu → **Repositories**
+3. Add: `https://github.com/djarthur78/ha-custom-dashboard`
+4. Refresh, find "Family Dashboard", click **Install**
+5. Start the add-on, enable "Show in sidebar"
+6. Access from HA sidebar!
+
+**See `DEPLOYMENT.md` for detailed instructions and troubleshooting.**
+
+### Build Add-on Locally
+
+```bash
+./build-addon.sh  # Builds React app and prepares add-on
+# Then copy addon/ folder to HA or push to GitHub
+```
+
+## Development Quick Start
+
+### Local Development
 ```bash
 cd src
 npm install
@@ -56,12 +90,14 @@ npm run dev
 | Document | Purpose | For Whom |
 |----------|---------|----------|
 | `README.md` | Project overview, quick start | Everyone (start here) |
+| `DEPLOYMENT.md` | How to deploy to Home Assistant | Deployment (start here for deployment) |
 | `FILE-GUIDE.md` | Which file to use when | Everyone (quick reference) |
 | `SESSION-NOTES.md` | Working notes, how to resume | Original developer only |
 | `ARCHITECTURE.md` | Technical design, decisions | Engineers (reference) |
 | `DEVELOPMENT.md` | Setup guide, how to build | Engineers (daily use) |
 | `CHANGELOG.md` | Features built, bugs fixed | Everyone (track progress) |
 | `DIAGRAMS.md` | Architecture diagrams (Mermaid) | Everyone (visual reference) |
+| `CLAUDE.md` | Instructions for Claude Code | AI assistant guidance |
 
 ---
 
@@ -114,11 +150,18 @@ netsh interface portproxy show all
 ## Git Tags
 
 - `discovery-complete` - Discovery phase complete
-- `phase-1-complete` - Foundation complete (current)
+- `phase-1-complete` - Foundation complete
+- `calendar-complete` - Calendar feature complete (current)
 
-## Next Session
+## Next Steps
 
-Ready to start **Phase 2A: Family Calendar** (2 weeks)
-- Read `specs/01-calendar-spec.md`
-- Create `02-BUILD-PHASE-2-CALENDAR.md` build prompt
-- Build calendar feature with week/day/month views
+### Immediate
+1. **Deploy to Home Assistant** - Follow `DEPLOYMENT.md` to install the add-on
+2. **Test on iPad** - Verify calendar works on wall panel
+3. **Add to Home Screen** - Create fullscreen iPad app
+
+### Next Phase: Meal Planner (Phase 2B)
+- Read `specs/02-meal-planner-spec.md`
+- Build meals page with This Week/Next Week views
+- Editable meal planning with HA input_text entities
+- Shopping list integration

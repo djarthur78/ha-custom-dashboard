@@ -32,6 +32,16 @@ VITE_HA_URL=http://192.168.1.2:8123
 VITE_HA_TOKEN=<long-lived-access-token>
 ```
 
+### Deployment (Add-on)
+```bash
+./build-addon.sh     # Build React app and prepare add-on
+git add addon/build  # Commit built files
+git push             # Push to GitHub
+# Then add repo to HA: Settings → Add-ons → Repositories
+```
+
+See `DEPLOYMENT.md` for detailed deployment instructions to Home Assistant.
+
 ## Architecture
 
 ### Connection Pattern: Singleton WebSocket Service
@@ -89,16 +99,24 @@ ha-custom-dashboard/
 │   ├── package.json
 │   └── vite.config.js
 │
+├── addon/                            # Home Assistant add-on
+│   ├── build/                       # Built React app (created by build-addon.sh)
+│   ├── config.json                  # Add-on metadata
+│   ├── Dockerfile                   # Container definition
+│   ├── nginx.conf                   # Web server config
+│   └── run.sh                       # Startup script
 ├── discovery/                        # HA entity discovery docs
 ├── specs/                            # Feature specifications
 ├── config/                           # Entity mappings (entities.json, automations.json)
 ├── operations/                       # Testing/deployment plans
 │
 ├── README.md                         # Project overview
+├── DEPLOYMENT.md                     # Add-on deployment guide
 ├── ARCHITECTURE.md                   # Technical design decisions
 ├── DEVELOPMENT.md                    # Setup and workflow guide
 ├── FOLDER-STRUCTURE.md               # Frontend organization patterns
-└── CHANGELOG.md                      # Build history
+├── CHANGELOG.md                      # Build history
+└── build-addon.sh                   # Build script for add-on
 ```
 
 ## Feature Organization

@@ -230,20 +230,212 @@ Comprehensive discovery of existing HA dashboard and entity inventory.
 
 ---
 
-## Next Phase
+## [Calendar Feature Complete + Add-on] - 2026-01-22
 
-**Phase 2A: Family Calendar** (Planned - 2 weeks)
-- Week view (default)
-- Day view toggle
-- Month view toggle
-- Multi-calendar display (8 Google calendars)
-- Color coding by calendar
-- Event filtering
-- Touch-optimized UI
+### Summary
+Completed full calendar implementation with multiple view modes, event management, and Home Assistant add-on for deployment.
 
-See `specs/01-calendar-spec.md` for details.
+### Added
+
+**Calendar Views (4 view modes)**
+- `CalendarViewList.jsx` - Main calendar page with week/list view
+- `DayListView.jsx` - Single day card list view
+- `TimelineView.jsx` - Single day timeline/schedule view (7am-11pm)
+- `WeekTimelineView.jsx` - 7-day timeline view with hourly slots
+- `MonthView.jsx` - Month grid view
+- `DayView.jsx` - Day view with hourly time slots
+- Two-tier selector for Period (Day/Week/Month) and Layout (List/Schedule)
+
+**Event Management**
+- `EventModal.jsx` - Create/edit events with:
+  - Quick duration buttons (1hr, 2hr, All day)
+  - Recurring weekly events support
+  - Natural language input parsing
+  - Calendar selection (only writable calendars)
+  - Default times rounded to :00 minutes
+- `EventDetailModal.jsx` - View event details, edit, delete
+- `DeleteConfirmDialog.jsx` - Confirmation dialog for deletions
+- Full CRUD operations via HA calendar service
+
+**Weather Integration**
+- `useWeather.js` hook - Weather forecast subscription
+- Colorful Lucide React weather icons (replaced emoji)
+- 7-day forecast integration in calendar views
+- Current temperature and condition in header
+- Weather display on day headers in all views
+
+**Calendar Service**
+- `calendar-service.js` - HA calendar integration:
+  - Fetch events from multiple calendars
+  - Create/update/delete events
+  - Natural language parsing
+  - Date range queries
+  - Recurring event support (RRULE)
+
+**UI Components**
+- `TwoTierSelector.jsx` - Period and layout selector
+- `Modal.jsx` - Reusable modal component
+- Waste collection countdown display
+- Calendar color-coded event cards
+
+**Preferences System**
+- `useCalendarPreferences.js` - Persistent user preferences:
+  - Selected calendars filter
+  - View mode (day/week/month)
+  - Layout mode (list/schedule)
+  - Default calendar selection
+  - localStorage persistence
+
+**Home Assistant Add-on**
+- Complete add-on structure in `addon/` directory:
+  - `config.json` - Add-on metadata with ingress
+  - `Dockerfile` - Multi-arch nginx container
+  - `nginx.conf` - Optimized web server config
+  - `run.sh` - Startup script
+  - `build.json` - Architecture support
+  - `README.md` - Installation instructions
+- `build-addon.sh` - Automated build script
+- `DEPLOYMENT.md` - Complete deployment guide
+- Ingress integration for authenticated access
+- Sidebar menu integration
+
+**Styling & Design**
+- Consistent headers across all views:
+  - Large day numbers (3em, bold)
+  - Orange "Today" highlight
+  - Weather icons with temperature ranges
+  - Unified spacing and fonts
+- Header shows: Full date, current time, temperature, weather icon
+- Calendar-specific color mapping in `constants/colors.js`
+- Event cards with calendar colors and borders
+- Responsive layout optimized for 1920x1080
+
+### Changed
+
+**Calendar Header**
+- Replaced "Arthur Family" with functional date/time/weather display
+- Left: Full date "Wednesday, January 22, 2026"
+- Right: Time "7:18 AM" and temperature "18°" with weather icon
+- Updates every minute automatically
+
+**Timeline Views**
+- Reduced hours from 24-hour (0-23) to realistic 7am-11pm (7-23)
+- Fixed event positioning with proper hour offset calculations
+- Current time indicator for today
+- Better screen fit for portrait displays
+
+**Event Modal**
+- Removed read-only calendars (Family, UK Holidays, Basildon)
+- Only shows writable calendars: Daz, Nic, Cerys, Dex, Birthdays
+- Default times set to :00 minutes for usability
+- Quick duration shortcuts for faster event creation
+
+**Layout**
+- Removed container max-width constraint for full 1920px width
+- Full-screen calendar views
+- Consistent padding and spacing
+
+### Fixed
+
+**Linting Errors**
+- Removed unused imports from all calendar components
+- Clean ESLint build with no warnings
+
+**Event Positioning Bug**
+- Events displayed at wrong times after hour range change
+- Fixed by adjusting position calculations to account for 7am start offset
+- Applied to both TimelineView and WeekTimelineView
+
+**Weather Icons**
+- Weather data was loading but not displaying
+- Added proper weather icon rendering with colorful Lucide icons
+- Icons show in header and day views
+
+**Build Configuration**
+- Fixed npm build directory issues
+- Proper .gitignore exception for addon/build/
+- Build output includes all required assets
+
+### Tested
+
+**Calendar Functionality (✅ Passed)**
+- [x] All 4 view combinations work: Day/Week × List/Schedule
+- [x] Calendar filtering by person works
+- [x] Event creation with quick duration
+- [x] Event editing and deletion
+- [x] Recurring weekly events
+- [x] All-day events display correctly
+- [x] Weather integration shows in all views
+- [x] Waste collection countdown accurate
+
+**Event Management (✅ Passed)**
+- [x] Create events in writable calendars
+- [x] Cannot select read-only calendars
+- [x] Quick duration buttons work (1hr, 2hr, All day)
+- [x] Recurring weekly checkbox creates proper RRULE
+- [x] Times default to :00 minutes
+- [x] Natural language input parsing
+
+**UI Consistency (✅ Passed)**
+- [x] All views have matching headers
+- [x] Day numbers and "Today" highlight consistent
+- [x] Weather icons and temps uniform across views
+- [x] Event card styling consistent
+- [x] Fonts and spacing unified
+
+**Add-on Build (✅ Passed)**
+- [x] Build script creates production build
+- [x] Files copied to addon/build/ correctly
+- [x] All required config files present
+- [x] Build output optimized (325KB total JS)
+
+### Git Commits
+
+```
+4e0ac12 Add Home Assistant add-on for dashboard deployment
+b2a95e8 Improve calendar header and event modal usability
+a08d4da Replace redundant header with functional date, time, and temperature
+977098d Update Week Schedule view to match consistent styling
+e18916b Make all calendar views consistent with Week/List style
+dca5851 Fix calendar colors and styling to match HA exactly
+dbdef55 Fix waste collection countdown to show next collection
+c9562b9 Apply all calendar styling improvements
+(and many more calendar implementation commits)
+```
+
+### Dependencies Added
+
+```json
+{
+  "react-big-calendar": "^1.15.0",
+  "react-router-dom": "^7.1.1"
+}
+```
+
+### Statistics
+
+- **Calendar Components:** 12
+- **Modals:** 3
+- **Hooks:** 2 (useWeather, useCalendarPreferences)
+- **Services:** 1 (calendar-service.js)
+- **View Modes:** 6 (Day/List, Day/Schedule, Week/List, Week/Schedule, Month, DayView)
+- **Calendar Integration:** 8 Google calendars
+- **Total Events Handled:** Unlimited (fetched by date range)
+- **Build Size:** 325KB JS + 27KB CSS (gzipped: 98KB + 5KB)
+
+### Known Issues
+
+None. Calendar feature fully functional and ready for deployment.
+
+### Next Steps
+
+1. Deploy add-on to Home Assistant
+2. Test on iPad wall panel
+3. Continue Phase 2B: Meals page
+4. Add Cameras page
+5. Add Games Room controls
 
 ---
 
 **Changelog maintained by:** Original Developer + Claude Code
-**Last Updated:** 2026-01-17 (Phase 1 Complete)
+**Last Updated:** 2026-01-22 (Calendar Complete + Add-on Ready)
