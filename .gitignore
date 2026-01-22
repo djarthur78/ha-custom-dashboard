@@ -11,6 +11,9 @@ dist/
 build/
 .vite/
 
+# Exception: Include addon build files for HA deployment
+!addon/build/
+
 # OS files
 .DS_Store
 Thumbs.db
