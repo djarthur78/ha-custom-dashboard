@@ -20,6 +20,5 @@
     "8099/tcp": "Web interface (not needed with ingress)"
   },
   "options": {},
-  "schema": {},
-  "image": "ghcr.io/djarthur78/ha-family-dashboard-{arch}"
+  "schema": {}
 }
