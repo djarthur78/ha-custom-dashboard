@@ -1,19 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Modal, ModalFooter } from '../../common/Modal';
-import { Calendar, Clock, MapPin, AlignLeft, User } from 'lucide-react';
-import { format, addHours } from 'date-fns';
+import { Calendar, Clock, MapPin, AlignLeft, User, Repeat } from 'lucide-react';
+import { format, addHours, setHours, setMinutes } from 'date-fns';
 import { createCalendarEvent, updateCalendarEvent, parseNaturalLanguage } from '../../../services/calendar-service';
 import { CALENDAR_COLORS } from '../../../constants/colors';
 
+// Only writable calendars (excluding read-only: Family, UK Holidays, Basildon)
 const CALENDAR_OPTIONS = [
   { id: 'calendar.arthurdarren_gmail_com', name: 'Daz', color: CALENDAR_COLORS['calendar.arthurdarren_gmail_com']?.primary || '#2962FF' },
   { id: 'calendar.nicholaarthur_gmail_com', name: 'Nic', color: CALENDAR_COLORS['calendar.nicholaarthur_gmail_com']?.primary || '#F4A6B8' },
   { id: 'calendar.arthurcerys_gmail_com', name: 'Cerys', color: CALENDAR_COLORS['calendar.arthurcerys_gmail_com']?.primary || '#9DB8A0' },
   { id: 'calendar.arthurdexter08_gmail_com', name: 'Dex', color: CALENDAR_COLORS['calendar.arthurdexter08_gmail_com']?.primary || '#FFB703' },
-  { id: 'calendar.99swanlane_gmail_com', name: 'Family', color: CALENDAR_COLORS['calendar.99swanlane_gmail_com']?.primary || '#4ecdc4' },
   { id: 'calendar.birthdays', name: 'Birthdays', color: CALENDAR_COLORS['calendar.birthdays']?.primary || '#fd79a8' },
-  { id: 'calendar.holidays_in_the_united_kingdom', name: 'UK Holidays', color: CALENDAR_COLORS['calendar.holidays_in_the_united_kingdom']?.primary || '#74b9ff' },
-  { id: 'calendar.basildon_council', name: 'Basildon', color: CALENDAR_COLORS['calendar.basildon_council']?.primary || '#fab1a0' },
 ];
 
 /**
@@ -38,17 +36,28 @@ export function EventModal({
 }) {
   const isEditMode = !!event;
 
+  // Helper to round time to nearest hour with :00 minutes
+  const roundToHour = (date) => {
+    const rounded = new Date(date);
+    rounded.setMinutes(0);
+    rounded.setSeconds(0);
+    rounded.setMilliseconds(0);
+    return rounded;
+  };
+
   // Form state
   const [formData, setFormData] = useState({
     title: '',
     calendar: initialCalendar,
     startDate: format(initialDate, 'yyyy-MM-dd'),
-    startTime: format(initialDate, 'HH:mm'),
+    startTime: format(roundToHour(initialDate), 'HH:mm'),
     endDate: format(initialDate, 'yyyy-MM-dd'),
-    endTime: format(addHours(initialDate, 1), 'HH:mm'),
+    endTime: format(addHours(roundToHour(initialDate), 1), 'HH:mm'),
     allDay: false,
     location: '',
     description: '',
+    recurring: false,
+    recurrenceRule: 'FREQ=WEEKLY',
   });
 
   const [errors, setErrors] = useState({});
@@ -71,19 +80,26 @@ export function EventModal({
         allDay: event.allDay || false,
         location: event.location || '',
         description: event.description || '',
+        recurring: false,
+        recurrenceRule: 'FREQ=WEEKLY',
       });
     } else {
-      // Reset for new event
+      // Reset for new event with :00 minutes
+      const roundedStart = roundToHour(initialDate);
+      const roundedEnd = addHours(roundedStart, 1);
+
       setFormData({
         title: '',
         calendar: initialCalendar,
         startDate: format(initialDate, 'yyyy-MM-dd'),
-        startTime: format(initialDate, 'HH:mm'),
+        startTime: format(roundedStart, 'HH:mm'),
         endDate: format(initialDate, 'yyyy-MM-dd'),
-        endTime: format(addHours(initialDate, 1), 'HH:mm'),
+        endTime: format(roundedEnd, 'HH:mm'),
         allDay: false,
         location: '',
         description: '',
+        recurring: false,
+        recurrenceRule: 'FREQ=WEEKLY',
       });
     }
     setErrors({});
@@ -171,6 +187,11 @@ export function EventModal({
         location: formData.location,
       };
 
+      // Add recurrence rule if recurring is enabled
+      if (formData.recurring && formData.recurrenceRule) {
+        eventData.rrule = formData.recurrenceRule;
+      }
+
       if (isEditMode && event.uid) {
         await updateCalendarEvent(formData.calendar, event.uid, eventData);
       } else {
@@ -204,6 +225,23 @@ export function EventModal({
   // Handle all-day toggle
   const handleAllDayToggle = () => {
     setFormData(prev => ({ ...prev, allDay: !prev.allDay }));
+  };
+
+  // Handle quick duration buttons
+  const handleQuickDuration = (hours) => {
+    if (hours === 'allday') {
+      setFormData(prev => ({ ...prev, allDay: true }));
+    } else {
+      const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
+      const endDateTime = addHours(startDateTime, hours);
+
+      setFormData(prev => ({
+        ...prev,
+        allDay: false,
+        endDate: format(endDateTime, 'yyyy-MM-dd'),
+        endTime: format(endDateTime, 'HH:mm'),
+      }));
+    }
   };
 
   return (
@@ -281,18 +319,35 @@ export function EventModal({
           )}
         </div>
 
-        {/* All Day Toggle */}
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="allDay"
-            checked={formData.allDay}
-            onChange={handleAllDayToggle}
-            className="w-4 h-4 rounded border-[var(--color-border)]"
-          />
-          <label htmlFor="allDay" className="text-sm font-medium text-[var(--color-text)]">
-            All day event
+        {/* Quick Duration Buttons */}
+        <div>
+          <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+            <Clock className="inline w-4 h-4 mr-1" />
+            Duration
           </label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => handleQuickDuration(1)}
+              className="flex-1 px-4 py-2 text-sm font-medium border-2 border-[var(--color-border)] rounded-lg hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
+            >
+              1 hour
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickDuration(2)}
+              className="flex-1 px-4 py-2 text-sm font-medium border-2 border-[var(--color-border)] rounded-lg hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
+            >
+              2 hours
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickDuration('allday')}
+              className="flex-1 px-4 py-2 text-sm font-medium border-2 border-[var(--color-border)] rounded-lg hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
+            >
+              All day
+            </button>
+          </div>
         </div>
 
         {/* Date and Time */}
@@ -357,6 +412,30 @@ export function EventModal({
               </>
             )}
           </div>
+        </div>
+
+        {/* Recurring */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              id="recurring"
+              checked={formData.recurring}
+              onChange={(e) => handleChange('recurring', e.target.checked)}
+              className="w-4 h-4 rounded border-[var(--color-border)]"
+            />
+            <label htmlFor="recurring" className="text-sm font-medium text-[var(--color-text)]">
+              <Repeat className="inline w-4 h-4 mr-1" />
+              Repeat weekly
+            </label>
+          </div>
+          {formData.recurring && (
+            <div className="ml-6 p-3 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)]">
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                This event will repeat every week on {format(new Date(`${formData.startDate}T${formData.startTime || '00:00'}`), 'EEEE')}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Location */}

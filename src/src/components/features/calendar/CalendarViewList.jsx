@@ -270,8 +270,11 @@ export function CalendarViewList() {
           {/* Right: Time and temperature */}
           <div className="flex items-center gap-4 text-3xl font-bold text-[var(--color-text-secondary)]">
             <span>{format(currentTime, 'h:mm a')}</span>
-            {weather.temperature && (
-              <span>{Math.round(weather.temperature)}°</span>
+            {weather.temperature && weather.condition && (
+              <div className="flex items-center gap-3">
+                <span>{Math.round(weather.temperature)}°</span>
+                <span className="text-2xl">{getWeatherIcon(weather.condition)}</span>
+              </div>
             )}
           </div>
         </div>
