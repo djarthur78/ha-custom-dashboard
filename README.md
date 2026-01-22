@@ -65,7 +65,7 @@ The dashboard is packaged as a Home Assistant add-on and ready to deploy!
 
 ```bash
 ./build-addon.sh  # Builds React app and prepares add-on
-# Then copy addon/ folder to HA or push to GitHub
+# Then copy family-dashboard/ folder to HA or push to GitHub
 ```
 
 ## Development Quick Start

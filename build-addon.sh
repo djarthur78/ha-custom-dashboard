@@ -13,10 +13,10 @@ cd src
 npm run build
 cd ..
 
-# Step 2: Copy build to addon directory
-echo "📋 Copying build to addon directory..."
-rm -rf addon/build
-cp -r src/dist addon/build
+# Step 2: Copy build to family-dashboard directory
+echo "📋 Copying build to family-dashboard directory..."
+rm -rf family-dashboard/build
+cp -r src/dist family-dashboard/build
 
 # Step 3: Update version in config.json (optional)
 VERSION=$(date +%Y.%m.%d)

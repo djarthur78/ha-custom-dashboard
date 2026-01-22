@@ -35,7 +35,7 @@ VITE_HA_TOKEN=<long-lived-access-token>
 ### Deployment (Add-on)
 ```bash
 ./build-addon.sh     # Build React app and prepare add-on
-git add addon/build  # Commit built files
+git add family-dashboard/build  # Commit built files
 git push             # Push to GitHub
 # Then add repo to HA: Settings → Add-ons → Repositories
 ```
@@ -99,7 +99,7 @@ ha-custom-dashboard/
 │   ├── package.json
 │   └── vite.config.js
 │
-├── addon/                            # Home Assistant add-on
+├── family-dashboard/                            # Home Assistant add-on
 │   ├── build/                       # Built React app (created by build-addon.sh)
 │   ├── config.json                  # Add-on metadata
 │   ├── Dockerfile                   # Container definition

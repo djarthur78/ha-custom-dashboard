@@ -32,22 +32,22 @@ cd /home/arthu/projects/ha-custom-dashboard
 
 This will:
 - Build the React app for production (`npm run build`)
-- Copy the build files to `addon/build/`
+- Copy the build files to `family-dashboard/build/`
 - Prepare everything for deployment
 
 #### Step 2: Copy to Home Assistant
 
-You need to copy the `addon` folder to your Home Assistant Pi. Choose one method:
+You need to copy the `family-dashboard` folder to your Home Assistant Pi. Choose one method:
 
 **Option A: Using Samba Share**
 1. Access your HA via network share: `\\192.168.1.2\config`
 2. Create folder: `addons/family-dashboard/`
-3. Copy entire `addon` folder contents there
+3. Copy entire `family-dashboard` folder contents there
 
 **Option B: Using SSH/SCP**
 ```bash
 # From your WSL2 machine
-scp -r addon/* root@192.168.1.2:/config/addons/family-dashboard/
+scp -r family-dashboard/* root@192.168.1.2:/config/addons/family-dashboard/
 ```
 
 **Option C: Using File Editor Add-on**
@@ -81,7 +81,7 @@ The add-on files are already in your GitHub repo. You just need to build and com
 ```bash
 cd /home/arthu/projects/ha-custom-dashboard
 ./build-addon.sh
-git add addon/
+git add family-dashboard/
 git commit -m "Add Home Assistant add-on with built files"
 git push origin main
 ```
@@ -103,8 +103,8 @@ When you make changes:
 cd src
 npm run build
 cd ..
-cp -r src/dist addon/build
-git add addon/build
+cp -r src/dist family-dashboard/build
+git add family-dashboard/build
 git commit -m "Update dashboard"
 git push
 
@@ -146,7 +146,7 @@ The add-on uses HA Ingress, which:
 1. Click on the add-on → **Logs** tab
 2. Common issues:
    - Missing build files: Run `./build-addon.sh` again
-   - nginx config error: Check `addon/nginx.conf` syntax
+   - nginx config error: Check `family-dashboard/nginx.conf` syntax
    - Port conflict: Change port in `config.json`
 
 ### Dashboard shows connection errors
@@ -226,7 +226,7 @@ After successful deployment:
 
 Or for local testing:
 1. Build: `./build-addon.sh`
-2. Copy to HA: `scp -r addon/* root@192.168.1.2:/config/addons/family-dashboard/`
+2. Copy to HA: `scp -r family-dashboard/* root@192.168.1.2:/config/addons/family-dashboard/`
 3. Restart add-on in HA
 
 ## Support

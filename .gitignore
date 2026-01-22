@@ -11,8 +11,8 @@ dist/
 build/
 .vite/
 
-# Exception: Include addon build files for HA deployment
-!addon/build/
+# Exception: Include add-on build files for HA deployment
+!family-dashboard/build/
 
 # OS files
 .DS_Store
