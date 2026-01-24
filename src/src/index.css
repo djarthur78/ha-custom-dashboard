@@ -54,3 +54,78 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-secondary);
 }
+
+/* Responsive Design - Mobile Phone Optimization */
+@media (max-width: 640px) {
+  /* Reduce padding on mobile */
+  body {
+    font-size: 14px;
+  }
+
+  /* Make buttons touch-friendly */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Hide less important UI elements on phone */
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  /* Stack items vertically on phone */
+  .stack-on-mobile {
+    flex-direction: column !important;
+  }
+
+  /* Full width on phone */
+  .full-width-mobile {
+    width: 100% !important;
+  }
+
+  /* Smaller text on mobile */
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+  }
+
+  h3 {
+    font-size: 1.1rem !important;
+  }
+
+  /* Reduce spacing on mobile */
+  .p-6 {
+    padding: 1rem !important;
+  }
+
+  .p-4 {
+    padding: 0.75rem !important;
+  }
+
+  .gap-6 {
+    gap: 1rem !important;
+  }
+
+  .gap-4 {
+    gap: 0.75rem !important;
+  }
+}
+
+/* Tablet optimization (iPad) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* Tablet-specific styles */
+  body {
+    font-size: 16px;
+  }
+}
+
+/* Desktop/Large displays */
+@media (min-width: 1025px) {
+  /* Desktop-specific styles */
+  body {
+    font-size: 16px;
+  }
+}
