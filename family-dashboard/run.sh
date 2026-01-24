@@ -32,6 +32,12 @@ ls -la /usr/share/nginx/html/
 bashio::log.info "Testing nginx configuration..."
 nginx -t
 
-# Start nginx
+# Check what user we're running as
+bashio::log.info "Running as user: $(whoami)"
+bashio::log.info "User ID: $(id)"
+
+# Start nginx in foreground
 bashio::log.info "Starting nginx..."
-exec nginx -g 'daemon off;'
+nginx -g 'daemon off;' 2>&1 | while IFS= read -r line; do
+    bashio::log.info "nginx: $line"
+done
