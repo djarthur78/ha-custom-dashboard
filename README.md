@@ -30,8 +30,8 @@ Modern, tablet-optimized web application replacing the existing HA "family calen
 
 - ✅ **Phase 1: Foundation** - React + Vite + HA WebSocket (COMPLETE)
 - ✅ **Phase 2A: Calendar** - Family calendar feature (COMPLETE)
-- ✅ **Deployment: Add-on** - Home Assistant add-on ready (READY TO DEPLOY)
-- 🔄 **Phase 2B: Meal Planner** - Meal planning (NEXT)
+- ✅ **Deployment: Add-on** - Home Assistant add-on (DEPLOYED - v0.7.1)
+- 🎯 **Phase 2B: Meal Planner** - Meal planning (**NEXT UP**)
 - ⏳ **Phase 2C: Games Room** - Games room controls (Pending)
 - ⏳ **Phase 2D: Cameras** - Camera feeds (Pending)
 
@@ -45,6 +45,21 @@ Modern, tablet-optimized web application replacing the existing HA "family calen
 - ✅ Waste collection countdown
 - ✅ Touch-optimized for iPad
 - ✅ Real-time updates via WebSocket
+
+## 🌐 Current Access
+
+**Dashboard URL:** http://192.168.1.2:8099
+
+**Status:** ✅ Deployed and working perfectly
+
+**How to Use:**
+- **Desktop:** Bookmark the URL above
+- **iPad:** Safari → Add to Home Screen for app-like experience
+- **Note:** HA sidebar "Family Dashboard" link is broken (ignore it)
+
+See `DEPLOYMENT.md` for full setup instructions.
+
+---
 
 ## Deployment to Home Assistant
 
