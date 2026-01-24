@@ -2,7 +2,7 @@ ARG BUILD_FROM
 FROM $BUILD_FROM
 
 # Install nginx and debugging tools
-RUN apk add --no-cache nginx net-tools iproute2
+RUN apk add --no-cache nginx net-tools iproute2 wget curl
 
 # Create necessary directories and fix permissions
 RUN mkdir -p /var/lib/nginx/tmp /var/log/nginx /run/nginx \

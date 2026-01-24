@@ -42,8 +42,31 @@ echo "[INFO] Hostname: $(hostname)"
 echo "[INFO] Checking if port 8099 is already in use:"
 netstat -tlnp | grep 8099 || echo "Port 8099 is free"
 
-# Start nginx in foreground
+# Start nginx and monitor it
 echo "[INFO] Starting nginx on port 8099..."
 
-# Run nginx in foreground
+# Create a simple health check script
+cat > /tmp/healthcheck.sh << 'HEALTHEOF'
+#!/bin/sh
+sleep 3
+if wget -q -O /dev/null http://127.0.0.1:8099/; then
+    echo "[INFO] ✓ Health check PASSED - nginx is responding on localhost:8099"
+else
+    echo "[ERROR] ✗ Health check FAILED - nginx is NOT responding on localhost:8099"
+    echo "[ERROR] Nginx error log:"
+    tail -50 /var/log/nginx/error.log
+    echo "[ERROR] Nginx access log:"
+    tail -50 /var/log/nginx/access.log
+    echo "[ERROR] Nginx processes:"
+    ps aux | grep nginx
+    exit 1
+fi
+HEALTHEOF
+
+chmod +x /tmp/healthcheck.sh
+
+# Run health check in background
+/tmp/healthcheck.sh &
+
+# Start nginx in foreground
 exec nginx -g "daemon off;"
