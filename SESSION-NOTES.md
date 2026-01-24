@@ -2,245 +2,316 @@
 
 > **📌 For Original Developer (Arthu) Only**
 > These are YOUR working notes to resume between sessions.
-> For new engineers, they should read README.md → ARCHITECTURE.md → DEVELOPMENT.md
 
-**Date:** 2026-01-22 (Wednesday)
+**Date:** 2026-01-22 (Wednesday Evening)
 **Project:** ha-custom-dashboard
-**Status:** Calendar Complete + Add-on Ready for Deployment ✅
+**Status:** 🚧 IN PROGRESS - Deploying Add-on to Home Assistant
 
 ---
 
-## Latest Session: Calendar Complete + Add-on (2026-01-22)
+## 🎯 Current Session: Deploying Home Assistant Add-on (2026-01-22)
 
-### ✅ Calendar Feature - COMPLETE ✅
+### What We're Trying To Do
+Deploy the calendar dashboard as a Home Assistant add-on so it can run on the Raspberry Pi wall panel (Android 14, 15.9" 1920x1080).
 
-**Full Calendar Implementation:**
-- ✅ 6 view modes working: Day/List, Day/Schedule, Week/List, Week/Schedule, Month, DayView
-- ✅ Two-tier selector for Period (Day/Week/Month) and Layout (List/Schedule)
-- ✅ Event creation, editing, deletion via EventModal
-- ✅ Recurring weekly events with RRULE support
-- ✅ Quick duration buttons (1hr, 2hr, All day)
-- ✅ Natural language event parsing
-- ✅ Calendar filtering (8 Google calendars)
-- ✅ Color-coded events by calendar
-- ✅ Weather integration with colorful Lucide icons
-- ✅ Waste collection countdown
-- ✅ Real-time updates via WebSocket
+### Where We Are NOW ⚠️
+- ✅ Calendar feature fully working in development mode
+- ✅ Add-on structure created and pushed to GitHub
+- 🚧 **DEPLOYING**: Multiple issues found and fixed, testing v0.3.0
+- ❌ **NOT YET TESTED**: Need to update to v0.3.0 and verify it loads
 
-**UI Consistency Achieved:**
-- ✅ Unified headers across all views
-- ✅ Large day numbers (3em) with orange "Today" highlight
-- ✅ Weather icons and temperature ranges
-- ✅ Consistent event card styling
-- ✅ Full-width layout (removed container max-width)
-- ✅ Timeline views optimized for 7am-11pm (not 24 hours)
+### Issues Fixed Today (in order)
 
-**Header Improvements:**
-- ✅ Replaced redundant "Arthur Family" with functional info
-- ✅ Left: Full date "Wednesday, January 22, 2026"
-- ✅ Right: Time "7:18 AM", temperature "18°", weather icon
-- ✅ Updates every minute automatically
+#### Issue 1: Repository Not Valid ❌→✅
+**Error:** `https://github.com/djarthur78/ha-custom-dashboard is not a valid add-on repository`
 
-**Event Modal Improvements:**
-- ✅ Removed read-only calendars (Family, UK Holidays, Basildon)
-- ✅ Only writable calendars shown: Daz, Nic, Cerys, Dex, Birthdays
-- ✅ Default times rounded to :00 minutes
-- ✅ Quick duration shortcuts for faster creation
-- ✅ Recurring weekly checkbox with clear description
+**Root Cause:** HA requires specific structure:
+- Missing `repository.json` at root
+- Directory was named `addon/` instead of matching slug `family-dashboard/`
 
-### ✅ Home Assistant Add-on - READY ✅
+**Fix:**
+- Added `repository.json` at root
+- Renamed `addon/` → `family-dashboard/`
+- Updated all references in docs and build scripts
+- **Commit:** 77cb42b
 
-**Complete Add-on Built:**
-- ✅ `addon/` directory with all required files
-- ✅ config.json - Add-on metadata with ingress
-- ✅ Dockerfile - Multi-arch nginx container
-- ✅ nginx.conf - Optimized web server config
-- ✅ run.sh - Startup script
-- ✅ build.json - Architecture support (ARM for RPi)
-- ✅ README.md - Installation instructions
-- ✅ `build-addon.sh` - Automated build script
-- ✅ `DEPLOYMENT.md` - Complete deployment guide
-- ✅ Built React app in `addon/build/` (325KB JS, 27KB CSS)
+#### Issue 2: Docker Image 403 Error ❌→✅
+**Error:** `Can't install ghcr.io/djarthur78/ha-family-dashboard-aarch64:0.1.0: denied`
 
-**Deployment Ready:**
-- ✅ All files committed and pushed to GitHub
-- ✅ Repository ready to add to HA add-on store
-- ✅ Two deployment methods documented
-- ✅ Ingress integration for authenticated access
-- ✅ Will appear in HA sidebar automatically
+**Root Cause:** `config.json` was trying to pull pre-built image from GitHub Container Registry that doesn't exist.
 
-### 🎯 What We Completed This Session
+**Fix:**
+- Removed `"image"` field from config.json
+- HA now builds Docker image locally from Dockerfile
+- **Commit:** 9d26c9e
 
-1. **Continued from token limit** - Previous session ran out of context
-2. **Fixed uncommitted work** - Large Phase 1 implementation was uncommitted
-3. **Timeline optimization** - Reduced hours to realistic 7am-11pm range
-4. **Full-width layout** - Removed container constraint for 1920px displays
-5. **Colorful weather icons** - Replaced emoji with professional Lucide icons
-6. **View consistency** - Unified all Day/Week views with same styling
-7. **Header overhaul** - Functional date/time/weather instead of "Arthur Family"
-8. **Event modal UX** - Quick duration, recurring events, :00 defaults
-9. **Add-on creation** - Complete HA add-on with build automation
-10. **Documentation** - DEPLOYMENT.md, updated README, CHANGELOG
+#### Issue 3: Blank Screen (Absolute Paths) ❌→✅
+**Error:** Blank screen when accessing dashboard through ingress
 
-### 📊 Current State
+**Root Cause:** Vite was building with absolute paths (`/assets/...`) which don't work with HA ingress URLs like `/c2ba14e6_family-dashboard/ingress/`
 
-**Working:**
-- ✅ Calendar views all functional
-- ✅ Event management (create/edit/delete)
-- ✅ Weather integration
-- ✅ Calendar filtering
-- ✅ Real-time updates
-- ✅ Touch-optimized for iPad
-- ✅ Add-on ready to deploy
+**Fix:**
+- Added `base: './'` to vite.config.js
+- Rebuilt with relative paths (`./assets/...`)
+- **Commit:** d8588b8
 
-**File Structure:**
+#### Issue 4: Still Blank (Missing Environment Variables) ❌→✅
+**Error:** Blank screen persisted - React app loading but no HA connection
+
+**Root Cause:** `.env` file with `VITE_HA_URL` and `VITE_HA_TOKEN` is gitignored, so Docker container doesn't have these values.
+
+**Fix (Iteration 1 - User Token):**
+- Added runtime config injection
+- Add-on options for user to provide long-lived token
+- `run.sh` creates `config.js` with token
+- WebSocket service checks `window.HA_CONFIG`
+- **Commit:** 3eac119
+
+**Fix (Iteration 2 - Supervisor Token):**
+- Simplified: Use built-in `SUPERVISOR_TOKEN` environment variable
+- Removed user configuration requirement
+- Works automatically with `homeassistant_api: true`
+- **Commit:** 0b6a439
+
+#### Issue 5: STILL Blank (Nginx Crashing) ❌→🚧
+**Error:** Blank screen still showing, logs show nginx starting then immediately stopping/restarting
+
+**Symptoms:**
 ```
-ha-custom-dashboard/
-├── addon/                    # HA add-on (ready to deploy)
-│   ├── build/               # Built React app
-│   ├── config.json          # Add-on metadata
-│   ├── Dockerfile           # Container definition
-│   ├── nginx.conf           # Web server config
-│   └── run.sh               # Startup script
-├── src/                     # React app source
-│   └── src/
-│       ├── components/
-│       │   └── features/
-│       │       └── calendar/  # 12 calendar components
-│       ├── hooks/            # useCalendarPreferences, useWeather
-│       ├── services/         # calendar-service.js
-│       └── constants/        # CALENDAR_COLORS
-├── DEPLOYMENT.md            # Deployment guide
-├── CHANGELOG.md             # Complete history
-└── build-addon.sh           # Build automation
+[INFO] Starting nginx...
+s6-rc: info: service legacy-services: stopping
+s6-rc: info: service legacy-services successfully stopped
+[restarts immediately]
 ```
 
-**Development Server:**
-- Local: http://localhost:5173/
-- iPad: http://192.168.1.6:5173/
-- Dev server running in background (baa1d44)
+**Root Cause:** HA add-on containers run as non-root user, but nginx needs write permissions for:
+- `/var/run/nginx.pid` (pid file)
+- `/var/log/nginx/` (logs)
+- `/var/lib/nginx/tmp` (temp files)
 
-**Home Assistant:**
-- URL: http://192.168.1.2:8123
-- Running on Raspberry Pi
-- HA OS (not standard Raspbian)
-- Google Calendar integration configured ✅
-- Weather integration configured ✅
+**Fix:**
+- Created directories: `/run/nginx`, `/var/log/nginx`, `/var/lib/nginx/tmp`
+- Set ownership: `chown nginx:nginx` on all directories
+- Changed pid path to `/run/nginx/nginx.pid`
+- Version bumped to **0.3.0**
+- **Commit:** 6f58fa4 ⬅️ **LATEST**
 
----
+### 📦 Current Add-on Version
 
-## 🚀 Next Session: Deploy to Home Assistant
+**Version:** 0.3.0 (latest, pushed to GitHub)
 
-### Option 1: GitHub Repository (Recommended)
+**What's In It:**
+- ✅ Proper repository structure (`repository.json`, `family-dashboard/`)
+- ✅ Local Docker build (no external image pull)
+- ✅ Relative asset paths for ingress
+- ✅ Runtime config injection (`config.js`)
+- ✅ Automatic Supervisor token authentication
+- ✅ Nginx permission fixes
+- ✅ Built React app (325KB JS + 27KB CSS)
 
-1. In HA: Settings → Add-ons → Add-on Store
-2. ⋮ menu → Repositories
-3. Add: `https://github.com/djarthur78/ha-custom-dashboard`
-4. Install "Family Dashboard"
-5. Start and enable in sidebar
+**Files:**
+```
+family-dashboard/
+├── build/                    # Built React app
+│   ├── assets/
+│   │   ├── index-B6fyKSRW.js
+│   │   └── index-DFz0ybDt.css
+│   ├── index.html           # Has <script src="./config.js"></script> injected
+│   └── vite.svg
+├── config.json              # v0.3.0, homeassistant_api: true
+├── Dockerfile               # nginx with proper permissions
+├── nginx.conf               # Port 8099, ingress-ready
+├── run.sh                   # Creates config.js with SUPERVISOR_TOKEN
+├── build.json               # Multi-arch support
+└── README.md                # User docs
+```
 
-### Option 2: Local Add-on (Testing)
+### 🔄 What Needs To Happen Next
 
-1. Copy `addon/` to HA Pi: `/config/addons/family-dashboard/`
-2. In HA: Settings → Add-ons → Add local repository
-3. Install and start
+**IMMEDIATE (tomorrow morning):**
 
-**See DEPLOYMENT.md for detailed steps and troubleshooting.**
+1. **Update Add-on in HA:**
+   - Settings → Add-ons → Family Dashboard
+   - Click ⋮ → **Update** (should show v0.3.0 available)
+   - OR **Rebuild** if update doesn't appear
+   - Click **Restart**
 
-### After Deployment
+2. **Check Logs:**
+   - Should see:
+     ```
+     [INFO] Starting Family Dashboard...
+     [INFO] Creating runtime configuration...
+     [INFO] Configuration created with Supervisor token
+     [INFO] Starting nginx...
+     ```
+   - Should **stay running** (no crash/restart loop)
 
-1. Test all calendar views on HA
-2. Test event creation/editing
-3. Set up iPad wall panel:
-   - Open Safari → http://192.168.1.2:8123
-   - Navigate to "Family Dashboard" in sidebar
-   - Add to Home Screen for fullscreen
-4. Verify WebSocket connection works through ingress
+3. **Test Dashboard:**
+   - Click "Family Dashboard" in HA sidebar
+   - Should load with calendar
+   - If blank: F12 → Console → check for errors
+   - If errors: Report back for next fix
 
----
+4. **If It Works:**
+   - Set up Android tablet with HA Companion App
+   - Configure kiosk mode
+   - Test on 1920x1080 display
+   - Consider switching to Fully Kiosk Browser for motion detection
 
-## 🎯 Next Phase: Meal Planner (Phase 2B)
+### 💻 Development Environment
 
-### Goals
-- Build Meals page
-- Show This Week / Next Week meal plans
-- Editable via HA input_text entities
-- Shopping list integration
-- Similar UI consistency to Calendar
+**Current State:**
+- Dev server still running: http://localhost:5173/ (background task baa1d44)
+- Works perfectly in development mode
+- Git: All changes committed and pushed to main
 
-### Reference
-- Read `specs/02-meal-planner-spec.md`
-- HA entities: `input_text.meals_*` (28 entities)
-- Days: Monday-Sunday for This Week and Next Week
-- Meals: Breakfast, Lunch, Dinner, Snacks
+**Key Files Modified Today:**
+- `src/vite.config.js` - Added `base: './'` for relative paths
+- `src/src/services/ha-websocket.js` - Auto-detect environment (dev vs add-on)
+- `family-dashboard/Dockerfile` - Permission fixes for nginx
+- `family-dashboard/nginx.conf` - PID file path change
+- `family-dashboard/config.json` - Version 0.1.0 → 0.3.0
+- `family-dashboard/run.sh` - Inject config.js with Supervisor token
+- `build-addon.sh` - Inject config.js script tag into index.html
+- `repository.json` - NEW file for HA add-on repository
 
-### Before Starting
-- Ensure Calendar is deployed and tested
-- Verify Meals page requirements with user
-- Plan UI/UX similar to Calendar consistency
+**Git Status:**
+- Branch: main
+- Latest commit: 6f58fa4 (nginx permissions fix)
+- All changes pushed ✅
 
----
+### 🐛 Debugging Tips for Tomorrow
 
-## 📝 Important Notes
+**If still blank after v0.3.0 update:**
 
-### Git Workflow
-- Branch: `main`
-- Remote: `https://github.com/djarthur78/ha-custom-dashboard`
-- All work committed and pushed ✅
-- Latest commit: 4e0ac12 (Add-on deployment)
+1. **Check if nginx is running:**
+   - Logs should NOT show crash/restart loop
+   - Should see "Starting nginx..." and then stay running
 
-### Environment
-- Development: WSL2 Ubuntu on Windows
-- Node version: (run `node -v` to check)
-- Home Assistant: 192.168.1.2:8123 (Raspberry Pi)
-- iPad: 192.168.1.6 (wall panel)
+2. **Check browser console:**
+   ```javascript
+   // In F12 Console:
+   window.HA_CONFIG  // Should show {token: "...", useIngress: true}
+   ```
 
-### Key Learnings
-1. React hooks must initialize from singleton service state
-2. Timeline views need hour offset calculations (startHour - 7)
-3. Full-width layouts need container removal in MainLayout
-4. HA add-ons use ingress for authentication
-5. Build script must copy dist to addon/build/
+3. **Check network tab:**
+   - Is `config.js` loading? (200 status)
+   - Are `assets/index-*.js` files loading? (200 status)
+   - Any 404 errors?
 
-### Known Issues
-- None! Calendar is fully functional
-- Add-on ready but not yet deployed/tested
+4. **Check nginx is serving files:**
+   - Try accessing: `http://192.168.1.2:8099` (direct, won't work due to ingress, but worth checking)
+   - Ingress URL: `http://192.168.1.2:8123/c2ba14e6_family-dashboard/ingress`
 
-### Commands to Remember
+5. **Check add-on logs carefully:**
+   - Look for nginx error messages
+   - Look for permission denied errors
+   - Look for "Configuration created with Supervisor token"
+
+### 📝 Commands for Tomorrow
+
 ```bash
-# Development
-cd src && npm run dev
-
-# Build add-on
+# If you need to rebuild add-on
+cd /home/arthu/projects/ha-custom-dashboard
 ./build-addon.sh
+git add family-dashboard/build
+git commit -m "Update dashboard"
+git push
 
-# Git workflow
-git add .
-git commit -m "message"
-git push origin main
-
-# Check dev server
+# Check dev server status
 tail -f /tmp/claude/-home-arthu-projects-ha-custom-dashboard/tasks/baa1d44.output
+
+# Test locally (still works)
+cd src && npm run dev
+# Access: http://localhost:5173/
 ```
+
+### 🎯 Success Criteria
+
+✅ **We're done when:**
+1. Add-on installs and stays running (no crash loop)
+2. Clicking "Family Dashboard" in HA sidebar loads the calendar
+3. All calendar features work (views, events, weather)
+4. Can access from Android tablet via HA Companion App
+5. Wall panel displays fullscreen at 1920x1080
+
+### 🔧 Fallback Options
+
+**If add-on approach fails:**
+1. **Standalone mode:** Run dev server on Windows, access from tablet via http://192.168.1.6:5173
+2. **HA iframe:** Embed dev server in HA dashboard iframe card
+3. **Static hosting:** Build and serve via HA's `www` folder
+
+**But add-on is the right approach** - just need to get nginx working properly!
 
 ---
 
-## Previous Sessions Summary
+## Previous Work (Before Today)
+
+### Session 3: Calendar Complete (2026-01-22 Morning/Afternoon)
+- ✅ Completed full calendar implementation
+- ✅ 6 view modes: Day/List, Day/Schedule, Week/List, Week/Schedule, Month, DayView
+- ✅ Event management (create/edit/delete/recurring)
+- ✅ Weather integration with colorful Lucide icons
+- ✅ UI consistency across all views
+- ✅ Header improvements (date/time/weather)
+- ✅ Event modal UX (quick duration, recurring, :00 defaults)
+- ✅ Created initial add-on structure
 
 ### Session 2: Phase 1 Complete (2026-01-17)
 - ✅ Built React + Vite foundation
 - ✅ HA WebSocket integration
 - ✅ Fixed critical entity loading bug
 - ✅ Tested on localhost and iPad
-- ✅ Connection status, entity cards working
 
 ### Session 1: Discovery (2026-01-17 Morning)
 - ✅ Analyzed existing HA dashboard
 - ✅ Inventoried 2,215 HA entities
 - ✅ Created specifications
-- ✅ Defined 7-week MVP plan
 
 ---
 
-**Last Updated:** 2026-01-22 23:45 (Wednesday Evening)
-**Next Session Goal:** Deploy add-on to Home Assistant and test on iPad wall panel
+## 🏠 Home Assistant Details
+
+**HA Instance:**
+- URL: http://192.168.1.2:8123
+- Platform: Raspberry Pi with HA OS
+- Google Calendar integration: ✅ Working
+- Weather integration: ✅ Working
+
+**Wall Panel:**
+- Device: Android 14 dedicated tablet
+- Screen: 15.9" 1920x1080 landscape
+- Current approach: HA Companion App
+- Future: Maybe Fully Kiosk Browser (motion detection, screensaver)
+
+**Add-on Status:**
+- Repository: https://github.com/djarthur78/ha-custom-dashboard
+- Installed: Yes
+- Version: 0.2.0 (needs update to 0.3.0)
+- Status: Running but nginx crashing (needs v0.3.0 fix)
+
+---
+
+## 🚀 Next Phase After Deployment
+
+Once add-on is working and tested on wall panel:
+
+**Phase 2B: Meal Planner**
+- Build Meals page
+- Show This Week / Next Week meal plans
+- Editable via HA input_text entities (28 entities)
+- Shopping list integration
+- Similar UI consistency to Calendar
+
+**Reference:**
+- Spec: `specs/02-meal-planner-spec.md`
+- HA entities: `input_text.meals_*`
+- Days: Monday-Sunday × 2 weeks
+- Meals: Breakfast, Lunch, Dinner, Snacks
+
+---
+
+**Last Updated:** 2026-01-22 21:00 (Wednesday Evening)
+**Next Session:** Deploy v0.3.0 and test if nginx stays running and dashboard loads
+**Critical Next Step:** Update add-on to v0.3.0 in HA and check logs + browser
