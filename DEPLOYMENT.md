@@ -1,13 +1,44 @@
-# Deployment Guide - Family Dashboard to Home Assistant
+# Deployment Guide - Family Dashboard
 
-This guide explains how to deploy the Family Dashboard as a Home Assistant Add-on.
+## Current Status
+
+**Version:** 0.7.1
+**Status:** ✅ **DEPLOYED AND WORKING**
+**Access Method:** Direct Port 8099
+**HA Ingress:** ❌ Broken (known HA Supervisor bug - not fixable)
 
 ## Overview
 
-The dashboard will run as a Home Assistant add-on on your Raspberry Pi (192.168.1.2). It uses:
+The dashboard runs as a Home Assistant add-on on your Raspberry Pi (192.168.1.2):
 - **Docker container** running nginx
-- **Home Assistant Ingress** for authentication and secure access
-- **Sidebar integration** - appears as a menu item in HA
+- **Direct port access** on port 8099 (ingress is broken)
+- **Full functionality** - all features work perfectly
+
+---
+
+## 🚀 How to Access Your Dashboard
+
+### Quick Access (All Devices)
+
+**Direct URL:** http://192.168.1.2:8099
+
+### On iPad (Kitchen Tablet)
+
+1. Open Safari → http://192.168.1.2:8099
+2. Tap Share button → "Add to Home Screen"
+3. Name it "Family Dashboard"
+4. Tap on iPad home screen icon to launch
+
+### On Desktop/Laptop
+
+- Bookmark: http://192.168.1.2:8099
+- Works on any browser on your network
+
+### ⚠️ Don't Use the HA Sidebar Link
+
+The "Family Dashboard" item in HA's sidebar uses ingress which is **broken** due to a Home Assistant Supervisor bug. Ignore it and use the direct URL instead.
+
+---
 
 ## Prerequisites
 
