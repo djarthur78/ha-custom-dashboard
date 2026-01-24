@@ -11,19 +11,11 @@ echo "[INFO] Setting up permissions..."
 chmod -R 755 /usr/share/nginx/html
 chmod -R 755 /var/lib/nginx /var/log/nginx /run/nginx
 
-# Create runtime config file for the React app
-echo "[INFO] Creating runtime configuration..."
-cat > /usr/share/nginx/html/config.js << EOF
-// Runtime configuration injected by add-on
-window.HA_CONFIG = {
-  token: "${SUPERVISOR_TOKEN}",
-  useIngress: true
-};
-EOF
+# Inject runtime config directly into index.html as inline script
+echo "[INFO] Injecting runtime configuration into HTML..."
+sed -i 's|<script src="./config.js"></script>|<script>window.HA_CONFIG={token:"'"${SUPERVISOR_TOKEN}"'",useIngress:true};</script>|' /usr/share/nginx/html/index.html
 
-chmod 644 /usr/share/nginx/html/config.js
-
-echo "[INFO] Configuration created with Supervisor token"
+echo "[INFO] Configuration injected into HTML"
 
 # List files for debugging
 echo "[INFO] Files in /usr/share/nginx/html:"
