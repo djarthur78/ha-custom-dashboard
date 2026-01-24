@@ -25,6 +25,12 @@ chmod 644 /usr/share/nginx/html/config.js
 
 echo "[INFO] Configuration created with Supervisor token"
 
+# Inject CSP meta tag into index.html to allow eval
+echo "[INFO] Injecting CSP meta tag into index.html..."
+sed -i '/<meta name="viewport"/a\    <meta http-equiv="Content-Security-Policy" content="default-src '\''self'\''; script-src '\''self'\'' '\''unsafe-eval'\'' '\''unsafe-inline'\''; style-src '\''self'\'' '\''unsafe-inline'\''; img-src '\''self'\'' data: https: blob:; font-src '\''self'\'' data:; connect-src '\''self'\'' http://supervisor/core/api/websocket ws://supervisor/core/api/websocket;">' /usr/share/nginx/html/index.html
+
+echo "[INFO] CSP meta tag injected"
+
 # List files for debugging
 echo "[INFO] Files in /usr/share/nginx/html:"
 ls -la /usr/share/nginx/html/
