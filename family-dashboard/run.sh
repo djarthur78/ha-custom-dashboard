@@ -38,6 +38,4 @@ bashio::log.info "User ID: $(id)"
 
 # Start nginx in foreground
 bashio::log.info "Starting nginx..."
-nginx -g 'daemon off;' 2>&1 | while IFS= read -r line; do
-    bashio::log.info "nginx: $line"
-done
+exec nginx -g 'daemon off;'
