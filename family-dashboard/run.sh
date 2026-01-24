@@ -6,6 +6,15 @@ echo "[INFO] Starting Family Dashboard..."
 # Get the Supervisor token (automatically available with homeassistant_api: true)
 SUPERVISOR_TOKEN="${SUPERVISOR_TOKEN}"
 
+# Get user configuration from options
+HA_URL=$(jq --raw-output '.ha_url // "http://supervisor/core"' /data/options.json)
+HA_TOKEN=$(jq --raw-output '.ha_token // ""' /data/options.json)
+
+echo "[INFO] Configuration:"
+echo "[INFO] - HA URL: ${HA_URL}"
+echo "[INFO] - User token: ${HA_TOKEN:+SET}"
+echo "[INFO] - Supervisor token: ${SUPERVISOR_TOKEN:+SET}"
+
 # Ensure nginx can write to necessary directories
 echo "[INFO] Setting up permissions..."
 chmod -R 755 /usr/share/nginx/html
@@ -13,7 +22,7 @@ chmod -R 755 /var/lib/nginx /var/log/nginx /run/nginx
 
 # Inject runtime config directly into index.html as inline script
 echo "[INFO] Injecting runtime configuration into HTML..."
-sed -i 's|<script src="./config.js"></script>|<script>window.HA_CONFIG={token:"'"${SUPERVISOR_TOKEN}"'",useIngress:true};</script>|' /usr/share/nginx/html/index.html
+sed -i 's|<script src="./config.js"></script>|<script>window.HA_CONFIG={url:"'"${HA_URL}"'",token:"'"${HA_TOKEN}"'",supervisorToken:"'"${SUPERVISOR_TOKEN}"'",useIngress:false};</script>|' /usr/share/nginx/html/index.html
 
 echo "[INFO] Configuration injected into HTML"
 

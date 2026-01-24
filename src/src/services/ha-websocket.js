@@ -18,13 +18,17 @@ class HAWebSocket {
 
     // Auto-detect environment
     // Priority: window.HA_CONFIG (add-on runtime) > env variables (development)
-    if (window.HA_CONFIG && window.HA_CONFIG.useIngress) {
-      // Running in HA add-on with ingress
-      // Connect through HA instance (ingress proxy)
+    if (window.HA_CONFIG && window.HA_CONFIG.url) {
+      // Running in add-on with explicit URL and token
+      this.url = window.HA_CONFIG.url;
+      this.token = window.HA_CONFIG.token || window.HA_CONFIG.supervisorToken;
+      console.log('[HA WebSocket] Running in add-on mode:', this.url);
+    } else if (window.HA_CONFIG && window.HA_CONFIG.useIngress) {
+      // Running in HA add-on with ingress (legacy)
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.host;
       this.url = `${protocol}//${host}/api/websocket`;
-      this.token = window.HA_CONFIG.token;
+      this.token = window.HA_CONFIG.supervisorToken || window.HA_CONFIG.token;
       console.log('[HA WebSocket] Running in add-on mode with ingress');
     } else if (import.meta.env.VITE_HA_URL) {
       // Development mode
