@@ -1,4 +1,5 @@
-#!/usr/bin/with-contenv bashio
+#!/bin/sh
+set -e
 
 echo "[INFO] Starting Family Dashboard..."
 
@@ -44,11 +45,6 @@ fi
 
 # Start nginx in foreground
 echo "[INFO] Starting nginx on port 8099..."
-echo "[INFO] Executing: /usr/sbin/nginx -g 'daemon off;'"
 
-# Use exec to replace this script with nginx process
-exec /usr/sbin/nginx -g "daemon off;"
-
-# This line should never be reached
-echo "[ERROR] exec failed! nginx did not start!"
-exit 1
+# Run nginx in foreground
+exec nginx -g "daemon off;"
