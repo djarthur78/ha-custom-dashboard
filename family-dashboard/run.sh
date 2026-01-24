@@ -49,18 +49,29 @@ echo "[INFO] Starting nginx on port 8099..."
 cat > /tmp/healthcheck.sh << 'HEALTHEOF'
 #!/bin/sh
 sleep 3
+
+# Get container IP
+CONTAINER_IP=$(ip addr show eth0 | grep "inet " | awk '{print $2}' | cut -d/ -f1)
+
+echo "[INFO] Testing nginx on localhost:8099..."
 if wget -q -O /dev/null http://127.0.0.1:8099/; then
-    echo "[INFO] ✓ Health check PASSED - nginx is responding on localhost:8099"
+    echo "[INFO] ✓ Health check PASSED - nginx responding on localhost:8099"
 else
-    echo "[ERROR] ✗ Health check FAILED - nginx is NOT responding on localhost:8099"
-    echo "[ERROR] Nginx error log:"
-    tail -50 /var/log/nginx/error.log
-    echo "[ERROR] Nginx access log:"
-    tail -50 /var/log/nginx/access.log
-    echo "[ERROR] Nginx processes:"
-    ps aux | grep nginx
-    exit 1
+    echo "[ERROR] ✗ Health check FAILED on localhost:8099"
 fi
+
+echo "[INFO] Testing nginx on container IP ($CONTAINER_IP:8099)..."
+if wget -q -O /dev/null http://$CONTAINER_IP:8099/; then
+    echo "[INFO] ✓ Health check PASSED - nginx responding on $CONTAINER_IP:8099"
+else
+    echo "[ERROR] ✗ Health check FAILED on $CONTAINER_IP:8099"
+    echo "[ERROR] This is the problem! Ingress proxy needs to connect via container IP"
+fi
+
+echo "[INFO] Checking what nginx is actually listening on:"
+netstat -tlnp | grep 8099
+echo "[INFO] Expected: nginx should be listening on 0.0.0.0:8099 (all interfaces)"
+echo "[INFO] If it shows 127.0.0.1:8099, that's the problem!"
 HEALTHEOF
 
 chmod +x /tmp/healthcheck.sh
