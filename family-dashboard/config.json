@@ -1,6 +1,6 @@
 {
   "name": "Family Dashboard",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "slug": "family-dashboard",
   "description": "Modern family calendar and dashboard for Home Assistant",
   "url": "https://github.com/djarthur78/ha-custom-dashboard",
@@ -13,9 +13,11 @@
   "panel_icon": "mdi:calendar-multiple",
   "panel_title": "Family Dashboard",
   "panel_admin": false,
-  "ports": {},
+  "ports": {
+    "8099/tcp": 8099
+  },
   "ports_description": {
-    "8099/tcp": "Web interface (not needed with ingress)"
+    "8099/tcp": "Web interface (temporary for testing)"
   },
   "options": {},
   "schema": {},
