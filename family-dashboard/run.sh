@@ -36,6 +36,12 @@ nginx -t
 bashio::log.info "Running as user: $(whoami)"
 bashio::log.info "User ID: $(id)"
 
+# Show nginx error log if it exists from previous run
+if [ -f /var/log/nginx/error.log ]; then
+    bashio::log.info "Previous nginx errors (if any):"
+    tail -20 /var/log/nginx/error.log || true
+fi
+
 # Start nginx in foreground
-bashio::log.info "Starting nginx..."
-exec nginx -g 'daemon off;'
+bashio::log.info "Starting nginx on port 8099..."
+exec nginx -g 'daemon off;' 2>&1
