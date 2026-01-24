@@ -35,6 +35,13 @@ if [ -f /var/log/nginx/error.log ]; then
     tail -20 /var/log/nginx/error.log || true
 fi
 
+# Show network configuration for debugging
+echo "[INFO] Network configuration:"
+ip addr show || true
+echo "[INFO] Hostname: $(hostname)"
+echo "[INFO] Checking if port 8099 is already in use:"
+netstat -tlnp | grep 8099 || echo "Port 8099 is free"
+
 # Start nginx in foreground
 echo "[INFO] Starting nginx on port 8099..."
 
