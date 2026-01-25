@@ -6,6 +6,95 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.9.0] - 2026-01-25
+
+### Summary
+Header redesign for space efficiency + biweekly calendar view + documentation cleanup.
+
+### Added
+- **Biweekly calendar view** - Shows 2 weeks stacked (Mon-Sun rows)
+- Biweekly navigation (jump forward/back 2 weeks)
+- Biweekly date label format: "Weeks 4-6 • 19 Jan - 1 Feb 2026"
+
+### Changed
+- **Header redesign** - Compact blue header with:
+  - Icon-only navigation (Home, Calendar, Meals, Games, Cameras)
+  - Date, time, weather moved to header
+  - Connected status on right side
+  - Eliminates ~150px vertical space
+- **View selector** - "Show me" and "View as" combined on single line with border
+- **Removed** redundant "Family Dashboard" heading below header
+- **Removed** text-based navigation tabs below header
+
+### Fixed
+- Biweekly view auto-switches to list mode (schedule not applicable)
+- Proper week calculation for biweekly navigation
+
+### Documentation
+- Created **ROADMAP.md** from specs/00-mvp-definition.md
+- Rewrote **DEPLOYMENT.md** with Arthur Dashboard integration details
+- Rewrote **README.md** for clarity and conciseness
+- Archived 20 historical docs to `docs/archive/`
+- Deleted 6 redundant files
+
+---
+
+## [0.8.1] - 2026-01-25
+
+### Summary
+Arthur Dashboard - Successful HA Companion App integration via Lovelace iframe.
+
+### Added
+- **Arthur Dashboard** - Dedicated Lovelace dashboard with fullscreen iframe
+  - Located at: http://192.168.1.2:8123/arthur-dashboard
+  - Works in HA Companion App on iOS/Android
+  - Accessible locally and remotely via Cloudflare tunnel
+- Created `/config/.storage/lovelace.arthur_dashboard` on HA Pi
+- Comprehensive deployment documentation (PIVOTAL-SUCCESS.md)
+
+### Fixed
+- HA Companion App integration (previous panel_iframe attempts failed)
+- Remote access via Cloudflare tunnel now working
+
+### Deprecated
+- panel_iframe approach (component not available in this HA installation)
+
+---
+
+## [0.8.0] - 2026-01-24
+
+### Summary
+Dashboard deployed as Home Assistant add-on running on port 8099.
+
+### Added
+- **Home Assistant Add-on** - Docker container with nginx
+- Add-on metadata (config.json, Dockerfile, nginx.conf, run.sh)
+- Build script (build-addon.sh) to prepare add-on from React build
+- Add-on port 8099 for direct access
+- GitHub repository as add-on source
+
+### Changed
+- Production build optimized and copied to `family-dashboard/build/`
+- Nginx serves static React files
+
+---
+
+## [0.7.1] - 2026-01-23
+
+### Summary
+Calendar feature complete with all 6 view modes and event CRUD.
+
+### Added
+- **Event Creation** - Modal with form for new events
+- **Event Editing** - Edit existing events via modal
+- **Event Deletion** - Delete with confirmation dialog
+- **Recurring Events** - Weekly recurring event support
+- **Weather Integration** - Colorful weather icons and forecasts
+- **Waste Collection Countdown** - Shows next collection in header
+- All 6 view modes working (Day/List, Day/Schedule, Week/List, Week/Schedule, Month, Day)
+
+---
+
 ## [Phase 1 Complete] - 2026-01-17
 
 ### Summary
