@@ -2,6 +2,27 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Testing Credentials (ALWAYS USE THESE FOR VERIFICATION)
+
+**IMPORTANT:** When testing deployments or verifying configurations, ALWAYS login and test yourself using these credentials:
+
+**Home Assistant:**
+- URL: http://192.168.1.2:8123
+- Username: `swanlane`
+- Password: `swanlane`
+- Login via puppeteer MCP and verify sidebar, panels, dashboards
+
+**SSH Access:**
+- Host: 192.168.1.2
+- Username: `hassio`
+- Password: `hassio`
+- Use for file operations, config changes
+
+**Working Dashboard:**
+- Direct URL: http://192.168.1.2:8099 (CONFIRMED WORKING)
+- Use puppeteer to screenshot and verify it loads
+- This is the PRIMARY access method (panel_iframe not available in this HA installation)
+
 ## Project Overview
 
 Modern React web application replacing an existing Home Assistant dashboard. Primary device is an iPad (kitchen calendar tablet). The app connects to Home Assistant via WebSocket for real-time updates and REST API for one-time queries.
