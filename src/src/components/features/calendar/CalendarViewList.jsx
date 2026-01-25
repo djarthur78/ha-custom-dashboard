@@ -249,7 +249,7 @@ export function CalendarViewList() {
 
   if (!isConnected) {
     return (
-      <PageContainer title="Calendar">
+      <PageContainer>
         <div className="text-center py-12 text-[var(--color-text-secondary)]">
           Connecting to Home Assistant...
         </div>

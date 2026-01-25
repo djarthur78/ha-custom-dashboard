@@ -43,10 +43,7 @@ export function HomePage() {
   const { state: testLightState } = useEntity('light.reading_light');
 
   return (
-    <PageContainer
-      title="Family Dashboard"
-      subtitle="Welcome! Select a feature to get started."
-    >
+    <PageContainer>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {/* eslint-disable-next-line no-unused-vars */}
         {features.map(({ to, icon: Icon, title, description, color }) => (

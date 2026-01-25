@@ -199,7 +199,7 @@ export function CalendarView() {
 
   if (!isConnected) {
     return (
-      <PageContainer title="Calendar">
+      <PageContainer>
         <div className="text-center py-12 text-[var(--color-text-secondary)]">
           Connecting to Home Assistant...
         </div>
@@ -209,8 +209,6 @@ export function CalendarView() {
 
   return (
     <PageContainer
-      title="Family Calendar"
-      subtitle="View all family calendars in one place"
       maxWidth="max-w-full"
     >
       {/* Top Bar: View Switcher + Calendar Filters + Add Button */}

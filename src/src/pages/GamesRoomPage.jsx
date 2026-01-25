@@ -7,10 +7,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 
 export function GamesRoomPage() {
   return (
-    <PageContainer
-      title="Games Room"
-      subtitle="Coming soon in Phase 2C"
-    >
+    <PageContainer>
       <div
         className="bg-[var(--color-surface)] rounded-xl p-12 text-center"
         style={{

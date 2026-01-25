@@ -7,10 +7,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 
 export function CamerasPage() {
   return (
-    <PageContainer
-      title="Camera Feeds"
-      subtitle="Coming soon in Phase 2D"
-    >
+    <PageContainer>
       <div
         className="bg-[var(--color-surface)] rounded-xl p-12 text-center"
         style={{

@@ -93,21 +93,21 @@ export function MainLayout() {
             ))}
           </nav>
 
-          {/* Center-Left: Date, Time, Weather */}
-          <div className="flex items-center gap-4 text-white">
-            <span className="text-lg font-semibold">
-              {format(currentTime, 'EEEE, MMMM d, yyyy')}
+          {/* Center-Left: Compact Date, Time, Weather */}
+          <div className="flex items-center gap-3 text-white text-base">
+            <span className="font-medium">
+              Arthur Family
             </span>
-            <span className="text-lg font-semibold">
-              {format(currentTime, 'h:mm a')}
+            <span className="font-medium">
+              {format(currentTime, 'HH:mm')}
             </span>
             {weather.temperature && weather.condition && (
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold">
+              <>
+                <span className="font-medium">
                   {Math.round(weather.temperature)}°
                 </span>
                 {getWeatherIcon(weather.condition)}
-              </div>
+              </>
             )}
           </div>
 
