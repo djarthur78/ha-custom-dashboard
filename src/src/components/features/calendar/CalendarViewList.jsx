@@ -77,7 +77,6 @@ const getWeatherIcon = (condition) => {
 
 export function CalendarViewList() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('week'); // 'day', 'week', 'month'
@@ -92,14 +91,6 @@ export function CalendarViewList() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [newEventDate, setNewEventDate] = useState(null);
-
-  // Update current time every minute
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Fetch events for current week (+ extra weeks for waste collection header)
   const fetchEvents = useCallback(async () => {
@@ -130,10 +121,19 @@ export function CalendarViewList() {
     fetchEvents();
   }, [fetchEvents]);
 
+  // Force list layout for biweekly period
+  useEffect(() => {
+    if (period === 'biweekly' && layout !== 'list') {
+      setLayout('list');
+    }
+  }, [period, layout]);
+
   // Navigation handlers
   const handlePrevious = () => {
     if (period === 'week') {
       setCurrentDate(prev => subWeeks(prev, 1));
+    } else if (period === 'biweekly') {
+      setCurrentDate(prev => subWeeks(prev, 2));
     } else if (period === 'day') {
       setCurrentDate(prev => subDays(prev, 1));
     } else if (period === 'month') {
@@ -144,6 +144,8 @@ export function CalendarViewList() {
   const handleNext = () => {
     if (period === 'week') {
       setCurrentDate(prev => addWeeks(prev, 1));
+    } else if (period === 'biweekly') {
+      setCurrentDate(prev => addWeeks(prev, 2));
     } else if (period === 'day') {
       setCurrentDate(prev => addDays(prev, 1));
     } else if (period === 'month') {
@@ -212,6 +214,9 @@ export function CalendarViewList() {
     } else if (period === 'week') {
       const weekEnd = addDays(weekStart, 6);
       return `Week ${format(weekStart, 'w')} • ${format(weekStart, 'd MMM')} - ${format(weekEnd, 'd MMM yyyy')}`;
+    } else if (period === 'biweekly') {
+      const biweekEnd = addDays(weekStart, 13);
+      return `Weeks ${format(weekStart, 'w')}-${format(biweekEnd, 'w')} • ${format(weekStart, 'd MMM')} - ${format(biweekEnd, 'd MMM yyyy')}`;
     } else if (period === 'month') {
       return format(currentDate, 'MMMM yyyy');
     }
@@ -259,27 +264,6 @@ export function CalendarViewList() {
       width: 'calc(100% + 2rem)',
       boxSizing: 'border-box'
     }}>
-      {/* Header */}
-      <div className="mb-6" style={{ width: '100%' }}>
-        <div className="flex items-center justify-between">
-          {/* Left: Current date */}
-          <h2 className="text-3xl font-bold text-[var(--color-text)]">
-            {format(currentTime, 'EEEE, MMMM d, yyyy')}
-          </h2>
-
-          {/* Right: Time and temperature */}
-          <div className="flex items-center gap-4 text-3xl font-bold text-[var(--color-text-secondary)]">
-            <span>{format(currentTime, 'h:mm a')}</span>
-            {weather.temperature && weather.condition && (
-              <div className="flex items-center gap-3">
-                <span>{Math.round(weather.temperature)}°</span>
-                <span className="text-2xl">{getWeatherIcon(weather.condition)}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Header with waste collection info */}
       {nextDayWasteEvents.length > 0 && (
         <div className="mb-4 text-sm flex items-center gap-2" style={{ color: '#666666', width: '100%' }}>
@@ -448,6 +432,221 @@ export function CalendarViewList() {
             onAddEvent={handleAddEvent}
             selectedCalendars={Array.from(enabledCalendars)}
           />
+        </div>
+      ) : period === 'biweekly' && layout === 'list' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+          {/* Week 1 */}
+          <div className="grid grid-cols-7" style={{ gap: '4px', width: '100%' }}>
+            {weekDays.map(day => {
+              const dayEvents = filteredEvents.filter(event =>
+                isSameDay(event.start, day)
+              ).sort((a, b) => a.start - b.start);
+
+              const isCurrentDay = isToday(day);
+              const dayKey = format(day, 'yyyy-MM-dd');
+              const dayWeather = weather.forecastByDate[dayKey];
+
+              return (
+                <div
+                  key={day.toISOString()}
+                  className="overflow-hidden bg-white"
+                  style={{
+                    border: 'solid 1px whitesmoke',
+                    borderRadius: '8px',
+                  }}
+                >
+                  {/* Day header */}
+                  <div style={{ padding: '8px', borderBottom: 'solid 1px whitesmoke' }}>
+                    <div className="flex items-center justify-between">
+                      <div
+                        style={{
+                          fontSize: '3em',
+                          fontWeight: 700,
+                          lineHeight: 1,
+                          ...(isCurrentDay && {
+                            borderRadius: '5px',
+                            backgroundColor: 'orange',
+                            padding: '0 4px',
+                            display: 'inline-block'
+                          })
+                        }}
+                      >
+                        {format(day, 'd')}
+                      </div>
+                      {dayWeather && (
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '1.2em' }}>
+                            {getWeatherIcon(dayWeather.condition)}
+                          </div>
+                          <div style={{ fontSize: '0.75em', color: '#666', fontWeight: 600 }}>
+                            {Math.round(dayWeather.temperature)}° / {Math.round(dayWeather.templow)}°
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '1em', fontWeight: 700, color: '#666', marginTop: '4px' }}>
+                      {(() => {
+                        const yesterday = addDays(new Date(), -1);
+                        const tomorrow = addDays(new Date(), 1);
+                        if (isToday(day)) return 'Today';
+                        if (isSameDay(day, yesterday)) return 'Yesterday';
+                        if (isSameDay(day, tomorrow)) return 'Tomorrow';
+                        return format(day, 'EEEE');
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Events list */}
+                  <div style={{ padding: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {dayEvents.length === 0 ? (
+                      <div className="text-xs text-[var(--color-text-secondary)] text-center py-2">
+                        No events
+                      </div>
+                    ) : (
+                      dayEvents
+                        .filter(event => event.calendarId !== 'calendar.basildon_council')
+                        .map(event => {
+                          const colors = getEventStyle(event.calendarId);
+                          return (
+                            <button
+                              key={event.id}
+                              onClick={() => handleEventClick(event)}
+                              className="w-full text-left hover:opacity-80 transition-opacity"
+                              style={{
+                                backgroundColor: colors.backgroundColor,
+                                padding: '8px',
+                                borderRadius: '10px',
+                                border: 'none',
+                                maxHeight: '80px',
+                                overflow: 'hidden',
+                              }}
+                            >
+                              <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#000000', opacity: 0.7, marginBottom: '2px' }}>
+                                {!event.allDay && (
+                                  <>{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</>
+                                )}
+                                {event.allDay && <>Entire day</>}
+                              </div>
+                              <div style={{ fontSize: '14px', lineHeight: '1.4', fontWeight: '500', color: '#000000' }}>
+                                {event.title}
+                              </div>
+                              {event.location && (
+                                <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#000000', opacity: 0.7, marginTop: '2px' }}>
+                                  {event.location}
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Week 2 */}
+          <div className="grid grid-cols-7" style={{ gap: '4px', width: '100%' }}>
+            {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i + 7)).map(day => {
+              const dayEvents = filteredEvents.filter(event =>
+                isSameDay(event.start, day)
+              ).sort((a, b) => a.start - b.start);
+
+              const isCurrentDay = isToday(day);
+              const dayKey = format(day, 'yyyy-MM-dd');
+              const dayWeather = weather.forecastByDate[dayKey];
+
+              return (
+                <div
+                  key={day.toISOString()}
+                  className="overflow-hidden bg-white"
+                  style={{
+                    border: 'solid 1px whitesmoke',
+                    borderRadius: '8px',
+                  }}
+                >
+                  {/* Day header */}
+                  <div style={{ padding: '8px', borderBottom: 'solid 1px whitesmoke' }}>
+                    <div className="flex items-center justify-between">
+                      <div
+                        style={{
+                          fontSize: '3em',
+                          fontWeight: 700,
+                          lineHeight: 1,
+                          ...(isCurrentDay && {
+                            borderRadius: '5px',
+                            backgroundColor: 'orange',
+                            padding: '0 4px',
+                            display: 'inline-block'
+                          })
+                        }}
+                      >
+                        {format(day, 'd')}
+                      </div>
+                      {dayWeather && (
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '1.2em' }}>
+                            {getWeatherIcon(dayWeather.condition)}
+                          </div>
+                          <div style={{ fontSize: '0.75em', color: '#666', fontWeight: 600 }}>
+                            {Math.round(dayWeather.temperature)}° / {Math.round(dayWeather.templow)}°
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '1em', fontWeight: 700, color: '#666', marginTop: '4px' }}>
+                      {format(day, 'EEEE')}
+                    </div>
+                  </div>
+
+                  {/* Events list */}
+                  <div style={{ padding: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {dayEvents.length === 0 ? (
+                      <div className="text-xs text-[var(--color-text-secondary)] text-center py-2">
+                        No events
+                      </div>
+                    ) : (
+                      dayEvents
+                        .filter(event => event.calendarId !== 'calendar.basildon_council')
+                        .map(event => {
+                          const colors = getEventStyle(event.calendarId);
+                          return (
+                            <button
+                              key={event.id}
+                              onClick={() => handleEventClick(event)}
+                              className="w-full text-left hover:opacity-80 transition-opacity"
+                              style={{
+                                backgroundColor: colors.backgroundColor,
+                                padding: '8px',
+                                borderRadius: '10px',
+                                border: 'none',
+                                maxHeight: '80px',
+                                overflow: 'hidden',
+                              }}
+                            >
+                              <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#000000', opacity: 0.7, marginBottom: '2px' }}>
+                                {!event.allDay && (
+                                  <>{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</>
+                                )}
+                                {event.allDay && <>Entire day</>}
+                              </div>
+                              <div style={{ fontSize: '14px', lineHeight: '1.4', fontWeight: '500', color: '#000000' }}>
+                                {event.title}
+                              </div>
+                              {event.location && (
+                                <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#000000', opacity: 0.7, marginTop: '2px' }}>
+                                  {event.location}
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-7" style={{ gap: '4px', width: '100%' }}>

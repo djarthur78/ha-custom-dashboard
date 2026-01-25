@@ -13,16 +13,24 @@ export function TwoTierSelector({
   onLayoutChange
 }) {
   return (
-    <div className="flex flex-col" style={{ gap: '12px' }}>
-      {/* Period Row */}
-      <div className="flex items-center" style={{ gap: '12px' }}>
+    <div
+      className="flex items-center"
+      style={{
+        gap: '20px',
+        padding: '8px 16px',
+        border: '2px solid #e0e0e0',
+        borderRadius: '999px',
+        backgroundColor: '#ffffff'
+      }}
+    >
+      {/* Period Section */}
+      <div className="flex items-center" style={{ gap: '8px' }}>
         <span
           className="text-sm font-semibold text-[var(--color-text)]"
-          style={{ width: '80px' }}
         >
           Show me:
         </span>
-        <div className="flex" style={{ gap: '12px' }}>
+        <div className="flex" style={{ gap: '8px' }}>
           <SelectorButton
             active={period === 'day'}
             onClick={() => onPeriodChange('day')}
@@ -34,6 +42,11 @@ export function TwoTierSelector({
             label="Week"
           />
           <SelectorButton
+            active={period === 'biweekly'}
+            onClick={() => onPeriodChange('biweekly')}
+            label="Biweekly"
+          />
+          <SelectorButton
             active={period === 'month'}
             onClick={() => onPeriodChange('month')}
             label="Month"
@@ -41,15 +54,17 @@ export function TwoTierSelector({
         </div>
       </div>
 
-      {/* Layout Row */}
-      <div className="flex items-center" style={{ gap: '12px' }}>
+      {/* Divider */}
+      <div style={{ width: '1px', height: '30px', backgroundColor: '#e0e0e0' }} />
+
+      {/* Layout Section */}
+      <div className="flex items-center" style={{ gap: '8px' }}>
         <span
           className="text-sm font-semibold text-[var(--color-text)]"
-          style={{ width: '80px' }}
         >
           View as:
         </span>
-        <div className="flex" style={{ gap: '12px' }}>
+        <div className="flex" style={{ gap: '8px' }}>
           <SelectorButton
             active={layout === 'list'}
             onClick={() => onLayoutChange('list')}
