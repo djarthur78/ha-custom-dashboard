@@ -1,0 +1,19 @@
+# Family Dashboard Panel Configuration
+#
+# INSTALLATION:
+# 1. Copy this file to your Home Assistant config folder
+# 2. Add this line to configuration.yaml:
+#    homeassistant:
+#      packages: !include_dir_named packages
+# 3. Create folder: /config/packages/
+# 4. Copy this file to: /config/packages/family_dashboard.yaml
+# 5. Restart Home Assistant
+# 6. The dashboard will appear in your sidebar
+
+# Create a panel iframe for the Family Dashboard
+panel_iframe:
+  family_dashboard:
+    title: "Family Dashboard"
+    icon: mdi:calendar-heart
+    url: "http://192.168.1.2:8099"
+    require_admin: false
