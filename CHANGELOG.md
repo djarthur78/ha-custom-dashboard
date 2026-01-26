@@ -6,6 +6,62 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.2] - 2026-01-26
+
+### Summary
+Critical bug fixes for meal planner data persistence and major visual design improvements.
+
+### Fixed
+
+**Meal Planner Data Loading**
+- Fixed critical bug where meals were not loading from Home Assistant entities
+- Fixed async state fetching in useMealData hook - now properly awaits `getStates()` call
+- Added WebSocket connection status checking to ensure data loads only after connection established
+- Fixed persistence issue where meals disappeared after switching between This Week and Next Week
+- Meals now correctly load from HA and persist across week switches
+
+**Code Quality**
+- Fixed lint error: removed unused `idx` variable in MealGrid.jsx:109
+- Fixed React hooks violation: removed setState call from within useEffect body
+- Improved error handling with comprehensive console logging for debugging
+
+### Changed
+
+**Meal Planner Visual Design**
+- Added colorful gradient headers for each meal type:
+  - Breakfast: Orange (#FF6B35) with Coffee icon
+  - Lunch: Teal (#4ECDC4) with UtensilsCrossed icon
+  - Dinner: Purple (#9B59B6) with Pizza icon
+  - Cakes: Pink (#E91E63) with Cake icon
+- Added today's row highlighting with gold gradient (#FFD93D to #FFA500) and star emoji
+- Color-coded cell backgrounds matching each meal type for better visual organization
+- Enhanced hover effects with scale transform (1.02x) and tinted backgrounds
+- Improved cell styling with rounded corners (8px) and box shadows
+- Better typography and spacing throughout
+
+**Meal Planner Layout**
+- Reduced meal column widths from 220px to 180px for better fit on 1920x1080 wall panel
+- More compact layout while maintaining readability
+- Improved visual hierarchy with gradients and colors
+
+### Technical Details
+- useMealData.js: Fixed async state fetching, added connection listener cleanup
+- MealGrid.jsx: Added MEAL_CONFIG object with colors and icons
+- MealCell.jsx: Color-coded borders and backgrounds based on meal type
+
+### Testing
+- Verified meals load correctly from Home Assistant entities
+- Verified meals persist when switching between weeks
+- Verified inline editing saves successfully to HA
+- Verified Clear day button functionality
+- Verified layout fits on 1920x1080 wall panel
+- No lint errors
+
+### Production Build
+- Rebuilt React app: 348.86 KB JS, 31.47 KB CSS (gzipped: 102.72 KB + 6.17 KB)
+
+---
+
 ## [1.0.1] - 2026-01-26
 
 ### Summary
