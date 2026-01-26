@@ -55,14 +55,23 @@ export function useMealData(week) {
           }
         }
 
-        // Get states from WebSocket service
-        const currentStates = haWebSocket.getState();
-        if (currentStates) {
+        // Get states from WebSocket service - FIX: await the async call
+        const allStates = await haWebSocket.getStates();
+        console.log('[useMealData] Fetched states from HA:', allStates?.length, 'entities');
+
+        if (allStates) {
+          // Convert array to object keyed by entity_id for faster lookup
+          const statesMap = {};
+          allStates.forEach(state => {
+            statesMap[state.entity_id] = state;
+          });
+
           for (const day of DAYS) {
             for (const mealType of MEAL_TYPES) {
               const entityId = weekData.days[day][mealType];
-              const entityState = currentStates[entityId];
+              const entityState = statesMap[entityId];
               if (entityState) {
+                console.log(`[useMealData] ${entityId} = "${entityState.state}"`);
                 states[day][mealType].value = entityState.state || '';
               }
             }
@@ -72,12 +81,28 @@ export function useMealData(week) {
         setMeals(states);
         setLoading(false);
       } catch (err) {
+        console.error('[useMealData] Error fetching meal states:', err);
         setError(err.message);
         setLoading(false);
       }
     };
 
-    fetchMealStates();
+    // Check if already connected, otherwise wait for connection
+    const status = haWebSocket.getStatus();
+
+    // Subscribe to connection changes if not yet connected
+    let unsubscribeConnection;
+    if (status !== 'connected') {
+      console.log('[useMealData] Waiting for WebSocket connection...');
+      unsubscribeConnection = haWebSocket.onConnectionChange((newStatus) => {
+        console.log('[useMealData] Connection status changed:', newStatus);
+        if (newStatus === 'connected') {
+          fetchMealStates();
+        }
+      });
+    } else {
+      fetchMealStates();
+    }
 
     // Subscribe to state changes for all meal entities
     const unsubscribeFunctions = entityIds.map(entityId => {
@@ -106,6 +131,10 @@ export function useMealData(week) {
     return () => {
       // Unsubscribe from all entities on unmount
       unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+      // Also unsubscribe from connection listener if it exists
+      if (unsubscribeConnection) {
+        unsubscribeConnection();
+      }
     };
   }, [week]);
 
@@ -114,11 +143,15 @@ export function useMealData(week) {
     const weekData = entitiesConfig.mealPlanner.weeks[week];
     const entityId = weekData.days[day][mealType];
 
+    console.log(`[useMealData] Updating ${entityId} to: "${value}"`);
+
     try {
-      await haWebSocket.callService('input_text', 'set_value', {
+      const result = await haWebSocket.callService('input_text', 'set_value', {
         entity_id: entityId,
         value: value,
       });
+
+      console.log(`[useMealData] Service call successful for ${entityId}`, result);
 
       // Optimistically update local state
       setMeals(prevMeals => ({
@@ -134,7 +167,7 @@ export function useMealData(week) {
 
       return true;
     } catch (err) {
-      console.error('[useMealData] Failed to update meal:', err);
+      console.error(`[useMealData] Failed to update ${entityId}:`, err);
       return false;
     }
   };

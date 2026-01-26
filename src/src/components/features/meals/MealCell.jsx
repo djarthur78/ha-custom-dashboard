@@ -1,20 +1,28 @@
 /**
  * MealCell Component
  * Editable cell for a single meal entry
- * Touch-optimized for wall panel
+ * Touch-optimized for wall panel with improved styling
  */
 
 import { useState, useRef, useEffect } from 'react';
 
-export function MealCell({ value, onSave, isLoading }) {
+const MEAL_COLORS = {
+  breakfast: '#FF6B35',
+  lunch: '#4ECDC4',
+  dinner: '#9B59B6',
+  cakes: '#E91E63',
+};
+
+export function MealCell({ value, onSave, isLoading, mealType, isToday }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || '');
   const [isSaving, setIsSaving] = useState(false);
   const inputRef = useRef(null);
 
+  const mealColor = MEAL_COLORS[mealType] || '#4ECDC4';
+
   const handleClick = () => {
     if (!isLoading && !isSaving) {
-      // Initialize editValue when starting to edit
       setEditValue(value || '');
       setIsEditing(true);
     }
@@ -66,9 +74,19 @@ export function MealCell({ value, onSave, isLoading }) {
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         disabled={isSaving}
-        className="w-full h-full px-3 py-2 text-base border-2 border-blue-500 rounded-lg focus:outline-none focus:border-blue-600 bg-white text-gray-900"
         style={{
-          minHeight: '44px',
+          width: '100%',
+          height: '100%',
+          minHeight: '60px',
+          padding: '12px 16px',
+          fontSize: '15px',
+          fontWeight: '500',
+          border: `3px solid ${mealColor}`,
+          borderRadius: '8px',
+          outline: 'none',
+          backgroundColor: 'white',
+          color: '#2c3e50',
+          boxShadow: `0 0 0 3px ${mealColor}33`,
         }}
       />
     );
@@ -77,20 +95,40 @@ export function MealCell({ value, onSave, isLoading }) {
   return (
     <div
       onClick={handleClick}
-      className="w-full h-full px-3 py-2 text-base cursor-pointer hover:bg-gray-50 rounded-lg transition-colors"
       style={{
-        minHeight: '44px',
-        border: '1px solid transparent',
+        width: '100%',
+        height: '100%',
+        minHeight: '60px',
+        padding: '12px 16px',
+        fontSize: '15px',
+        fontWeight: '500',
+        cursor: 'pointer',
+        border: '2px solid transparent',
+        borderRadius: '8px',
+        transition: 'all 0.2s ease',
+        backgroundColor: isToday && value ? `${mealColor}15` : 'transparent',
+      }}
+      onMouseEnter={(e) => {
+        if (!isLoading && !isSaving) {
+          e.currentTarget.style.backgroundColor = `${mealColor}20`;
+          e.currentTarget.style.borderColor = `${mealColor}40`;
+          e.currentTarget.style.transform = 'scale(1.02)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = isToday && value ? `${mealColor}15` : 'transparent';
+        e.currentTarget.style.borderColor = 'transparent';
+        e.currentTarget.style.transform = 'scale(1)';
       }}
     >
       {isLoading ? (
-        <span className="text-gray-400">Loading...</span>
+        <span style={{ color: '#999', fontStyle: 'italic' }}>Loading...</span>
       ) : isSaving ? (
-        <span className="text-blue-500">Saving...</span>
+        <span style={{ color: mealColor, fontWeight: '600' }}>Saving...</span>
       ) : value ? (
-        <span className="text-gray-900">{value}</span>
+        <span style={{ color: '#2c3e50', lineHeight: '1.4' }}>{value}</span>
       ) : (
-        <span className="text-gray-400 italic">Tap to add</span>
+        <span style={{ color: '#aaa', fontStyle: 'italic' }}>Tap to add...</span>
       )}
     </div>
   );
