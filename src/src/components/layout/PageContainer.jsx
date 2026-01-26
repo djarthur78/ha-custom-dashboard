@@ -3,9 +3,9 @@
  * Consistent wrapper for page content
  */
 
-export function PageContainer({ children, title, subtitle, maxWidth = 'max-w-7xl' }) {
+export function PageContainer({ children, title, subtitle, maxWidth = 'max-w-[1800px]' }) {
   return (
-    <div className={`${maxWidth} mx-auto`}>
+    <div className={`${maxWidth} mx-auto px-4`}>
       {(title || subtitle) && (
         <div className="mb-6">
           {title && (

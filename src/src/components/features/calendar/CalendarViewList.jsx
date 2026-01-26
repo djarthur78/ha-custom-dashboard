@@ -296,7 +296,7 @@ export function CalendarViewList() {
                   border: 'none',
                   boxShadow: 'none',
                   padding: 0,
-                  fontSize: '16px',
+                  fontSize: '15px',
                   fontWeight: 800,
                 }}
                 title={calendar.name}
@@ -315,9 +315,9 @@ export function CalendarViewList() {
               background: '#efefef',
               boxShadow: 'none',
               border: 'none',
-              fontSize: '15px',
+              fontSize: '14px',
               fontWeight: 700,
-              padding: '0 20px',
+              padding: '0 18px',
             }}
             onClick={() => handleAddEvent(currentDate)}
           >
@@ -345,7 +345,7 @@ export function CalendarViewList() {
               background: '#efefef',
               boxShadow: 'none',
               border: 'none',
-              fontSize: '15px',
+              fontSize: '14px',
               fontWeight: 700,
             }}
           >
@@ -367,9 +367,11 @@ export function CalendarViewList() {
             <ChevronLeft size={26} style={{ color: 'black' }} />
           </button>
 
-          <span style={{ fontSize: '14px', fontWeight: 700, minWidth: '200px', textAlign: 'center' }}>
-            {dateLabel}
-          </span>
+          <div style={{ fontSize: '13px', fontWeight: 700, minWidth: '140px', textAlign: 'center', lineHeight: '1.3' }}>
+            {dateLabel.split(' • ').map((part, i) => (
+              <div key={i}>{part}</div>
+            ))}
+          </div>
 
           <button
             onClick={handleNext}

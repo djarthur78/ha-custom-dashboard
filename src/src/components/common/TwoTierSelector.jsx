@@ -26,7 +26,8 @@ export function TwoTierSelector({
       {/* Period Section */}
       <div className="flex items-center" style={{ gap: '8px' }}>
         <span
-          className="text-sm font-semibold text-[var(--color-text)]"
+          className="font-semibold text-[var(--color-text)]"
+          style={{ fontSize: '13px' }}
         >
           Show me:
         </span>
@@ -60,7 +61,8 @@ export function TwoTierSelector({
       {/* Layout Section */}
       <div className="flex items-center" style={{ gap: '8px' }}>
         <span
-          className="text-sm font-semibold text-[var(--color-text)]"
+          className="font-semibold text-[var(--color-text)]"
+          style={{ fontSize: '13px' }}
         >
           View as:
         </span>
@@ -87,14 +89,14 @@ function SelectorButton({ active, onClick, label }) {
       onClick={onClick}
       className="transition-all hover:opacity-80"
       style={{
-        minWidth: '100px',
+        minWidth: '90px',
         height: '44px',
         backgroundColor: active ? 'var(--color-primary)' : '#efefef',
         color: active ? '#ffffff' : '#000000',
         border: 'none',
         borderRadius: '22px', // pill shape
         fontWeight: 700,
-        fontSize: '15px',
+        fontSize: '14px',
         boxShadow: active ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
         padding: '0 24px',
         cursor: 'pointer',

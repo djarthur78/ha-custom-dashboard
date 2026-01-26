@@ -25,8 +25,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Modern React web application replacing an existing Home Assistant dashboard. Primary device is an iPad (kitchen calendar tablet). The app connects to Home Assistant via WebSocket for real-time updates and REST API for one-time queries.
+Modern React web application replacing an existing Home Assistant dashboard. Primary device is a wall panel (1920x1080 resolution). The app connects to Home Assistant via WebSocket for real-time updates and REST API for one-time queries.
 
+**Display:** 1920x1080 wall panel (landscape orientation)
 **Tech Stack:** React 19, Vite 7.3, Tailwind CSS v4, React Router, date-fns, Lucide React
 
 ## Essential Commands
@@ -43,7 +44,8 @@ npm run lint         # Run ESLint
 
 ### Access URLs
 - **Local development:** http://localhost:5173/
-- **iPad access:** http://192.168.1.6:5173/ (via WSL2 port forwarding)
+- **Wall panel access:** http://192.168.1.2:8099 (production via HA add-on)
+- **Dev access from Windows:** http://192.168.1.6:5173/ (via WSL2 port forwarding)
 - **Home Assistant:** http://192.168.1.2:8123
 
 ### Environment Setup
@@ -244,7 +246,7 @@ function LightToggle({ entityId }) {
 ## Development Environment
 
 ### WSL2 + Port Forwarding
-Development runs in WSL2 Ubuntu. Port 5173 is forwarded from Windows host (192.168.1.6) to WSL2 for iPad access.
+Development runs in WSL2 Ubuntu. Port 5173 is forwarded from Windows host (192.168.1.6) to WSL2 for remote access during development.
 
 **Check port forwarding (PowerShell):**
 ```powershell
@@ -257,7 +259,7 @@ ip addr show eth0 | grep "inet " | awk '{print $2}' | cut -d/ -f1
 ```
 
 ### Testing
-- Manual testing on localhost and iPad
+- Manual testing on localhost and wall panel (1920x1080)
 - Check browser console for `[HA WebSocket]` and `[useEntity]` logs
 - Verify entity updates in real-time by toggling in HA UI
 
