@@ -6,6 +6,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.1] - 2026-01-26
+
+### Summary
+Calendar layout fixes for 1920x1080 wall panel + Meal planner pivot for better usability.
+
+### Changed
+
+**Calendar Layout (Fixed for 1920x1080 Wall Panel)**
+- Reduced PageContainer max-width from max-w-7xl to max-w-[1800px] with px-4 padding
+- Split date label to two rows for compact display (e.g., "Week 5" / "26 Jan - 1 Feb 2026")
+- Reduced all button font sizes by 1pt:
+  - Person filter buttons: 16px → 15px
+  - Add Event button: 15px → 14px
+  - Today button: 15px → 14px
+  - TwoTierSelector labels: 14px → 13px
+  - TwoTierSelector buttons: 15px → 14px, minWidth 100px → 90px
+  - Date label: 14px → 13px with two-row layout
+- Fixed right arrow (>) button being cut off on 1920x1080 display
+
+**Meal Planner Grid (Pivoted Layout)**
+- Transposed grid: meal types (Breakfast, Lunch, Dinner, Cakes) now columns instead of rows
+- Days (Thu-Wed) now rows instead of columns
+- Days show full name + date (e.g., "Thursday Jan 16")
+- More intuitive layout: scan across meals for a day, or down days for a meal type
+
+**Meal Planner Functionality**
+- Added "Clear" button (red X icon) for each day row
+- Clear button clears all 4 meals for the selected day with confirmation dialog
+- Touch-optimized 44px button size
+
+### Documentation
+- Updated CLAUDE.md with correct device information:
+  - Changed "iPad" references to "1920x1080 wall panel"
+  - Added display resolution specification
+  - Updated access URLs and testing notes
+
+### Production Build
+- Rebuilt React app: 344.49 KB JS, 31.97 KB CSS (gzipped: 101 KB + 6 KB)
+- Updated add-on build folder
+
+---
+
 ## [1.0.0] - 2026-01-26
 
 ### Summary
