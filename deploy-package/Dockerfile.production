@@ -1,0 +1,21 @@
+FROM nginx:alpine
+
+# Install wget for healthcheck
+RUN apk add --no-cache wget
+
+# Copy pre-built React app
+COPY build /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.production.conf /etc/nginx/nginx.conf
+
+# Create entrypoint script for runtime config injection
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+# Expose port 80
+EXPOSE 80
+
+# Use entrypoint to inject config at runtime
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,11 +1,12 @@
 /**
  * MealGrid Component
  * Displays 7-day meal grid (Thu-Wed) with 4 meal types per day
- * Touch-optimized for iPad
+ * Touch-optimized for wall panel
  */
 
 import { MealCell } from './MealCell';
 import { format, addDays } from 'date-fns';
+import { X } from 'lucide-react';
 
 const DAYS = ['thu', 'fri', 'sat', 'sun', 'mon', 'tue', 'wed'];
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'cakes'];
@@ -27,7 +28,7 @@ const MEAL_LABELS = {
   cakes: 'Cakes',
 };
 
-export function MealGrid({ meals, loading, onMealUpdate }) {
+export function MealGrid({ meals, loading, onMealUpdate, onClearDay }) {
   // Calculate dates for the current week (Thu-Wed)
   const getWeekDates = () => {
     const today = new Date();
@@ -71,27 +72,30 @@ export function MealGrid({ meals, loading, onMealUpdate }) {
       <table className="w-full border-collapse">
         <thead>
           <tr>
-            <th className="bg-gray-100 p-3 text-left font-semibold border border-gray-300 min-w-[120px]">
-              Meal
+            <th className="bg-gray-100 p-3 text-left font-semibold border border-gray-300 min-w-[140px]">
+              Day
             </th>
-            {DAYS.map((day, index) => (
+            {MEAL_TYPES.map(mealType => (
               <th
-                key={day}
-                className="bg-gray-100 p-3 text-center font-semibold border border-gray-300 min-w-[150px]"
+                key={mealType}
+                className="bg-gray-100 p-3 text-center font-semibold border border-gray-300 min-w-[200px]"
               >
-                <div>{DAY_LABELS[day]}</div>
-                <div className="text-sm font-normal text-gray-600">{weekDates[index]}</div>
+                {MEAL_LABELS[mealType]}
               </th>
             ))}
+            <th className="bg-gray-100 p-3 text-center font-semibold border border-gray-300 w-[80px]">
+              Clear
+            </th>
           </tr>
         </thead>
         <tbody>
-          {MEAL_TYPES.map(mealType => (
-            <tr key={mealType}>
+          {DAYS.map((day, index) => (
+            <tr key={day}>
               <td className="bg-gray-50 p-3 font-medium border border-gray-300">
-                {MEAL_LABELS[mealType]}
+                <div>{DAY_LABELS[day]}</div>
+                <div className="text-sm font-normal text-gray-600">{weekDates[index]}</div>
               </td>
-              {DAYS.map(day => {
+              {MEAL_TYPES.map(mealType => {
                 const mealData = meals[day]?.[mealType];
                 return (
                   <td key={`${day}-${mealType}`} className="border border-gray-300 p-0">
@@ -103,6 +107,19 @@ export function MealGrid({ meals, loading, onMealUpdate }) {
                   </td>
                 );
               })}
+              <td className="border border-gray-300 p-3 text-center">
+                <button
+                  onClick={() => onClearDay(day)}
+                  className="flex items-center justify-center mx-auto p-2 rounded-full hover:bg-red-100 transition-colors"
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                  }}
+                  title={`Clear all meals for ${DAY_LABELS[day]}`}
+                >
+                  <X size={20} className="text-red-600" />
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

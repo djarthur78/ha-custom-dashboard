@@ -1,0 +1,39 @@
+# Stage 1: Build React app
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY src/package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
+COPY src/ ./
+
+# Build the app with relative base path
+RUN npm run build
+
+# Stage 2: Production nginx server
+FROM nginx:alpine
+
+# Install wget for healthcheck
+RUN apk add --no-cache wget
+
+# Copy built React app from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.production.conf /etc/nginx/nginx.conf
+
+# Create entrypoint script for runtime config injection
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+# Expose port 80
+EXPOSE 80
+
+# Use entrypoint to inject config at runtime
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]

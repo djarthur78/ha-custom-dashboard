@@ -33,6 +33,23 @@ export function MealsPage() {
     return await updateMeal(day, mealType, value);
   };
 
+  const handleClearDay = async (day) => {
+    if (!window.confirm(`Clear all meals for ${day.toUpperCase()}?`)) {
+      return;
+    }
+
+    try {
+      const clearPromises = MEAL_TYPES.map(mealType =>
+        updateMeal(day, mealType, '')
+      );
+
+      await Promise.all(clearPromises);
+      console.log(`[MealsPage] Cleared all meals for ${day}`);
+    } catch (err) {
+      console.error(`[MealsPage] Failed to clear meals for ${day}:`, err);
+    }
+  };
+
   const handleCopyWeek = async () => {
     try {
       // Copy all meals from w2 to w1
@@ -96,6 +113,7 @@ export function MealsPage() {
             meals={meals}
             loading={loading}
             onMealUpdate={handleMealUpdate}
+            onClearDay={handleClearDay}
           />
         </div>
 
