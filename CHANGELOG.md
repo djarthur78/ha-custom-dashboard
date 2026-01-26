@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.3] - 2026-01-26
+
+### Summary
+Critical fix for HTTPS remote access via Cloudflare tunnel - dashboard now works correctly with ingress.
+
+### Fixed
+
+**HTTPS/Ingress Support**
+- Fixed "Unable to load iframes pointing at websites using http: if Home Assistant is served over https:" error
+- Changed `useIngress: false` to `useIngress: true` in run.sh configuration
+- Dashboard now correctly detects HTTPS protocol and uses WSS (secure WebSocket) when accessed remotely
+- WebSocket connection automatically adapts to the access method:
+  - Local HTTP access: uses ws://192.168.1.2:8123
+  - Remote HTTPS access via Cloudflare: uses wss://ha.99swanlane.uk
+- No more mixed content blocking when accessing via https://ha.99swanlane.uk
+
+### Technical Details
+- run.sh:25 - Changed injected config from `useIngress:false` to `useIngress:true`
+- ha-websocket.js:26-32 - Ingress mode now active, uses window.location.protocol for protocol detection
+- WebSocket service automatically uses wss:// when page is loaded via https://
+
+### Testing
+- Verify local access still works: http://192.168.1.2:8099
+- Verify remote access works: https://ha.99swanlane.uk (via ingress)
+- Verify WebSocket connects with correct protocol in both scenarios
+
+---
+
 ## [1.0.2] - 2026-01-26
 
 ### Summary

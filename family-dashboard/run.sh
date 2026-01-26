@@ -22,7 +22,7 @@ chmod -R 755 /var/lib/nginx /var/log/nginx /run/nginx
 
 # Inject runtime config directly into index.html as inline script
 echo "[INFO] Injecting runtime configuration into HTML..."
-sed -i 's|<script src="./config.js"></script>|<script>window.HA_CONFIG={url:"'"${HA_URL}"'",token:"'"${HA_TOKEN}"'",supervisorToken:"'"${SUPERVISOR_TOKEN}"'",useIngress:false};</script>|' /usr/share/nginx/html/index.html
+sed -i 's|<script src="./config.js"></script>|<script>window.HA_CONFIG={url:"'"${HA_URL}"'",token:"'"${HA_TOKEN}"'",supervisorToken:"'"${SUPERVISOR_TOKEN}"'",useIngress:true};</script>|' /usr/share/nginx/html/index.html
 
 echo "[INFO] Configuration injected into HTML"
 
