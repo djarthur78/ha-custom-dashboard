@@ -120,7 +120,6 @@ export async function createCalendarEvent(calendarId, eventData) {
         description: eventData.description || '',
         location: eventData.location || '',
       },
-      return_response: true,
     });
 
     console.log(`[Calendar Service] Event created successfully:`, result);
@@ -155,7 +154,6 @@ export async function updateCalendarEvent(calendarId, uid, eventData) {
         description: eventData.description || '',
         location: eventData.location || '',
       },
-      return_response: true,
     });
 
     console.log(`[Calendar Service] Event updated successfully:`, result);
@@ -191,7 +189,6 @@ export async function deleteCalendarEvent(calendarId, uid, recurrenceId = null) 
       domain: 'calendar',
       service: 'delete_event',
       service_data: serviceData,
-      return_response: true,
     });
 
     console.log(`[Calendar Service] Event deleted successfully:`, result);

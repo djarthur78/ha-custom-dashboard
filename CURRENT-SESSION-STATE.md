@@ -66,6 +66,52 @@ src/src/components/features/calendar/CalendarView.jsx
 src/src/components/features/calendar/CalendarViewList.jsx
 ```
 
+## 🚨 KNOWN ERRORS (Reported by User)
+
+### 1. Event CRUD Operations All Failing ✅ FIXED
+**Error Message (appears for ALL operations):**
+```
+Failed to create calendar event: Validation error: An action which does not return responses can't be called with return_response=True
+```
+
+**Status:** ✅ FIXED - Removed `return_response: true` from calendar-service.js lines 123, 158, 194
+
+**What was fixed:**
+- Removed `return_response: true` from `createCalendarEvent()`
+- Removed `return_response: true` from `updateCalendarEvent()`
+- Removed `return_response: true` from `deleteCalendarEvent()`
+
+**Next step:** Build and deploy to test the fix works
+
+---
+
+### 2. Recurring Events Only Show First Occurrence ❌ NOT FIXED
+**Problem:** Recurring events only display on their first date, not on subsequent recurrence dates.
+
+**Example:**
+- Weekly event "Collage" every Thursday
+- Should appear on all Thursdays in the calendar
+- Currently only shows on the first Thursday
+
+**Impact:**
+- Users can't see their recurring events across the week/month
+- Calendar appears incomplete
+- Major usability issue
+
+**Where to investigate:**
+- `src/src/services/calendar-service.js` - fetchCalendarEvents function
+- Check if `calendar.get_events` service returns expanded recurring events
+- May need to manually expand RRULE (recurrence rules) in frontend
+- Check if HA calendar integration expands recurrences or returns raw RRULE
+
+**Possible solutions:**
+1. Check if increasing date range in calendar.get_events helps
+2. Use a library to expand RRULE patterns (like `rrule.js`)
+3. Check HA calendar entity attributes for recurrence rules
+4. Query each day individually instead of date ranges
+
+---
+
 ## What Still Needs Fixing
 
 ### Calendar Visual Issues ❌
@@ -80,27 +126,21 @@ src/src/components/features/calendar/CalendarViewList.jsx
 - Week/month navigation controls
 
 ### Calendar Edit Entry Functionality ❌
-**Problem:** User reported that editing calendar entries doesn't work properly.
+**Problem:** ALL event operations fail with same error (see "KNOWN ERRORS" section above).
 
-**Need to investigate and test:**
-1. Click on an existing event - does detail modal open?
-2. In detail modal, is there an "Edit" button?
-3. Does clicking "Edit" open the edit form?
-4. Can you modify event fields (title, time, description)?
-5. Does clicking "Save" update the event in Home Assistant?
-6. Are there error messages in browser console?
-7. Do changes appear immediately in the calendar?
+**Confirmed broken (user tested):**
+1. ❌ Creating new events fails with error
+2. ❌ Editing existing events fails with error
+3. ❌ Deleting events fails with error
 
-**Related: Can you CREATE new events?**
-- Does "+ Add Event" button work?
-- Does the create form open?
-- Can you set event details?
-- Does saving create the event in HA?
+**Likely working (needs verification):**
+- ✅ Viewing events (displaying in calendar)
+- ✅ Clicking events (opening detail modal)
+- ✅ Event detail modal display
+- ✅ Edit form opening
+- ✅ Delete confirmation dialog
 
-**Related: Can you DELETE events?**
-- Is there a delete button in event detail?
-- Does confirmation dialog appear?
-- Does delete actually remove from HA?
+**The SAVE operations are what fail - the UIs likely work fine.**
 
 **Files to Check:**
 ```
