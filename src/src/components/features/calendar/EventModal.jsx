@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, ModalFooter } from '../../common/Modal';
 import { Calendar, Clock, MapPin, AlignLeft, User, Repeat } from 'lucide-react';
-import { format, addHours, setHours, setMinutes } from 'date-fns';
+import { format, addHours } from 'date-fns';
 import { createCalendarEvent, updateCalendarEvent, parseNaturalLanguage } from '../../../services/calendar-service';
 import { CALENDAR_COLORS } from '../../../constants/colors';
 
@@ -220,11 +220,6 @@ export function EventModal({
         return newErrors;
       });
     }
-  };
-
-  // Handle all-day toggle
-  const handleAllDayToggle = () => {
-    setFormData(prev => ({ ...prev, allDay: !prev.allDay }));
   };
 
   // Handle quick duration buttons

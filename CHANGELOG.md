@@ -6,6 +6,75 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.0] - 2026-01-26
+
+### Summary
+Phase 2B Complete: Meal Planner fully implemented with two-week view, inline editing, and week copy function.
+
+### Added
+
+**Meal Planner Feature (Phase 2B - Complete)**
+- Two-week meal planning view (This Week / Next Week tabs)
+- 7-day grid layout (Thursday-Wednesday week structure)
+- 4 meal types per day: Breakfast, Lunch, Dinner, Cakes
+- Inline cell editing - tap to edit, Enter to save, Escape to cancel
+- Auto-save on blur with visual feedback (Saving... indicator)
+- Real-time synchronization with Home Assistant input_text entities (56 total)
+- Week copy function: "Copy Next Week → This Week" button with confirmation dialog
+- Touch-optimized cells (44px minimum height) for wall panel
+- Date headers showing actual calendar dates (e.g., "Thursday Jan 16")
+- Help tip at bottom explaining edit controls
+
+**New Components**
+- `MealsPage.jsx` - Main meal planner page with week management
+- `MealGrid.jsx` - 7-day × 4-meal grid table component
+- `MealCell.jsx` - Editable cell with inline editing
+- `WeekSelector.jsx` - This Week / Next Week tab selector
+- `CopyWeekButton.jsx` - Week copy with confirmation dialog
+- `useMealData.js` - Hook for fetching/updating meal data with WebSocket subscriptions
+
+### Production Build
+- Rebuilt React app with Meal Planner (343.63 KB JS, 31.88 KB CSS)
+- Updated add-on build folder (family-dashboard/build/)
+- Ready for deployment to wall panel via HA add-on update
+
+### Technical Notes
+- Meal data stored in 56 HA input_text entities (28 per week)
+- WebSocket subscriptions for real-time updates across all meal entities
+- Optimistic UI updates for instant feedback
+- Clean lint with 0 errors
+
+---
+
+## [0.9.1] - 2026-01-26
+
+### Summary
+Phase 2 Implementation Plan - Phase 1 Quick Wins completed. Wall panel touch target improvements and lint error fixes.
+
+### Changed
+
+**Header Sizing for Wall Panel Touch (MainLayout.jsx)**
+- Nav icons: 24px → 28px (better touch targets for wall panel)
+- Icon padding: p-2 → p-3 (larger tap area ~44px)
+- Date/time/temp text: text-base (16px) → text-xl (20px) (readable from kitchen distance)
+- Weather icons: 20px → 24px (match larger text size)
+
+### Fixed
+
+**Lint Errors (4 errors → 0 errors)**
+- `EventModal.jsx`: Removed unused imports `setHours`, `setMinutes` from date-fns
+- `EventModal.jsx`: Removed unused `handleAllDayToggle` function (lines 225-228)
+- `MainLayout.jsx`: Added eslint-disable comment for false positive on `Icon` variable
+
+### Remaining Phase 2 Tasks
+The following tasks are planned but not yet implemented:
+1. **Phase 2C**: Games Room - climate, harmony, power controls
+2. **Phase 2D**: Cameras - 3x3 grid with modal view
+3. **Calendar Enhancement**: Move temperature next to date in calendar weekly view
+4. **Future**: People/Map tab - family location tracking with map
+
+---
+
 ## [0.9.0] - 2026-01-25
 
 ### Summary
