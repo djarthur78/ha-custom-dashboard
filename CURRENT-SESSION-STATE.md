@@ -114,16 +114,28 @@ Failed to create calendar event: Validation error: An action which does not retu
 
 ## What Still Needs Fixing
 
-### Calendar Visual Issues ❌
-**Problem:** Need to verify calendar matches original HA dashboard design.
+### Calendar Visual Issues ⏳ PARTIALLY FIXED (NOT DEPLOYED)
+**Status:** Changes made in code but NOT yet in deployed add-on build
 
-**Check:**
-- Layout spacing and padding
-- Event card styling
-- Color scheme matches HA theme
-- Touch targets are iPad-friendly (min 44px)
-- Waste collection banner styling
-- Week/month navigation controls
+**✅ Fixed in code (waiting for deployment):**
+1. Compact header format: "Arthur Family HH:mm 6°" instead of full date/time
+2. Removed "Family Dashboard" title from home page
+3. Removed "Calendar" title from calendar page
+4. Removed all page titles from other pages
+
+**❓ Need to verify after deployment:**
+- Does header show "Arthur Family 06:58 4°" format?
+- Are page titles gone?
+- Layout spacing and padding looks good?
+- Event card styling matches HA theme?
+- Color scheme consistent?
+- Touch targets are iPad-friendly (min 44px)?
+- Waste collection banner styling correct?
+- Week/month navigation controls work well?
+
+**📸 Last screenshot showed:** Still showing old format "Monday, January 26, 2026" because add-on not updated yet
+
+**Action needed:** Update add-on in Home Assistant to see visual changes
 
 ### Calendar Edit Entry Functionality ❌
 **Problem:** ALL event operations fail with same error (see "KNOWN ERRORS" section above).
@@ -185,16 +197,39 @@ src/src/services/ha-websocket.js - WebSocket service layer
 
 ## Detailed Testing Plan for Calendar
 
-### Step 1: Visual Testing
+### Step 1: Visual Testing - Header and Layout
+**Compare with:** Original HA dashboard (~/Downloads/comparison.png)
+
+**Header checks (top blue bar):**
+- [ ] Shows "Arthur Family HH:mm 6°" format (compact, not full date)
+- [ ] Icon navigation on left side (Home, Calendar, Meals, Games, Cameras)
+- [ ] Date/time/weather in center-left
+- [ ] "Connected" status on right side (green dot + text)
+- [ ] No "Arthur Dashboard" text in header
+- [ ] Header height is compact (not wasting space)
+
+**Page layout checks:**
+- [ ] No "Family Dashboard" heading on home page
+- [ ] No "Calendar" heading on calendar page
+- [ ] No "Meal Planner" heading on meals page
+- [ ] Content starts immediately below header
+- [ ] Waste collection banner shows at top of calendar
+- [ ] Calendar controls (Show me: Day/Week/Month, View as: List/Schedule) are visible
+
+**Event card checks:**
+- [ ] Event cards have proper padding
+- [ ] Colors match calendar source (Daz=blue, Nic=pink, etc)
+- [ ] Touch targets are at least 44px high for iPad
+- [ ] Time format is consistent (HH:MM)
+- [ ] All-day events show "Entire day" label
+- [ ] Multi-line event titles wrap properly
+
+**Screenshot locations for comparison:**
 ```bash
-# Use puppeteer to test at production URL
-# Navigate to: http://192.168.1.2:8099/calendar
-# Take screenshots of:
-# - Week view (default)
-# - Day view
-# - Month view
-# - Event cards
-# - Compare with original HA dashboard
+# Use puppeteer to take screenshots:
+# http://192.168.1.2:8099/ - Home page
+# http://192.168.1.2:8099/calendar - Calendar page
+# Compare header height and layout with ~/Downloads/comparison.png
 ```
 
 ### Step 2: Functionality Testing - View Events
@@ -426,6 +461,41 @@ scripts: {
 ✅ Date navigation (prev/next/today buttons)
 ❓ Event CRUD (create, edit, delete) - NEEDS TESTING
 
+## Summary: All Issues to Fix (Priority Order)
+
+### 🔴 HIGH PRIORITY - Blocking Basic Functionality
+1. **Update Add-on in HA** ⏳ WAITING FOR USER
+   - User needs to update the add-on from GitHub
+   - This deploys both visual fixes AND CRUD operation fixes
+   - Action: User must restart/rebuild add-on in Home Assistant
+
+2. **Test Event CRUD After Update** ⏳ PENDING DEPLOYMENT
+   - Create new event - should work now
+   - Edit existing event - should work now
+   - Delete event - should work now
+   - Verify no more "return_response" errors
+
+### 🟡 MEDIUM PRIORITY - Major UX Issues
+3. **Recurring Events Only Show First Date** ❌ NOT FIXED
+   - Events with recurrence rules only appear once
+   - Example: "Collage" every Thursday only shows on first Thursday
+   - Needs investigation in calendar-service.js
+   - May need RRULE expansion library
+
+### 🟢 LOW PRIORITY - Visual Polish
+4. **Verify Visual Changes After Deployment** ⏳ PENDING DEPLOYMENT
+   - Check compact header format
+   - Verify page titles removed
+   - Compare with original HA dashboard screenshot
+   - Use detailed visual testing checklist above
+
+---
+
 ## Current Todo List State
-1. ✅ Fix calendar visual issues as requested - COMPLETED
-2. ⏳ Fix calendar edit entry functionality - IN PROGRESS (need details from user)
+1. ✅ Rebuilt React app with calendar-service.js fix - COMPLETED
+2. ⏳ Update add-on in Home Assistant - WAITING FOR USER
+3. ⏳ Test event creation after update - PENDING
+4. ⏳ Test event editing after update - PENDING
+5. ⏳ Test event deletion after update - PENDING
+6. ❌ Investigate recurring events issue - NOT STARTED
+7. ❌ Fix recurring events display - NOT STARTED
