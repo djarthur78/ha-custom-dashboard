@@ -30,6 +30,77 @@ Modern React web application replacing an existing Home Assistant dashboard. Pri
 **Display:** 1920x1080 wall panel (landscape orientation)
 **Tech Stack:** React 19, Vite 7.3, Tailwind CSS v4, React Router, date-fns, Lucide React
 
+---
+
+## Context Management (CRITICAL - READ FIRST)
+
+### The Golden Rule
+
+> **PLAN → SAVE → EXECUTE → SAVE**
+>
+> Never start executing without a saved plan. Never end without saving state.
+
+### Session Start Checklist
+
+**Every session MUST begin by reading these files in order:**
+
+```bash
+# 1. This file (CLAUDE.md) - Project overview
+# 2. Current task state
+cat .claude/CURRENT-TASK.md
+
+# 3. Recent session history
+cat .claude/SESSION-LOG.md
+
+# 4. Git status
+git status && git log --oneline -5
+```
+
+### Before Any Major Task
+
+1. **Create a plan first** - For complex tasks, create/update a `*-PLAN.md` file
+2. **Update CURRENT-TASK.md** - Set status to IN_PROGRESS, note what you're doing
+3. **Break into phases** - List specific files to modify, define success criteria
+
+### During Work
+
+- Commit after each logical unit of work
+- Update CURRENT-TASK.md progress checklist
+- Push to remote frequently
+
+### Session End (MANDATORY)
+
+```bash
+# 1. Commit any uncommitted work
+git add <files> && git commit -m "message"
+git push
+
+# 2. Update context files
+# - .claude/CURRENT-TASK.md (progress, next steps)
+# - .claude/SESSION-LOG.md (session summary)
+```
+
+### Context Files
+
+| File | Purpose | Update When |
+|------|---------|-------------|
+| `.claude/CURRENT-TASK.md` | Active task state | Before/after every task |
+| `.claude/SESSION-LOG.md` | Historical session log | End of each session |
+| `.claude/WORKFLOW.md` | Standard procedures | When process changes |
+| `*-PLAN.md` files | Task-specific plans | Before complex tasks |
+
+### Emergency Recovery
+
+If context is lost mid-session:
+```bash
+git log --oneline -10          # Recent commits
+cat .claude/CURRENT-TASK.md    # Task state
+cat .claude/SESSION-LOG.md     # Session history
+git diff --stat HEAD~5         # Recent changes
+```
+
+---
+
 ## Essential Commands
 
 ### Development
@@ -296,10 +367,12 @@ export const CALENDAR_COLORS = {
 4. **FOLDER-STRUCTURE.md** - Frontend organization patterns
 5. **specs/** - Detailed feature specifications
 
-### For Resuming Work
-- **SESSION-NOTES.md** - Working notes for original developer
-- **CHANGELOG.md** - What's been built
-- Build prompts: `00-DISCOVERY-PROMPT.md`, `01-BUILD-PHASE-1-FOUNDATION.md`, etc.
+### For Resuming Work (AI Sessions)
+1. **`.claude/CURRENT-TASK.md`** - Current task state and progress (READ FIRST)
+2. **`.claude/SESSION-LOG.md`** - Recent session history
+3. **`.claude/WORKFLOW.md`** - Standard operating procedures
+4. **`CHANGELOG.md`** - What's been built
+5. **`*-PLAN.md`** files - Active migration/feature plans
 
 ### Reference
 - **discovery/** - HA entity inventory and current dashboard analysis
@@ -310,10 +383,24 @@ export const CALENDAR_COLORS = {
 ## Known Constraints
 
 - No TypeScript (using JavaScript for faster MVP)
-- No automated tests yet (manual testing only)
 - HTTP only (local network, no HTTPS)
 - Single persistent WebSocket connection (singleton pattern)
 - Local development requires WSL2 port forwarding for iPad access
+
+## Testing
+
+```bash
+cd src
+npm test              # Run all tests
+npm run test:watch    # Watch mode
+npm run test:coverage # Coverage report
+```
+
+**Test coverage:** 99 tests across services and hooks
+- `ha-websocket.test.js` - WebSocket service (25 tests)
+- `useEntity.test.js` - Entity hook (12 tests)
+- `useServiceCall.test.js` - Service call hook (20 tests)
+- `calendar-service.test.js` - Calendar service (42 tests)
 
 ## Git Workflow
 
