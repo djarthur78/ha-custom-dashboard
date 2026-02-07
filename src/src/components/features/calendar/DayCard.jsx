@@ -5,7 +5,7 @@
  */
 
 import { memo } from 'react';
-import { format, isToday, isSameDay, addDays } from 'date-fns';
+import { format, isToday } from 'date-fns';
 import { getEventStyle } from '../../../constants/colors';
 import { getWeatherIcon } from '../../../utils/weather';
 
@@ -15,24 +15,16 @@ import { getWeatherIcon } from '../../../utils/weather';
  * @param {Array} props.events - Events filtered to this day (pre-sorted)
  * @param {Object} [props.weather] - Weather data for this day { condition, temperature, templow }
  * @param {Function} props.onEventClick - Event click handler
- * @param {boolean} [props.showRelativeLabel=true] - Show Today/Yesterday/Tomorrow labels
  */
 export const DayCard = memo(function DayCard({
   day,
   events,
   weather,
   onEventClick,
-  showRelativeLabel = true,
 }) {
   const isCurrentDay = isToday(day);
 
   const getDayLabel = () => {
-    if (!showRelativeLabel) return format(day, 'EEEE');
-    const yesterday = addDays(new Date(), -1);
-    const tomorrow = addDays(new Date(), 1);
-    if (isToday(day)) return 'Today';
-    if (isSameDay(day, yesterday)) return 'Yesterday';
-    if (isSameDay(day, tomorrow)) return 'Tomorrow';
     return format(day, 'EEEE');
   };
 

@@ -5,7 +5,7 @@
  */
 
 import { useMemo } from 'react';
-import { format, isSameDay, isToday, addDays } from 'date-fns';
+import { format, isSameDay, isToday } from 'date-fns';
 import { getEventStyle } from '../../../constants/colors';
 import { useWeather } from '../../../hooks/useWeather';
 import { getWeatherIcon } from '../../../utils/weather';
@@ -46,11 +46,6 @@ export function DayListView({
 
   // Get day name
   const getDayName = () => {
-    const yesterday = addDays(new Date(), -1);
-    const tomorrow = addDays(new Date(), 1);
-    if (isToday(currentDate)) return 'Today';
-    if (isSameDay(currentDate, yesterday)) return 'Yesterday';
-    if (isSameDay(currentDate, tomorrow)) return 'Tomorrow';
     return format(currentDate, 'EEEE');
   };
 

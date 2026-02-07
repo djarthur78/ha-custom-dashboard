@@ -156,7 +156,11 @@ export function MealGrid({ meals, loading, onMealUpdate, onClearDay }) {
               <tr
                 key={day}
                 style={{
-                  backgroundColor: isCurrentDay ? '#FFF9E6' : 'transparent',
+                  backgroundColor: isCurrentDay ? '#FFF3CC' : 'transparent',
+                  outline: isCurrentDay ? '3px solid #FFA500' : 'none',
+                  outlineOffset: '-1px',
+                  position: isCurrentDay ? 'relative' : 'static',
+                  zIndex: isCurrentDay ? 1 : 'auto',
                 }}
               >
                 <td

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { format, addDays, subDays, isSameDay, isToday } from 'date-fns';
+import { format, isSameDay, isToday } from 'date-fns';
 import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react';
 import { CALENDAR_COLORS } from '../../../constants/colors';
 import { useWeather } from '../../../hooks/useWeather';
@@ -144,11 +144,6 @@ export function TimelineView({
 
   // Get day name
   const getDayName = () => {
-    const yesterday = addDays(new Date(), -1);
-    const tomorrow = addDays(new Date(), 1);
-    if (isToday(currentDate)) return 'Today';
-    if (isSameDay(currentDate, yesterday)) return 'Yesterday';
-    if (isSameDay(currentDate, tomorrow)) return 'Tomorrow';
     return format(currentDate, 'EEEE, MMMM d, yyyy');
   };
 
