@@ -3,6 +3,12 @@
  * Manages WebSocket connection to Home Assistant with auto-reconnect
  */
 
+import { getHAConfig } from '../utils/ha-config';
+import createLogger from '../utils/logger';
+
+const log = createLogger('HA WebSocket');
+const weatherLog = createLogger('Weather');
+
 class HAWebSocket {
   constructor() {
     this.ws = null;
@@ -15,34 +21,12 @@ class HAWebSocket {
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 10;
     this.reconnectTimeout = null;
+    this.stateCache = new Map(); // entity_id → full state object
+    this.stateCacheReady = false;
 
-    // Auto-detect environment
-    // Priority: window.HA_CONFIG (add-on runtime) > env variables (development)
-    if (window.HA_CONFIG && window.HA_CONFIG.url) {
-      // Running in add-on with explicit URL and token
-      this.url = window.HA_CONFIG.url;
-      this.token = window.HA_CONFIG.token || window.HA_CONFIG.supervisorToken;
-      console.log('[HA WebSocket] Running in add-on mode:', this.url);
-    } else if (window.HA_CONFIG && window.HA_CONFIG.useIngress) {
-      // Running in HA add-on with ingress (legacy)
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
-      this.url = `${protocol}//${host}/api/websocket`;
-      this.token = window.HA_CONFIG.supervisorToken || window.HA_CONFIG.token;
-      console.log('[HA WebSocket] Running in add-on mode with ingress');
-    } else if (import.meta.env.VITE_HA_URL) {
-      // Development mode
-      this.url = import.meta.env.VITE_HA_URL;
-      this.token = import.meta.env.VITE_HA_TOKEN;
-      console.log('[HA WebSocket] Running in development mode');
-    } else {
-      // Fallback: try to connect to current host
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
-      this.url = `${protocol}//${host}/api/websocket`;
-      this.token = null;
-      console.warn('[HA WebSocket] No configuration found, attempting connection without token');
-    }
+    const config = getHAConfig();
+    this.url = config.url;
+    this.token = config.token;
   }
 
   /**
@@ -62,7 +46,7 @@ class HAWebSocket {
         this.ws = new WebSocket(`${wsUrl}/api/websocket`);
 
         this.ws.onopen = () => {
-          console.log('[HA WebSocket] Connection opened');
+          log.debug('Connection opened');
         };
 
         this.ws.onmessage = async (event) => {
@@ -71,14 +55,14 @@ class HAWebSocket {
         };
 
         this.ws.onerror = (error) => {
-          console.error('[HA WebSocket] Error:', error);
+          log.error('Error:', error);
           this.isConnecting = false;
           this.notifyConnectionListeners('error', error);
           reject(error);
         };
 
         this.ws.onclose = () => {
-          console.log('[HA WebSocket] Connection closed');
+          log.debug('Connection closed');
           this.isAuthenticated = false;
           this.isConnecting = false;
           this.notifyConnectionListeners('disconnected');
@@ -97,12 +81,12 @@ class HAWebSocket {
   async handleMessage(message, resolve, reject) {
     switch (message.type) {
       case 'auth_required':
-        console.log('[HA WebSocket] Auth required');
+        log.debug('Auth required');
         this.authenticate();
         break;
 
       case 'auth_ok':
-        console.log('[HA WebSocket] Authentication successful');
+        log.info('Authentication successful');
         this.isAuthenticated = true;
         this.isConnecting = false;
         this.reconnectAttempts = 0;
@@ -112,7 +96,7 @@ class HAWebSocket {
         break;
 
       case 'auth_invalid':
-        console.error('[HA WebSocket] Authentication failed');
+        log.error('Authentication failed');
         this.isConnecting = false;
         this.notifyConnectionListeners('auth_failed');
         if (reject) reject(new Error('Authentication failed'));
@@ -127,7 +111,7 @@ class HAWebSocket {
         break;
 
       default:
-        console.log('[HA WebSocket] Unknown message type:', message.type);
+        log.debug('Unknown message type:', message.type);
     }
   }
 
@@ -142,13 +126,27 @@ class HAWebSocket {
   }
 
   /**
-   * Subscribe to state changes
+   * Subscribe to state changes and populate initial state cache
    */
-  subscribeToStates() {
+  async subscribeToStates() {
+    // Subscribe to future state changes
     this.send({
       type: 'subscribe_events',
       event_type: 'state_changed',
     });
+
+    // Fetch all current states to populate cache
+    try {
+      const states = await this.send({ type: 'get_states' });
+      this.stateCache.clear();
+      states.forEach(state => {
+        this.stateCache.set(state.entity_id, state);
+      });
+      this.stateCacheReady = true;
+      log.debug(`State cache populated with ${states.length} entities`);
+    } catch (error) {
+      log.error('Failed to populate state cache:', error);
+    }
   }
 
   /**
@@ -181,6 +179,9 @@ class HAWebSocket {
       const newState = message.event.data?.new_state;
 
       if (entityId && newState) {
+        // Update state cache
+        this.stateCache.set(entityId, newState);
+
         const subscribers = this.stateSubscribers.get(entityId);
         if (subscribers) {
           subscribers.forEach(callback => callback(newState));
@@ -192,10 +193,10 @@ class HAWebSocket {
     if (message.event?.forecast && this.weatherSubscribers) {
       const callback = this.weatherSubscribers.get(message.id);
       if (callback) {
-        console.log(`[Weather] Received forecast update for subscription ${message.id}:`, message.event.forecast);
+        weatherLog.debug(`Received forecast update for subscription ${message.id}`);
         callback(message.event.forecast);
       } else {
-        console.log(`[Weather] Received forecast but no callback found for ID ${message.id}`);
+        weatherLog.debug(`Received forecast but no callback found for ID ${message.id}`);
       }
     }
   }
@@ -241,13 +242,24 @@ class HAWebSocket {
   }
 
   /**
-   * Get current state of an entity
+   * Get current state of an entity (from cache, falls back to network)
    */
   async getState(entityId) {
-    const states = await this.send({
-      type: 'get_states',
-    });
+    // Use cache if available
+    if (this.stateCacheReady && this.stateCache.has(entityId)) {
+      return this.stateCache.get(entityId);
+    }
+
+    // Fallback to network fetch
+    const states = await this.send({ type: 'get_states' });
     return states.find(state => state.entity_id === entityId);
+  }
+
+  /**
+   * Get cached state synchronously (returns null if not cached)
+   */
+  getCachedState(entityId) {
+    return this.stateCache.get(entityId) || null;
   }
 
   /**
@@ -311,7 +323,7 @@ class HAWebSocket {
 
       // Store the callback with the message ID
       this.weatherSubscribers.set(id, callback);
-      console.log(`[Weather] Subscribing with ID ${id} to ${entityId}`);
+      weatherLog.debug(`Subscribing with ID ${id} to ${entityId}`);
 
       // Set up response listener
       const timeout = setTimeout(() => {
@@ -326,12 +338,12 @@ class HAWebSocket {
       this.listeners.set(id, {
         resolve: () => {
           clearTimeout(timeout);
-          console.log(`[Weather] Subscription ${id} confirmed`);
+          weatherLog.debug(`Subscription ${id} confirmed`);
           // Return unsubscribe function
           resolve(() => {
             if (this.weatherSubscribers) {
               this.weatherSubscribers.delete(id);
-              console.log(`[Weather] Unsubscribed ${id}`);
+              weatherLog.debug(`Unsubscribed ${id}`);
             }
           });
         },
@@ -383,7 +395,7 @@ class HAWebSocket {
     }
 
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('[HA WebSocket] Max reconnect attempts reached');
+      log.error('Max reconnect attempts reached');
       this.notifyConnectionListeners('max_retries_reached');
       return;
     }
@@ -391,12 +403,12 @@ class HAWebSocket {
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
     this.reconnectAttempts++;
 
-    console.log(`[HA WebSocket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
+    log.info(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
     this.notifyConnectionListeners('reconnecting', { attempt: this.reconnectAttempts, delay });
 
     this.reconnectTimeout = setTimeout(() => {
       this.connect().catch(error => {
-        console.error('[HA WebSocket] Reconnect failed:', error);
+        log.error('Reconnect failed:', error);
       });
     }, delay);
   }
@@ -427,6 +439,35 @@ class HAWebSocket {
     this.isConnecting = false;
     this.listeners.clear();
     this.stateSubscribers.clear();
+    this.stateCache.clear();
+    this.stateCacheReady = false;
+  }
+
+  /**
+   * Wait for connection to be established.
+   * Resolves immediately if already connected, or waits up to timeout ms.
+   * @param {number} [timeout=5000] - Max wait time in ms
+   * @returns {Promise<void>} Resolves when connected, rejects on timeout
+   */
+  waitForConnection(timeout = 5000) {
+    if (this.getStatus() === 'connected') {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        unsubscribe();
+        reject(new Error('Connection timeout'));
+      }, timeout);
+
+      const unsubscribe = this.onConnectionChange((status) => {
+        if (status === 'connected') {
+          clearTimeout(timer);
+          unsubscribe();
+          resolve();
+        }
+      });
+    });
   }
 
   /**

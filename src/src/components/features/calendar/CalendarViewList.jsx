@@ -4,15 +4,16 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { format, startOfWeek, addWeeks, subWeeks, addDays, subDays, addMonths, subMonths, isSameDay, isToday } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudLightning, Sun, Moon, CloudFog, Wind, Snowflake } from 'lucide-react';
+import { format, startOfWeek, addWeeks, subWeeks, addDays, subDays, addMonths, subMonths, isSameDay } from 'date-fns';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from 'lucide-react';
 import { PageContainer } from '../../layout/PageContainer';
 import { LoadingSpinner } from '../../common/LoadingSpinner';
 import { TwoTierSelector } from '../../common/TwoTierSelector';
 import { useHAConnection } from '../../../hooks/useHAConnection';
 import { useWeather } from '../../../hooks/useWeather';
 import { fetchAllCalendarEvents } from '../../../services/calendar-service';
-import { getEventStyle, getCalendarColor } from '../../../constants/colors';
+import { getCalendarColor } from '../../../constants/colors';
+import { CALENDAR_IDS, PERSON_CALENDARS } from '../../../constants/calendars';
 import { EventModal } from './EventModal';
 import { EventDetailModal } from './EventDetailModal';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
@@ -21,59 +22,7 @@ import { DayListView } from './DayListView';
 import { MonthView } from './MonthView';
 import { TimelineView } from './TimelineView';
 import { WeekTimelineView } from './WeekTimelineView';
-
-// Person calendars for filtering
-const PERSON_CALENDARS = [
-  { id: 'calendar.arthurdarren_gmail_com', name: 'Daz', shortName: 'D' },
-  { id: 'calendar.nicholaarthur_gmail_com', name: 'Nic', shortName: 'N' },
-  { id: 'calendar.arthurcerys_gmail_com', name: 'Cerys', shortName: 'C' },
-  { id: 'calendar.arthurdexter08_gmail_com', name: 'Dex', shortName: 'D' },
-];
-
-// All calendar entity IDs
-const CALENDAR_IDS = [
-  'calendar.99swanlane_gmail_com',
-  'calendar.arthurdarren_gmail_com',
-  'calendar.nicholaarthur_gmail_com',
-  'calendar.arthurcerys_gmail_com',
-  'calendar.arthurdexter08_gmail_com',
-  'calendar.birthdays',
-  'calendar.holidays_in_the_united_kingdom',
-  'calendar.basildon_council',
-];
-
-// Weather condition to emoji icon mapping
-const getWeatherIcon = (condition) => {
-  const iconMap = {
-    'clear-night': { icon: Moon, color: '#FDB813', size: 28 },
-    'cloudy': { icon: Cloud, color: '#78909C', size: 28 },
-    'fog': { icon: CloudFog, color: '#B0BEC5', size: 28 },
-    'hail': { icon: CloudSnow, color: '#81D4FA', size: 28 },
-    'lightning': { icon: CloudLightning, color: '#FDD835', size: 28 },
-    'lightning-rainy': { icon: CloudLightning, color: '#FFA726', size: 28 },
-    'partlycloudy': { icon: Cloud, color: '#90CAF9', size: 28 },
-    'pouring': { icon: CloudRain, color: '#42A5F5', size: 28 },
-    'rainy': { icon: CloudDrizzle, color: '#5C6BC0', size: 28 },
-    'snowy': { icon: Snowflake, color: '#81D4FA', size: 28 },
-    'snowy-rainy': { icon: CloudSnow, color: '#64B5F6', size: 28 },
-    'sunny': { icon: Sun, color: '#FFB300', size: 28 },
-    'windy': { icon: Wind, color: '#90A4AE', size: 28 },
-    'windy-variant': { icon: Wind, color: '#78909C', size: 28 },
-    'exceptional': { icon: Cloud, color: '#FF5722', size: 28 },
-  };
-
-  const config = iconMap[condition] || iconMap['sunny'];
-  const IconComponent = config.icon;
-
-  return (
-    <IconComponent
-      size={config.size}
-      style={{ color: config.color }}
-      strokeWidth={2}
-    />
-  );
-};
-
+import { DayCard } from './DayCard';
 
 export function CalendarViewList() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -201,11 +150,17 @@ export function CalendarViewList() {
   };
 
   // Filter events by enabled calendars
-  const filteredEvents = events.filter(event => enabledCalendars.has(event.calendarId));
+  const filteredEvents = useMemo(
+    () => events.filter(event => enabledCalendars.has(event.calendarId)),
+    [events, enabledCalendars]
+  );
 
   // Get week days
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const weekDays = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
+    [weekStart]
+  );
 
   // Date label based on period
   const dateLabel = useMemo(() => {
@@ -225,27 +180,29 @@ export function CalendarViewList() {
 
 
   // Get waste collection events for header (exclude today, show next collection)
-  const now = new Date();
-  const today = new Date(now);
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const { nextDayWasteEvents, daysUntilCollection } = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const wasteEvents = events.filter(e =>
-    e.calendarId === 'calendar.basildon_council' &&
-    e.start >= tomorrow  // Only future collections, not today
-  ).sort((a, b) => a.start - b.start);
+    const wasteEvents = events.filter(e =>
+      e.calendarId === 'calendar.basildon_council' &&
+      e.start >= tomorrow
+    ).sort((a, b) => a.start - b.start);
 
-  // Get next collection day and all events on that day
-  const nextWasteCollection = wasteEvents[0];
-  const nextCollectionDay = nextWasteCollection?.start;
-  const nextDayWasteEvents = wasteEvents.filter(e =>
-    nextCollectionDay && isSameDay(e.start, nextCollectionDay)
-  );
+    const nextWasteCollection = wasteEvents[0];
+    const nextCollectionDay = nextWasteCollection?.start;
+    const nextDayWasteEvents = wasteEvents.filter(e =>
+      nextCollectionDay && isSameDay(e.start, nextCollectionDay)
+    );
 
-  const daysUntilCollection = nextWasteCollection
-    ? Math.ceil((nextWasteCollection.start - today) / (1000 * 60 * 60 * 24))
-    : null;
+    const daysUntilCollection = nextWasteCollection
+      ? Math.ceil((nextWasteCollection.start - today) / (1000 * 60 * 60 * 24))
+      : null;
+
+    return { nextDayWasteEvents, daysUntilCollection };
+  }, [events]);
 
   if (!isConnected) {
     return (
@@ -443,106 +400,16 @@ export function CalendarViewList() {
               const dayEvents = filteredEvents.filter(event =>
                 isSameDay(event.start, day)
               ).sort((a, b) => a.start - b.start);
-
-              const isCurrentDay = isToday(day);
               const dayKey = format(day, 'yyyy-MM-dd');
-              const dayWeather = weather.forecastByDate[dayKey];
 
               return (
-                <div
+                <DayCard
                   key={day.toISOString()}
-                  className="overflow-hidden bg-white"
-                  style={{
-                    border: 'solid 1px whitesmoke',
-                    borderRadius: '8px',
-                  }}
-                >
-                  {/* Day header */}
-                  <div style={{ padding: '8px', borderBottom: 'solid 1px whitesmoke' }}>
-                    <div className="flex items-center justify-between">
-                      <div
-                        style={{
-                          fontSize: '3em',
-                          fontWeight: 700,
-                          lineHeight: 1,
-                          ...(isCurrentDay && {
-                            borderRadius: '5px',
-                            backgroundColor: 'orange',
-                            padding: '0 4px',
-                            display: 'inline-block'
-                          })
-                        }}
-                      >
-                        {format(day, 'd')}
-                      </div>
-                      {dayWeather && (
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '1.2em' }}>
-                            {getWeatherIcon(dayWeather.condition)}
-                          </div>
-                          <div style={{ fontSize: '0.75em', color: '#666', fontWeight: 600 }}>
-                            {Math.round(dayWeather.temperature)}° / {Math.round(dayWeather.templow)}°
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ fontSize: '1em', fontWeight: 700, color: '#666', marginTop: '4px' }}>
-                      {(() => {
-                        const yesterday = addDays(new Date(), -1);
-                        const tomorrow = addDays(new Date(), 1);
-                        if (isToday(day)) return 'Today';
-                        if (isSameDay(day, yesterday)) return 'Yesterday';
-                        if (isSameDay(day, tomorrow)) return 'Tomorrow';
-                        return format(day, 'EEEE');
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Events list */}
-                  <div style={{ padding: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {dayEvents.length === 0 ? (
-                      <div className="text-xs text-[var(--color-text-secondary)] text-center py-2">
-                        No events
-                      </div>
-                    ) : (
-                      dayEvents
-                        .filter(event => event.calendarId !== 'calendar.basildon_council')
-                        .map(event => {
-                          const colors = getEventStyle(event.calendarId);
-                          return (
-                            <button
-                              key={event.id}
-                              onClick={() => handleEventClick(event)}
-                              className="w-full text-left hover:opacity-80 transition-opacity"
-                              style={{
-                                backgroundColor: colors.backgroundColor,
-                                padding: '8px',
-                                borderRadius: '10px',
-                                border: 'none',
-                                maxHeight: '80px',
-                                overflow: 'hidden',
-                              }}
-                            >
-                              <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#000000', opacity: 0.7, marginBottom: '2px' }}>
-                                {!event.allDay && (
-                                  <>{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</>
-                                )}
-                                {event.allDay && <>Entire day</>}
-                              </div>
-                              <div style={{ fontSize: '14px', lineHeight: '1.4', fontWeight: '500', color: '#000000' }}>
-                                {event.title}
-                              </div>
-                              {event.location && (
-                                <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#000000', opacity: 0.7, marginTop: '2px' }}>
-                                  {event.location}
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })
-                    )}
-                  </div>
-                </div>
+                  day={day}
+                  events={dayEvents}
+                  weather={weather.forecastByDate[dayKey]}
+                  onEventClick={handleEventClick}
+                />
               );
             })}
           </div>
@@ -553,99 +420,17 @@ export function CalendarViewList() {
               const dayEvents = filteredEvents.filter(event =>
                 isSameDay(event.start, day)
               ).sort((a, b) => a.start - b.start);
-
-              const isCurrentDay = isToday(day);
               const dayKey = format(day, 'yyyy-MM-dd');
-              const dayWeather = weather.forecastByDate[dayKey];
 
               return (
-                <div
+                <DayCard
                   key={day.toISOString()}
-                  className="overflow-hidden bg-white"
-                  style={{
-                    border: 'solid 1px whitesmoke',
-                    borderRadius: '8px',
-                  }}
-                >
-                  {/* Day header */}
-                  <div style={{ padding: '8px', borderBottom: 'solid 1px whitesmoke' }}>
-                    <div className="flex items-center justify-between">
-                      <div
-                        style={{
-                          fontSize: '3em',
-                          fontWeight: 700,
-                          lineHeight: 1,
-                          ...(isCurrentDay && {
-                            borderRadius: '5px',
-                            backgroundColor: 'orange',
-                            padding: '0 4px',
-                            display: 'inline-block'
-                          })
-                        }}
-                      >
-                        {format(day, 'd')}
-                      </div>
-                      {dayWeather && (
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '1.2em' }}>
-                            {getWeatherIcon(dayWeather.condition)}
-                          </div>
-                          <div style={{ fontSize: '0.75em', color: '#666', fontWeight: 600 }}>
-                            {Math.round(dayWeather.temperature)}° / {Math.round(dayWeather.templow)}°
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ fontSize: '1em', fontWeight: 700, color: '#666', marginTop: '4px' }}>
-                      {format(day, 'EEEE')}
-                    </div>
-                  </div>
-
-                  {/* Events list */}
-                  <div style={{ padding: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {dayEvents.length === 0 ? (
-                      <div className="text-xs text-[var(--color-text-secondary)] text-center py-2">
-                        No events
-                      </div>
-                    ) : (
-                      dayEvents
-                        .filter(event => event.calendarId !== 'calendar.basildon_council')
-                        .map(event => {
-                          const colors = getEventStyle(event.calendarId);
-                          return (
-                            <button
-                              key={event.id}
-                              onClick={() => handleEventClick(event)}
-                              className="w-full text-left hover:opacity-80 transition-opacity"
-                              style={{
-                                backgroundColor: colors.backgroundColor,
-                                padding: '8px',
-                                borderRadius: '10px',
-                                border: 'none',
-                                maxHeight: '80px',
-                                overflow: 'hidden',
-                              }}
-                            >
-                              <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#000000', opacity: 0.7, marginBottom: '2px' }}>
-                                {!event.allDay && (
-                                  <>{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</>
-                                )}
-                                {event.allDay && <>Entire day</>}
-                              </div>
-                              <div style={{ fontSize: '14px', lineHeight: '1.4', fontWeight: '500', color: '#000000' }}>
-                                {event.title}
-                              </div>
-                              {event.location && (
-                                <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#000000', opacity: 0.7, marginTop: '2px' }}>
-                                  {event.location}
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })
-                    )}
-                  </div>
-                </div>
+                  day={day}
+                  events={dayEvents}
+                  weather={weather.forecastByDate[dayKey]}
+                  onEventClick={handleEventClick}
+                  showRelativeLabel={false}
+                />
               );
             })}
           </div>
@@ -656,106 +441,16 @@ export function CalendarViewList() {
             const dayEvents = filteredEvents.filter(event =>
               isSameDay(event.start, day)
             ).sort((a, b) => a.start - b.start);
-
-            const isCurrentDay = isToday(day);
             const dayKey = format(day, 'yyyy-MM-dd');
-            const dayWeather = weather.forecastByDate[dayKey];
 
             return (
-              <div
+              <DayCard
                 key={day.toISOString()}
-                className="overflow-hidden bg-white"
-                style={{
-                  border: 'solid 1px whitesmoke',
-                  borderRadius: '8px',
-                }}
-              >
-                {/* Day header */}
-                <div style={{ padding: '8px', borderBottom: 'solid 1px whitesmoke' }}>
-                  <div className="flex items-center justify-between">
-                    <div
-                      style={{
-                        fontSize: '3em',
-                        fontWeight: 700,
-                        lineHeight: 1,
-                        ...(isCurrentDay && {
-                          borderRadius: '5px',
-                          backgroundColor: 'orange',
-                          padding: '0 4px',
-                          display: 'inline-block'
-                        })
-                      }}
-                    >
-                      {format(day, 'd')}
-                    </div>
-                    {dayWeather && (
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '1.2em' }}>
-                          {getWeatherIcon(dayWeather.condition)}
-                        </div>
-                        <div style={{ fontSize: '0.75em', color: '#666', fontWeight: 600 }}>
-                          {Math.round(dayWeather.temperature)}° / {Math.round(dayWeather.templow)}°
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ fontSize: '1em', fontWeight: 700, color: '#666', marginTop: '4px' }}>
-                    {(() => {
-                      const yesterday = addDays(new Date(), -1);
-                      const tomorrow = addDays(new Date(), 1);
-                      if (isToday(day)) return 'Today';
-                      if (isSameDay(day, yesterday)) return 'Yesterday';
-                      if (isSameDay(day, tomorrow)) return 'Tomorrow';
-                      return format(day, 'EEEE');
-                    })()}
-                  </div>
-                </div>
-
-                {/* Events list */}
-                <div style={{ padding: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {dayEvents.length === 0 ? (
-                    <div className="text-xs text-[var(--color-text-secondary)] text-center py-2">
-                      No events
-                    </div>
-                  ) : (
-                    dayEvents
-                      .filter(event => event.calendarId !== 'calendar.basildon_council')
-                      .map(event => {
-                        const colors = getEventStyle(event.calendarId);
-                        return (
-                          <button
-                            key={event.id}
-                            onClick={() => handleEventClick(event)}
-                            className="w-full text-left hover:opacity-80 transition-opacity"
-                            style={{
-                              backgroundColor: colors.backgroundColor,
-                              padding: '8px',
-                              borderRadius: '10px',
-                              border: 'none',
-                              maxHeight: '80px',
-                              overflow: 'hidden',
-                            }}
-                          >
-                            <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#000000', opacity: 0.7, marginBottom: '2px' }}>
-                              {!event.allDay && (
-                                <>{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</>
-                              )}
-                              {event.allDay && <>Entire day</>}
-                            </div>
-                            <div style={{ fontSize: '14px', lineHeight: '1.4', fontWeight: '500', color: '#000000' }}>
-                              {event.title}
-                            </div>
-                            {event.location && (
-                              <div style={{ fontSize: '12px', lineHeight: '1.4', color: '#000000', opacity: 0.7, marginTop: '2px' }}>
-                                {event.location}
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })
-                  )}
-                </div>
-              </div>
+                day={day}
+                events={dayEvents}
+                weather={weather.forecastByDate[dayKey]}
+                onEventClick={handleEventClick}
+              />
             );
           })}
         </div>

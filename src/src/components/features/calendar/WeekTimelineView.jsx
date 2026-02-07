@@ -9,41 +9,9 @@
 
 import { useMemo } from 'react';
 import { format, startOfWeek, addDays, isSameDay, isToday } from 'date-fns';
-import { Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudLightning, Sun, Moon, CloudFog, Wind, Snowflake } from 'lucide-react';
 import { CALENDAR_COLORS } from '../../../constants/colors';
 import { useWeather } from '../../../hooks/useWeather';
-
-// Weather icon mapping (same as other views)
-const getWeatherIcon = (condition, size = 24) => {
-  const iconMap = {
-    'clear-night': { icon: Moon, color: '#FDB813' },
-    'cloudy': { icon: Cloud, color: '#78909C' },
-    'fog': { icon: CloudFog, color: '#B0BEC5' },
-    'hail': { icon: CloudSnow, color: '#81D4FA' },
-    'lightning': { icon: CloudLightning, color: '#FDD835' },
-    'lightning-rainy': { icon: CloudLightning, color: '#FFA726' },
-    'partlycloudy': { icon: Cloud, color: '#90CAF9' },
-    'pouring': { icon: CloudRain, color: '#42A5F5' },
-    'rainy': { icon: CloudDrizzle, color: '#5C6BC0' },
-    'snowy': { icon: Snowflake, color: '#81D4FA' },
-    'snowy-rainy': { icon: CloudSnow, color: '#64B5F6' },
-    'sunny': { icon: Sun, color: '#FFB300' },
-    'windy': { icon: Wind, color: '#90A4AE' },
-    'windy-variant': { icon: Wind, color: '#78909C' },
-    'exceptional': { icon: Cloud, color: '#FF5722' },
-  };
-
-  const config = iconMap[condition] || iconMap['sunny'];
-  const IconComponent = config.icon;
-
-  return (
-    <IconComponent
-      size={size}
-      style={{ color: config.color }}
-      strokeWidth={2}
-    />
-  );
-};
+import { getWeatherIcon } from '../../../utils/weather';
 
 export function WeekTimelineView({
   currentDate,

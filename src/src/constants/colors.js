@@ -1,74 +1,22 @@
 /**
  * Color Constants
- * Calendar colors matching Home Assistant theme
+ * Calendar color helpers — colors now defined in calendars.js
  */
 
-// Calendar Colors - One color per calendar source
-export const CALENDAR_COLORS = {
-  // Main family calendar
-  'calendar.99swanlane_gmail_com': {
-    primary: '#4ecdc4',    // Teal
-    text: '#ffffff',
-    border: '#3ab5ad',
-  },
+import { CALENDAR_COLORS } from './calendars';
 
-  // Daz (Darren)
-  'calendar.arthurdarren_gmail_com': {
-    primary: '#2962FF',    // Blue - from YAML
-    text: '#000000',
-    border: '#2962FF',
-  },
+// Re-export for backward compatibility
+export { CALENDAR_COLORS };
 
-  // Nic (Nicola)
-  'calendar.nicholaarthur_gmail_com': {
-    primary: '#F4A6B8',    // Pink - from YAML
-    text: '#000000',
-    border: '#F4A6B8',
-  },
-
-  // Cerys
-  'calendar.arthurcerys_gmail_com': {
-    primary: '#9DB8A0',    // Green - from YAML
-    text: '#000000',
-    border: '#9DB8A0',
-  },
-
-  // Dex (Dexter)
-  'calendar.arthurdexter08_gmail_com': {
-    primary: '#FFB703',    // Orange/Yellow - from YAML
-    text: '#000000',
-    border: '#FFB703',
-  },
-
-  // Birthdays
-  'calendar.birthdays': {
-    primary: '#fd79a8',    // Pink
-    text: '#ffffff',
-    border: '#e76690',
-  },
-
-  // UK Holidays
-  'calendar.holidays_in_the_united_kingdom': {
-    primary: '#74b9ff',    // Light blue
-    text: '#2d3436',
-    border: '#5aa3e6',
-  },
-
-  // Basildon Council
-  'calendar.basildon_council': {
-    primary: '#fab1a0',    // Coral
-    text: '#2d3436',
-    border: '#e89885',
-  },
+const DEFAULT_COLOR = {
+  primary: '#95a5a6',
+  text: '#ffffff',
+  border: '#7f8c8d',
 };
 
 // Helper function to get calendar color
 export function getCalendarColor(calendarId) {
-  return CALENDAR_COLORS[calendarId] || {
-    primary: '#95a5a6',  // Default gray
-    text: '#ffffff',
-    border: '#7f8c8d',
-  };
+  return CALENDAR_COLORS[calendarId] || DEFAULT_COLOR;
 }
 
 // Helper function for event styling

@@ -1,12 +1,18 @@
 /**
  * Calendar Service
- * Fetches calendar events from Home Assistant
+ * Fetches calendar events from Home Assistant via REST API,
+ * creates/updates/deletes via WebSocket
  */
 
 import haWebSocket from './ha-websocket';
+import haRest from './ha-rest';
+import createLogger from '../utils/logger';
+import { showToast } from '../hooks/useToast';
+
+const log = createLogger('Calendar');
 
 /**
- * Fetch calendar events for a date range
+ * Fetch calendar events for a date range via REST API
  * @param {string} calendarId - Calendar entity ID (e.g., 'calendar.daz')
  * @param {Date} start - Start date
  * @param {Date} end - End date
@@ -14,61 +20,27 @@ import haWebSocket from './ha-websocket';
  */
 export async function fetchCalendarEvents(calendarId, start, end) {
   try {
-    const startISO = start.toISOString();
-    const endISO = end.toISOString();
+    log.debug(`[Calendar Service] Fetching events for ${calendarId} via REST API`);
 
-    console.log(`[Calendar Service] Fetching events for ${calendarId}`, { start: startISO, end: endISO });
+    const events = await haRest.getCalendarEvents(calendarId, start, end);
 
-    // Try to call calendar.get_events service via WebSocket
-    try {
-      const result = await haWebSocket.send({
-        type: 'call_service',
-        domain: 'calendar',
-        service: 'get_events',
-        service_data: {
-          entity_id: calendarId,
-          start_date_time: startISO,
-          end_date_time: endISO,
-        },
-        return_response: true,
-      });
+    log.debug(`[Calendar Service] Got ${events.length} events for ${calendarId}`);
 
-      console.log(`[Calendar Service] WebSocket response for ${calendarId}:`, result);
-
-      // Try different response paths (HA API format can vary)
-      let events = [];
-      if (result?.response?.[calendarId]?.events) {
-        events = result.response[calendarId].events;
-      } else if (result?.[calendarId]?.events) {
-        events = result[calendarId].events;
-      } else if (result?.response?.events) {
-        events = result.response.events;
-      } else if (result?.events) {
-        events = result.events;
-      } else if (Array.isArray(result?.response)) {
-        events = result.response;
-      } else if (Array.isArray(result)) {
-        events = result;
-      }
-
-      console.log(`[Calendar Service] Got ${events.length} events for ${calendarId}`);
-
-      return events.map(event => ({
-        id: `${calendarId}-${event.start}-${event.summary}`,
-        title: event.summary || 'Untitled Event',
-        start: new Date(event.start),
-        end: new Date(event.end),
-        allDay: !event.start.includes('T'),
-        calendarId: calendarId,
-        description: event.description || '',
-        location: event.location || '',
-      }));
-    } catch (wsError) {
-      console.error(`[Calendar Service] WebSocket failed for ${calendarId}:`, wsError);
-      return [];
-    }
+    return events.map(event => ({
+      id: `${calendarId}-${event.start?.dateTime || event.start?.date}-${event.summary}`,
+      title: event.summary || 'Untitled Event',
+      start: new Date(event.start?.dateTime || event.start?.date),
+      end: new Date(event.end?.dateTime || event.end?.date),
+      allDay: !!event.start?.date && !event.start?.dateTime,
+      calendarId: calendarId,
+      description: event.description || '',
+      location: event.location || '',
+      uid: event.uid,
+      recurrence_id: event.recurrence_id,
+    }));
   } catch (error) {
-    console.error(`[Calendar Service] Failed to fetch events for ${calendarId}:`, error);
+    log.error(`[Calendar Service] Failed to fetch events for ${calendarId}:`, error);
+    showToast('Failed to load calendar events', 'error');
     return [];
   }
 }
@@ -88,7 +60,7 @@ export async function fetchAllCalendarEvents(calendarIds, start, end) {
     // Flatten array of arrays into single array
     return results.flat();
   } catch (error) {
-    console.error('Failed to fetch calendar events:', error);
+    log.error('Failed to fetch calendar events:', error);
     return [];
   }
 }
@@ -106,7 +78,7 @@ export async function fetchAllCalendarEvents(calendarIds, start, end) {
  */
 export async function createCalendarEvent(calendarId, eventData) {
   try {
-    console.log(`[Calendar Service] Creating event in ${calendarId}:`, eventData);
+    log.debug(`[Calendar Service] Creating event in ${calendarId}:`, eventData);
 
     const result = await haWebSocket.send({
       type: 'call_service',
@@ -122,10 +94,10 @@ export async function createCalendarEvent(calendarId, eventData) {
       },
     });
 
-    console.log(`[Calendar Service] Event created successfully:`, result);
+    log.debug(`[Calendar Service] Event created successfully:`, result);
     return { success: true, result };
   } catch (error) {
-    console.error(`[Calendar Service] Failed to create event:`, error);
+    log.error(`[Calendar Service] Failed to create event:`, error);
     throw new Error(`Failed to create calendar event: ${error.message}`);
   }
 }
@@ -139,7 +111,7 @@ export async function createCalendarEvent(calendarId, eventData) {
  */
 export async function updateCalendarEvent(calendarId, uid, eventData) {
   try {
-    console.log(`[Calendar Service] Updating event ${uid} in ${calendarId}:`, eventData);
+    log.debug(`[Calendar Service] Updating event ${uid} in ${calendarId}:`, eventData);
 
     const result = await haWebSocket.send({
       type: 'call_service',
@@ -156,10 +128,10 @@ export async function updateCalendarEvent(calendarId, uid, eventData) {
       },
     });
 
-    console.log(`[Calendar Service] Event updated successfully:`, result);
+    log.debug(`[Calendar Service] Event updated successfully:`, result);
     return { success: true, result };
   } catch (error) {
-    console.error(`[Calendar Service] Failed to update event:`, error);
+    log.error(`[Calendar Service] Failed to update event:`, error);
     throw new Error(`Failed to update calendar event: ${error.message}`);
   }
 }
@@ -173,7 +145,7 @@ export async function updateCalendarEvent(calendarId, uid, eventData) {
  */
 export async function deleteCalendarEvent(calendarId, uid, recurrenceId = null) {
   try {
-    console.log(`[Calendar Service] Deleting event ${uid} from ${calendarId}`);
+    log.debug(`[Calendar Service] Deleting event ${uid} from ${calendarId}`);
 
     const serviceData = {
       entity_id: calendarId,
@@ -191,10 +163,10 @@ export async function deleteCalendarEvent(calendarId, uid, recurrenceId = null) 
       service_data: serviceData,
     });
 
-    console.log(`[Calendar Service] Event deleted successfully:`, result);
+    log.debug(`[Calendar Service] Event deleted successfully:`, result);
     return { success: true, result };
   } catch (error) {
-    console.error(`[Calendar Service] Failed to delete event:`, error);
+    log.error(`[Calendar Service] Failed to delete event:`, error);
     throw new Error(`Failed to delete calendar event: ${error.message}`);
   }
 }

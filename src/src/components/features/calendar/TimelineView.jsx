@@ -1,40 +1,9 @@
 import { useMemo } from 'react';
 import { format, addDays, subDays, isSameDay, isToday } from 'date-fns';
-import { ChevronLeft, ChevronRight, Plus, Clock, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudLightning, Sun, Moon, CloudFog, Wind, Snowflake } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react';
 import { CALENDAR_COLORS } from '../../../constants/colors';
 import { useWeather } from '../../../hooks/useWeather';
-
-// Weather icon mapping (same as other views)
-const getWeatherIcon = (condition) => {
-  const iconMap = {
-    'clear-night': { icon: Moon, color: '#FDB813', size: 32 },
-    'cloudy': { icon: Cloud, color: '#78909C', size: 32 },
-    'fog': { icon: CloudFog, color: '#B0BEC5', size: 32 },
-    'hail': { icon: CloudSnow, color: '#81D4FA', size: 32 },
-    'lightning': { icon: CloudLightning, color: '#FDD835', size: 32 },
-    'lightning-rainy': { icon: CloudLightning, color: '#FFA726', size: 32 },
-    'partlycloudy': { icon: Cloud, color: '#90CAF9', size: 32 },
-    'pouring': { icon: CloudRain, color: '#42A5F5', size: 32 },
-    'rainy': { icon: CloudDrizzle, color: '#5C6BC0', size: 32 },
-    'snowy': { icon: Snowflake, color: '#81D4FA', size: 32 },
-    'snowy-rainy': { icon: CloudSnow, color: '#64B5F6', size: 32 },
-    'sunny': { icon: Sun, color: '#FFB300', size: 32 },
-    'windy': { icon: Wind, color: '#90A4AE', size: 32 },
-    'windy-variant': { icon: Wind, color: '#78909C', size: 32 },
-    'exceptional': { icon: Cloud, color: '#FF5722', size: 32 },
-  };
-
-  const config = iconMap[condition] || iconMap['sunny'];
-  const IconComponent = config.icon;
-
-  return (
-    <IconComponent
-      size={config.size}
-      style={{ color: config.color }}
-      strokeWidth={2}
-    />
-  );
-};
+import { getWeatherIcon } from '../../../utils/weather';
 
 /**
  * TimelineView Component
@@ -233,7 +202,7 @@ export function TimelineView({
                 {dayWeather && (
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '1.2em', marginBottom: '4px' }}>
-                      {getWeatherIcon(dayWeather.condition)}
+                      {getWeatherIcon(dayWeather.condition, 32)}
                     </div>
                     <div style={{ fontSize: '0.85em', color: '#666', fontWeight: 600 }}>
                       {Math.round(dayWeather.temperature)}° / {Math.round(dayWeather.templow)}°

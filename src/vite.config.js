@@ -14,5 +14,11 @@ export default defineConfig({
     host: '0.0.0.0', // Allow network access (iPad)
     port: 5173,
     strictPort: true,
+    proxy: {
+      '/api': {
+        target: 'http://192.168.1.2:8123',
+        changeOrigin: true,
+      },
+    },
   },
 })

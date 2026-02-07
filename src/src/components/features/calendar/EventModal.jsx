@@ -3,16 +3,7 @@ import { Modal, ModalFooter } from '../../common/Modal';
 import { Calendar, Clock, MapPin, AlignLeft, User, Repeat } from 'lucide-react';
 import { format, addHours } from 'date-fns';
 import { createCalendarEvent, updateCalendarEvent, parseNaturalLanguage } from '../../../services/calendar-service';
-import { CALENDAR_COLORS } from '../../../constants/colors';
-
-// Only writable calendars (excluding read-only: Family, UK Holidays, Basildon)
-const CALENDAR_OPTIONS = [
-  { id: 'calendar.arthurdarren_gmail_com', name: 'Daz', color: CALENDAR_COLORS['calendar.arthurdarren_gmail_com']?.primary || '#2962FF' },
-  { id: 'calendar.nicholaarthur_gmail_com', name: 'Nic', color: CALENDAR_COLORS['calendar.nicholaarthur_gmail_com']?.primary || '#F4A6B8' },
-  { id: 'calendar.arthurcerys_gmail_com', name: 'Cerys', color: CALENDAR_COLORS['calendar.arthurcerys_gmail_com']?.primary || '#9DB8A0' },
-  { id: 'calendar.arthurdexter08_gmail_com', name: 'Dex', color: CALENDAR_COLORS['calendar.arthurdexter08_gmail_com']?.primary || '#FFB703' },
-  { id: 'calendar.birthdays', name: 'Birthdays', color: CALENDAR_COLORS['calendar.birthdays']?.primary || '#fd79a8' },
-];
+import { CALENDAR_OPTIONS } from '../../../constants/calendars';
 
 /**
  * EventModal Component

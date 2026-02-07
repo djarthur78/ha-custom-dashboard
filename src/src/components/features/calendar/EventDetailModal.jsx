@@ -1,18 +1,7 @@
 import { Modal, ModalFooter } from '../../common/Modal';
 import { Calendar, Clock, MapPin, AlignLeft, Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { CALENDAR_COLORS } from '../../../constants/colors';
-
-const CALENDAR_NAMES = {
-  'calendar.99swanlane_gmail_com': '99 Swan Lane',
-  'calendar.arthurdarren_gmail_com': 'Daz',
-  'calendar.nicholaarthur_gmail_com': 'Nic',
-  'calendar.arthurcerys_gmail_com': 'Cerys',
-  'calendar.arthurdexter08_gmail_com': 'Dex',
-  'calendar.birthdays': 'Birthdays',
-  'calendar.holidays_in_the_united_kingdom': 'UK Holidays',
-  'calendar.basildon_council': 'Basildon Council',
-};
+import { CALENDAR_COLORS, CALENDAR_NAMES } from '../../../constants/calendars';
 
 /**
  * EventDetailModal Component

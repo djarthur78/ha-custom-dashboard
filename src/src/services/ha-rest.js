@@ -3,8 +3,9 @@
  * For operations that don't require WebSocket (config, services info, etc.)
  */
 
-const HA_URL = import.meta.env.VITE_HA_URL;
-const HA_TOKEN = import.meta.env.VITE_HA_TOKEN;
+import { getHAConfig } from '../utils/ha-config';
+
+const { url: HA_URL, token: HA_TOKEN } = getHAConfig({ useProxy: true });
 
 /**
  * Make a request to Home Assistant REST API

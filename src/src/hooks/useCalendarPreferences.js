@@ -1,18 +1,10 @@
 import { useState, useEffect } from 'react';
+import { CALENDAR_IDS } from '../constants/calendars';
 
 const STORAGE_KEY = 'calendarPreferences';
 
 const DEFAULT_PREFERENCES = {
-  selectedCalendars: [
-    'calendar.99swanlane_gmail_com',
-    'calendar.arthurdarren_gmail_com',
-    'calendar.nicholaarthur_gmail_com',
-    'calendar.arthurcerys_gmail_com',
-    'calendar.arthurdexter08_gmail_com',
-    'calendar.birthdays',
-    'calendar.holidays_in_the_united_kingdom',
-    'calendar.basildon_council',
-  ],
+  selectedCalendars: CALENDAR_IDS,
   viewMode: 'week', // 'week' | 'month' | 'day'
   showWeekends: true,
   defaultCalendar: 'calendar.arthurdarren_gmail_com',

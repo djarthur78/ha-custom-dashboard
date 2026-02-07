@@ -3,12 +3,14 @@
  * Main application layout with compact header navigation
  */
 
-import { useState, useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import { Calendar, Utensils, Gamepad2, Camera, Home, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudLightning, Sun, Moon, CloudFog, Wind, Snowflake } from 'lucide-react';
-import { format } from 'date-fns';
+import { Calendar, Utensils, Gamepad2, Camera, Home } from 'lucide-react';
 import { useWeather } from '../../hooks/useWeather';
 import { useHAConnection } from '../../hooks/useHAConnection';
+import { getWeatherIcon } from '../../utils/weather';
+import { Clock } from './Clock';
+import { ToastContainer } from '../common/Toast';
+import { useToast } from '../../hooks/useToast';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Home' },
@@ -18,48 +20,10 @@ const navItems = [
   { to: '/cameras', icon: Camera, label: 'Cameras' },
 ];
 
-const getWeatherIcon = (condition) => {
-  const iconMap = {
-    'clear-night': { icon: Moon, color: '#FDB813', size: 24 },
-    'cloudy': { icon: Cloud, color: '#78909C', size: 24 },
-    'fog': { icon: CloudFog, color: '#B0BEC5', size: 24 },
-    'hail': { icon: CloudSnow, color: '#81D4FA', size: 24 },
-    'lightning': { icon: CloudLightning, color: '#FDD835', size: 24 },
-    'lightning-rainy': { icon: CloudLightning, color: '#FFA726', size: 24 },
-    'partlycloudy': { icon: Cloud, color: '#90CAF9', size: 24 },
-    'pouring': { icon: CloudRain, color: '#42A5F5', size: 24 },
-    'rainy': { icon: CloudDrizzle, color: '#5C6BC0', size: 24 },
-    'snowy': { icon: Snowflake, color: '#81D4FA', size: 24 },
-    'snowy-rainy': { icon: CloudSnow, color: '#64B5F6', size: 24 },
-    'sunny': { icon: Sun, color: '#FFB300', size: 24 },
-    'windy': { icon: Wind, color: '#90A4AE', size: 24 },
-    'windy-variant': { icon: Wind, color: '#78909C', size: 24 },
-    'exceptional': { icon: Cloud, color: '#FF5722', size: 24 },
-  };
-
-  const config = iconMap[condition] || iconMap['sunny'];
-  const IconComponent = config.icon;
-
-  return (
-    <IconComponent
-      size={config.size}
-      style={{ color: config.color }}
-      strokeWidth={2}
-    />
-  );
-};
-
 export function MainLayout() {
-  const [currentTime, setCurrentTime] = useState(new Date());
   const weather = useWeather();
   const { isConnected } = useHAConnection();
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-    return () => clearInterval(timer);
-  }, []);
+  const { toasts, dismissToast } = useToast();
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
@@ -99,9 +63,7 @@ export function MainLayout() {
             <span className="font-medium">
               Arthur Family
             </span>
-            <span className="font-medium">
-              {format(currentTime, 'HH:mm')}
-            </span>
+            <Clock />
             {weather.temperature && weather.condition && (
               <>
                 <span className="font-medium">
@@ -131,6 +93,8 @@ export function MainLayout() {
           Family Dashboard - Built with React + Home Assistant
         </div>
       </footer>
+
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
