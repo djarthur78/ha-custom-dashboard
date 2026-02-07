@@ -54,16 +54,8 @@ export function MealGrid({ meals, loading, onMealUpdate, onClearDay }) {
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
-    // Calculate offset to Thursday
-    let offset;
-    if (dayOfWeek === 0) {
-      offset = -3;
-    } else if (dayOfWeek >= 1 && dayOfWeek <= 3) {
-      offset = dayOfWeek - 4 - 7;
-    } else {
-      offset = dayOfWeek - 4;
-    }
-
+    // Calculate offset to most recent Thursday (start of meal week)
+    const offset = -((dayOfWeek - 4 + 7) % 7);
     const thursday = addDays(today, offset);
 
     return DAYS.map((_, index) => {
