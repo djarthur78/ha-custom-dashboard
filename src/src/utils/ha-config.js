@@ -18,8 +18,10 @@
  */
 export function getHAConfig({ useProxy = false } = {}) {
   if (window.HA_CONFIG && window.HA_CONFIG.url) {
+    // In the add-on, nginx proxies /api/ to HA, so use empty URL for REST calls
+    const proxyAvailable = useProxy && window.HA_CONFIG.useProxy;
     return {
-      url: window.HA_CONFIG.url,
+      url: proxyAvailable ? '' : window.HA_CONFIG.url,
       token: window.HA_CONFIG.token || window.HA_CONFIG.supervisorToken,
     };
   }
