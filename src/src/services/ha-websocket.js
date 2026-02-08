@@ -47,13 +47,17 @@ class HAWebSocket {
       // This keeps the WebSocket within the ingress path context
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.host;
-      const basePath = window.location.pathname.replace(/\/$/, ''); // Remove trailing slash
+      // Get the directory path (not including index.html)
+      const pathname = window.location.pathname;
+      const basePath = pathname.substring(0, pathname.lastIndexOf('/'));
       wsUrl = `${protocol}//${host}${basePath}/api/websocket`;
-      log.debug(`Using relative WebSocket URL: ${wsUrl}`);
+      log.info(`Ingress mode - WebSocket URL: ${wsUrl}`);
+      log.info(`Location: ${window.location.href}`);
+      log.info(`Pathname: ${pathname}, BasePath: ${basePath}`);
     } else {
       // Absolute mode: use configured URL
       wsUrl = `${this.url.replace('http://', 'ws://').replace('https://', 'wss://')}/api/websocket`;
-      log.debug(`Using absolute WebSocket URL: ${wsUrl}`);
+      log.info(`Direct mode - WebSocket URL: ${wsUrl}`);
     }
 
     return new Promise((resolve, reject) => {
