@@ -28,8 +28,8 @@ export function MainLayout() {
   const location = useLocation();
   const { alertMode, dismissAlert } = useDoorbellAlert();
 
-  // Camera page needs full viewport - no padding/footer
-  const isCameraPage = location.pathname === '/cameras';
+  // Camera and Games Room pages need full viewport - no padding/footer
+  const isFullViewport = ['/cameras', '/games-room'].includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
@@ -89,12 +89,12 @@ export function MainLayout() {
       </header>
 
       {/* Main Content */}
-      <main className={isCameraPage ? '' : 'mx-auto px-4 py-6'}>
+      <main className={isFullViewport ? '' : 'mx-auto px-4 py-6'}>
         <Outlet context={{ alertMode, dismissAlert }} />
       </main>
 
-      {/* Footer - hide on camera page */}
-      {!isCameraPage && (
+      {/* Footer - hide on full viewport pages */}
+      {!isFullViewport && (
         <footer className="bg-[var(--color-surface)] border-t border-[var(--color-border)] mt-12">
           <div className="container mx-auto px-4 py-4 text-center text-sm text-[var(--color-text-secondary)]">
             Family Dashboard - Built with React + Home Assistant
