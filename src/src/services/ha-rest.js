@@ -5,12 +5,12 @@
 
 import { getHAConfig } from '../utils/ha-config';
 
-const { url: HA_URL, token: HA_TOKEN } = getHAConfig();
-
 /**
  * Make a request to Home Assistant REST API
  */
 async function request(endpoint, options = {}) {
+  // Get config dynamically to ensure window.HA_CONFIG is available
+  const { url: HA_URL, token: HA_TOKEN } = getHAConfig();
   const url = `${HA_URL}/api${endpoint}`;
 
   const response = await fetch(url, {
