@@ -3,60 +3,37 @@
  * Single source of truth for HA URL and token resolution.
  * Used by both ha-websocket.js and ha-rest.js.
  *
- * Priority order:
- * 1. window.HA_CONFIG.url (add-on runtime with explicit URL)
- * 2. window.HA_CONFIG.useIngress (add-on with ingress proxy)
- * 3. import.meta.env.VITE_HA_URL (development)
- * 4. Fallback to current host (last resort)
+ * With v2.0.12, we simplified this to ALWAYS return the configured URL:
+ * - Add-on mode: returns "http://supervisor/core" (injected by run.sh)
+ * - Dev mode: returns VITE_HA_URL from .env
+ *
+ * The app's JavaScript makes fetch() and WebSocket requests directly to this URL.
+ * The browser handles the actual HTTP request, which goes through HA's ingress
+ * system when accessed via ingress.
  */
 
 /**
  * Detect HA environment and return { url, token } config.
- * @param {Object} [options]
- * @param {boolean} [options.useProxy] - In dev mode, return empty URL so requests go through Vite proxy (for REST API CORS avoidance)
  * @returns {{ url: string, token: string|null }}
  */
-export function getHAConfig({ useProxy = false } = {}) {
+export function getHAConfig() {
+  // Add-on mode: window.HA_CONFIG injected by run.sh
   if (window.HA_CONFIG && window.HA_CONFIG.url) {
     const token = window.HA_CONFIG.token || window.HA_CONFIG.supervisorToken;
-    const proxyAvailable = window.HA_CONFIG.useProxy;
-    const isSecure = window.location.protocol === 'https:';
-
-    // HTTPS context (Cloudflare tunnel / ingress): use relative URLs
-    // This ensures paths stay within ingress context (/api/hassio_ingress/<token>/)
-    // Relative URLs like 'api/websocket' resolve correctly within ingress path
-    if (isSecure && proxyAvailable) {
-      return { url: '', token };
-    }
-
-    // REST with proxy: use relative URL (nginx proxy handles routing locally)
-    if (useProxy && proxyAvailable) {
-      return { url: '', token };
-    }
-
-    // Local HTTP: use configured HA URL directly
     return { url: window.HA_CONFIG.url, token };
   }
 
-  if (window.HA_CONFIG && window.HA_CONFIG.useIngress) {
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    return {
-      url: `${protocol}//${host}`,
-      token: window.HA_CONFIG.supervisorToken || window.HA_CONFIG.token,
-    };
-  }
-
+  // Development mode: use .env variables
   if (import.meta.env.VITE_HA_URL) {
     return {
-      url: (useProxy && import.meta.env.DEV) ? '' : import.meta.env.VITE_HA_URL,
+      url: import.meta.env.VITE_HA_URL,
       token: import.meta.env.VITE_HA_TOKEN,
     };
   }
 
-  // Fallback: current host, no token
+  // Fallback: local HA instance (last resort)
   return {
-    url: window.location.origin,
+    url: 'http://192.168.1.2:8123',
     token: null,
   };
 }

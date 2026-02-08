@@ -40,25 +40,13 @@ class HAWebSocket {
     this.isConnecting = true;
     this.notifyConnectionListeners('connecting');
 
-    // Construct WebSocket URL
-    let wsUrl;
-    if (!this.url || this.url === '') {
-      // Relative mode (ingress): use current page location to build WebSocket URL
-      // This keeps the WebSocket within the ingress path context
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
-      // Get the directory path (not including index.html)
-      const pathname = window.location.pathname;
-      const basePath = pathname.substring(0, pathname.lastIndexOf('/'));
-      wsUrl = `${protocol}//${host}${basePath}/api/websocket`;
-      log.info(`Ingress mode - WebSocket URL: ${wsUrl}`);
-      log.info(`Location: ${window.location.href}`);
-      log.info(`Pathname: ${pathname}, BasePath: ${basePath}`);
-    } else {
-      // Absolute mode: use configured URL
-      wsUrl = `${this.url.replace('http://', 'ws://').replace('https://', 'wss://')}/api/websocket`;
-      log.info(`Direct mode - WebSocket URL: ${wsUrl}`);
-    }
+    // Simple WebSocket URL construction
+    // Add-on mode: ws://supervisor/core/api/websocket
+    // Dev mode: ws://192.168.1.2:8123/api/websocket
+    const wsUrl = `${this.url.replace('http://', 'ws://').replace('https://', 'wss://')}/api/websocket`;
+
+    log.info(`Connecting to WebSocket: ${wsUrl}`);
+    log.info(`Using token: ${this.token ? 'SET' : 'MISSING'}`);
 
     return new Promise((resolve, reject) => {
       try {
@@ -74,7 +62,7 @@ class HAWebSocket {
         };
 
         this.ws.onerror = (error) => {
-          log.error('Error:', error);
+          log.error('WebSocket error:', error);
           this.isConnecting = false;
           this.notifyConnectionListeners('error', error);
           reject(error);

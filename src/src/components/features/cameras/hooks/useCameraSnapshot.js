@@ -8,10 +8,9 @@ export function useCameraSnapshot(entityId, intervalMs = 3000) {
 
   const refresh = useCallback(() => {
     if (!attributes?.access_token) return;
-    const { url: baseUrl } = getHAConfig({ useProxy: true });
-    // Use relative path when baseUrl is empty to stay within ingress context
-    const apiPath = baseUrl ? `${baseUrl}/api` : 'api';
-    setUrl(`${apiPath}/camera_proxy/${entityId}?token=${attributes.access_token}&t=${Date.now()}`);
+    const { url: baseUrl } = getHAConfig();
+    // Use supervisor API in add-on mode, direct URL in dev mode
+    setUrl(`${baseUrl}/api/camera_proxy/${entityId}?token=${attributes.access_token}&t=${Date.now()}`);
   }, [entityId, attributes?.access_token]);
 
   useEffect(() => {

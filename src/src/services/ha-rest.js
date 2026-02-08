@@ -5,7 +5,7 @@
 
 import { getHAConfig } from '../utils/ha-config';
 
-const { url: HA_URL, token: HA_TOKEN } = getHAConfig({ useProxy: true });
+const { url: HA_URL, token: HA_TOKEN } = getHAConfig();
 
 /**
  * Make a request to Home Assistant REST API
