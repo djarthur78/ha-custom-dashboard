@@ -65,6 +65,26 @@ git push             # Push to GitHub
 
 See `DEPLOYMENT.md` for detailed deployment instructions to Home Assistant.
 
+### Testing & Deployment Workflow
+**IMPORTANT:** Always test locally first. Only deploy to HA after confirming changes work.
+
+```
+1. Make changes
+2. Run tests:        cd src && npx vitest run
+3. Build check:      cd src && npm run build
+4. Start dev server: cd src && npm run dev
+5. Test in browser:  http://localhost:5173 (use Puppeteer to screenshot/verify)
+6. Only after confirmed working:
+   a. ./build-addon.sh
+   b. Bump version in family-dashboard/config.json
+   c. git add + commit + push
+   d. Deploy via Puppeteer: login to HA, then run:
+      hass.callWS({ type: 'supervisor/api', endpoint: '/addons/c2ba14e6_family-dashboard/update', method: 'post' })
+7. Verify on production: http://192.168.1.2:8099
+```
+
+**Add-on slug:** `c2ba14e6_family-dashboard`
+
 ## Architecture
 
 ### Connection Pattern: Singleton WebSocket Service

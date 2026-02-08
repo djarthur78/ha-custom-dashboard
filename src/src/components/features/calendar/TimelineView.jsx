@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { format, isSameDay, isToday } from 'date-fns';
+import { isEventOnDay } from '../../../utils/calendar';
 import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react';
 import { CALENDAR_COLORS } from '../../../constants/colors';
 import { useWeather } from '../../../hooks/useWeather';
@@ -40,7 +41,7 @@ export function TimelineView({
         if (selectedCalendars.length > 0 && !selectedCalendars.includes(event.calendarId)) {
           return false;
         }
-        return isSameDay(event.start, currentDate);
+        return isEventOnDay(event, currentDate);
       })
       .filter(event => !event.allDay) // Handle all-day separately
       .sort((a, b) => a.start - b.start);
@@ -53,7 +54,7 @@ export function TimelineView({
         if (selectedCalendars.length > 0 && !selectedCalendars.includes(event.calendarId)) {
           return false;
         }
-        return isSameDay(event.start, currentDate) && event.allDay;
+        return isEventOnDay(event, currentDate) && event.allDay;
       });
   }, [events, currentDate, selectedCalendars]);
 

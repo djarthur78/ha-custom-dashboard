@@ -5,7 +5,8 @@
  */
 
 import { useMemo } from 'react';
-import { format, isSameDay, isToday } from 'date-fns';
+import { format, isToday } from 'date-fns';
+import { isEventOnDay } from '../../../utils/calendar';
 import { getEventStyle } from '../../../constants/colors';
 import { useWeather } from '../../../hooks/useWeather';
 import { getWeatherIcon } from '../../../utils/weather';
@@ -28,7 +29,7 @@ export function DayListView({
         }
 
         // Filter by current day
-        return isSameDay(event.start, currentDate);
+        return isEventOnDay(event, currentDate);
       })
       // Exclude waste collection events
       .filter(event => event.calendarId !== 'calendar.basildon_council')

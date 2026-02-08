@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { format, addDays, subDays, isSameDay, isToday } from 'date-fns';
+import { format, addDays, subDays, isToday } from 'date-fns';
+import { isEventOnDay } from '../../../utils/calendar';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { CALENDAR_COLORS } from '../../../constants/colors';
 
@@ -38,7 +39,7 @@ export function DayView({
         }
 
         // Filter by current day
-        return isSameDay(event.start, currentDate);
+        return isEventOnDay(event, currentDate);
       })
       .sort((a, b) => a.start - b.start);
   }, [events, currentDate, selectedCalendars]);

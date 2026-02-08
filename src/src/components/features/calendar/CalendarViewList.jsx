@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { format, startOfWeek, addWeeks, subWeeks, addDays, subDays, addMonths, subMonths, isSameDay } from 'date-fns';
+import { isEventOnDay } from '../../../utils/calendar';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from 'lucide-react';
 import { PageContainer } from '../../layout/PageContainer';
 import { LoadingSpinner } from '../../common/LoadingSpinner';
@@ -398,7 +399,7 @@ export function CalendarViewList() {
           <div className="grid grid-cols-7" style={{ gap: '4px', width: '100%' }}>
             {weekDays.map(day => {
               const dayEvents = filteredEvents.filter(event =>
-                isSameDay(event.start, day)
+                isEventOnDay(event, day)
               ).sort((a, b) => a.start - b.start);
               const dayKey = format(day, 'yyyy-MM-dd');
 
@@ -418,7 +419,7 @@ export function CalendarViewList() {
           <div className="grid grid-cols-7" style={{ gap: '4px', width: '100%' }}>
             {Array.from({ length: 7 }, (_, i) => addDays(weekStart, i + 7)).map(day => {
               const dayEvents = filteredEvents.filter(event =>
-                isSameDay(event.start, day)
+                isEventOnDay(event, day)
               ).sort((a, b) => a.start - b.start);
               const dayKey = format(day, 'yyyy-MM-dd');
 
@@ -439,7 +440,7 @@ export function CalendarViewList() {
         <div className="grid grid-cols-7" style={{ gap: '4px', width: '100%' }}>
           {weekDays.map(day => {
             const dayEvents = filteredEvents.filter(event =>
-              isSameDay(event.start, day)
+              isEventOnDay(event, day)
             ).sort((a, b) => a.start - b.start);
             const dayKey = format(day, 'yyyy-MM-dd');
 

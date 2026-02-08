@@ -9,6 +9,7 @@
 
 import { useMemo } from 'react';
 import { format, startOfWeek, addDays, isSameDay, isToday } from 'date-fns';
+import { isEventOnDay } from '../../../utils/calendar';
 import { CALENDAR_COLORS } from '../../../constants/colors';
 import { useWeather } from '../../../hooks/useWeather';
 import { getWeatherIcon } from '../../../utils/weather';
@@ -44,7 +45,7 @@ export function WeekTimelineView({
           if (selectedCalendars.length > 0 && !selectedCalendars.includes(event.calendarId)) {
             return false;
           }
-          return isSameDay(event.start, day);
+          return isEventOnDay(event, day);
         })
         .filter(event => !event.allDay && event.calendarId !== 'calendar.basildon_council')
         .sort((a, b) => a.start - b.start);
