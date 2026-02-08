@@ -48,8 +48,8 @@ const MEAL_CONFIG = {
   },
 };
 
-export function MealGrid({ meals, loading, onMealUpdate, onClearDay }) {
-  // Calculate dates for the current week (Thu-Wed)
+export function MealGrid({ meals, loading, selectedWeek = 'w1', onMealUpdate, onClearDay }) {
+  // Calculate dates for the selected week (Thu-Wed)
   const getWeekDates = () => {
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
@@ -58,8 +58,11 @@ export function MealGrid({ meals, loading, onMealUpdate, onClearDay }) {
     const offset = -((dayOfWeek - 4 + 7) % 7);
     const thursday = addDays(today, offset);
 
+    // If viewing Next Week (w2), add 7 days
+    const weekStart = selectedWeek === 'w2' ? addDays(thursday, 7) : thursday;
+
     return DAYS.map((_, index) => {
-      const date = addDays(thursday, index);
+      const date = addDays(weekStart, index);
       return {
         formatted: format(date, 'MMM d'),
         date: date,

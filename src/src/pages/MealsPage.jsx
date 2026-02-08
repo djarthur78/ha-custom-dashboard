@@ -112,6 +112,7 @@ export function MealsPage() {
           <MealGrid
             meals={meals}
             loading={loading}
+            selectedWeek={selectedWeek}
             onMealUpdate={handleMealUpdate}
             onClearDay={handleClearDay}
           />
