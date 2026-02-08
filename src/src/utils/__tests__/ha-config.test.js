@@ -102,12 +102,13 @@ describe('getHAConfig', () => {
 
     const { getHAConfig } = await import('../ha-config.js');
 
-    // WebSocket (useProxy=false): should use current origin, not http:// URL
+    // HTTPS + ingress: both WebSocket and REST should use relative URLs
+    // to stay within ingress context (/api/hassio_ingress/<token>/)
     const wsConfig = getHAConfig();
-    expect(wsConfig.url).toBe('https://ha.example.com');
+    expect(wsConfig.url).toBe(''); // Relative URL for ingress
     expect(wsConfig.token).toBe('user-token');
 
-    // REST (useProxy=true): should use relative URL
+    // REST (useProxy=true): should also use relative URL
     const restConfig = getHAConfig({ useProxy: true });
     expect(restConfig.url).toBe('');
   });

@@ -39,11 +39,26 @@ class HAWebSocket {
 
     this.isConnecting = true;
     this.notifyConnectionListeners('connecting');
-    const wsUrl = this.url.replace('http://', 'ws://').replace('https://', 'wss://');
+
+    // Construct WebSocket URL
+    let wsUrl;
+    if (!this.url || this.url === '') {
+      // Relative mode (ingress): use current page location to build WebSocket URL
+      // This keeps the WebSocket within the ingress path context
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      const basePath = window.location.pathname.replace(/\/$/, ''); // Remove trailing slash
+      wsUrl = `${protocol}//${host}${basePath}/api/websocket`;
+      log.debug(`Using relative WebSocket URL: ${wsUrl}`);
+    } else {
+      // Absolute mode: use configured URL
+      wsUrl = `${this.url.replace('http://', 'ws://').replace('https://', 'wss://')}/api/websocket`;
+      log.debug(`Using absolute WebSocket URL: ${wsUrl}`);
+    }
 
     return new Promise((resolve, reject) => {
       try {
-        this.ws = new WebSocket(`${wsUrl}/api/websocket`);
+        this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
           log.debug('Connection opened');

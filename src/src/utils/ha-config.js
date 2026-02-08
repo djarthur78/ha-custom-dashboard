@@ -22,16 +22,16 @@ export function getHAConfig({ useProxy = false } = {}) {
     const proxyAvailable = window.HA_CONFIG.useProxy;
     const isSecure = window.location.protocol === 'https:';
 
-    // REST with proxy: use relative URL (nginx proxy handles routing locally,
-    // HA's own /api/ is on the same origin when accessed via Cloudflare/ingress)
-    if (useProxy && proxyAvailable) {
+    // HTTPS context (Cloudflare tunnel / ingress): use relative URLs
+    // This ensures paths stay within ingress context (/api/hassio_ingress/<token>/)
+    // Relative URLs like 'api/websocket' resolve correctly within ingress path
+    if (isSecure && proxyAvailable) {
       return { url: '', token };
     }
 
-    // HTTPS context (Cloudflare tunnel / ingress): use current origin
-    // to avoid mixed content (browser blocks http:// in https:// pages)
-    if (isSecure) {
-      return { url: window.location.origin, token };
+    // REST with proxy: use relative URL (nginx proxy handles routing locally)
+    if (useProxy && proxyAvailable) {
+      return { url: '', token };
     }
 
     // Local HTTP: use configured HA URL directly
