@@ -9,8 +9,9 @@ import { getHAConfig } from '../utils/ha-config';
  * Make a request to Home Assistant REST API
  */
 async function request(endpoint, options = {}) {
-  // Get config dynamically to ensure window.HA_CONFIG is available
-  const { url: HA_URL, token: HA_TOKEN } = getHAConfig();
+  // Get config dynamically with useProxy: true for REST API calls
+  // This returns empty URL so requests go to /api/* which nginx proxies
+  const { url: HA_URL, token: HA_TOKEN } = getHAConfig({ useProxy: true });
   const url = `${HA_URL}/api${endpoint}`;
 
   const response = await fetch(url, {

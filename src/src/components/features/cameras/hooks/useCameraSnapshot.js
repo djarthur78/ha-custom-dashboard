@@ -8,8 +8,8 @@ export function useCameraSnapshot(entityId, intervalMs = 3000) {
 
   const refresh = useCallback(() => {
     if (!attributes?.access_token) return;
-    const { url: baseUrl } = getHAConfig();
-    // Use supervisor API in add-on mode, direct URL in dev mode
+    const { url: baseUrl } = getHAConfig({ useProxy: true });
+    // Use nginx proxy (empty baseUrl) in add-on mode, direct URL in dev mode
     setUrl(`${baseUrl}/api/camera_proxy/${entityId}?token=${attributes.access_token}&t=${Date.now()}`);
   }, [entityId, attributes?.access_token]);
 
