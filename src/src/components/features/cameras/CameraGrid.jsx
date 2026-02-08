@@ -28,16 +28,16 @@ export function CameraGrid({ alertMode = false, onDismissAlert }) {
             gridTemplateColumns: '70fr 30fr',
             gridTemplateRows: '1fr 1fr',
           } : {
-            // Normal mode: 3 front top (65%), 5 other bottom (35%)
-            gridTemplateColumns: 'repeat(5, 1fr)',
-            gridTemplateRows: '65fr 35fr',
+            // Normal mode: Front door left 50%, Front R+L stacked right 50%, Back 5 bottom
+            gridTemplateColumns: 'repeat(10, 1fr)', // 10 columns for flexibility
+            gridTemplateRows: '32.5fr 32.5fr 35fr', // Top half split, then bottom
           })
         }}
       >
         {alertMode ? (
-          // Alert mode: only show 3 front cameras
+          // Alert mode: front door large (70%), other 2 stacked on right
           <>
-            {/* Front door - large, left side */}
+            {/* Front door - large, left side, full height */}
             <div style={{ gridColumn: 1, gridRow: '1 / 3' }}>
               <CameraFeed
                 camera={frontCameras[0]}
@@ -68,10 +68,10 @@ export function CameraGrid({ alertMode = false, onDismissAlert }) {
             </div>
           </>
         ) : (
-          // Normal mode: all 8 cameras
+          // Normal mode: Front door left 50%, Front R+L stacked right 50%, Back 5 bottom
           <>
-            {/* Front cameras - top row (span multiple columns for width) */}
-            <div style={{ gridColumn: '1 / 3', gridRow: 1 }}>
+            {/* Front door - left 50% width (columns 1-5), top 65% height (rows 1-2) */}
+            <div style={{ gridColumn: '1 / 6', gridRow: '1 / 3' }}>
               <CameraFeed
                 camera={frontCameras[0]}
                 stream={true}
@@ -80,7 +80,8 @@ export function CameraGrid({ alertMode = false, onDismissAlert }) {
               />
             </div>
 
-            <div style={{ gridColumn: 3, gridRow: 1 }}>
+            {/* Front right - right 50% width (columns 6-10), top half */}
+            <div style={{ gridColumn: '6 / 11', gridRow: 1 }}>
               <CameraFeed
                 camera={frontCameras[1]}
                 stream={true}
@@ -89,7 +90,8 @@ export function CameraGrid({ alertMode = false, onDismissAlert }) {
               />
             </div>
 
-            <div style={{ gridColumn: '4 / 6', gridRow: 1 }}>
+            {/* Front left - right 50% width (columns 6-10), bottom half */}
+            <div style={{ gridColumn: '6 / 11', gridRow: 2 }}>
               <CameraFeed
                 camera={frontCameras[2]}
                 stream={true}
@@ -98,9 +100,9 @@ export function CameraGrid({ alertMode = false, onDismissAlert }) {
               />
             </div>
 
-            {/* Other cameras - bottom row (1 column each) */}
+            {/* Back 5 cameras - bottom row, each takes 2 columns */}
             {otherCameras.map((camera, idx) => (
-              <div key={camera.id} style={{ gridColumn: idx + 1, gridRow: 2 }}>
+              <div key={camera.id} style={{ gridColumn: `${idx * 2 + 1} / ${idx * 2 + 3}`, gridRow: 3 }}>
                 <CameraFeed
                   camera={camera}
                   stream={false}
