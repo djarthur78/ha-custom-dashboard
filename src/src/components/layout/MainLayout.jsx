@@ -3,7 +3,7 @@
  * Main application layout with compact header navigation
  */
 
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { Calendar, Utensils, Gamepad2, Camera, Home } from 'lucide-react';
 import { useWeather } from '../../hooks/useWeather';
 import { useHAConnection } from '../../hooks/useHAConnection';
@@ -11,6 +11,7 @@ import { getWeatherIcon } from '../../utils/weather';
 import { Clock } from './Clock';
 import { ToastContainer } from '../common/Toast';
 import { useToast } from '../../hooks/useToast';
+import { useDoorbellAlert } from '../features/cameras/hooks/useDoorbellAlert';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Home' },
@@ -24,6 +25,11 @@ export function MainLayout() {
   const weather = useWeather();
   const { isConnected } = useHAConnection();
   const { toasts, dismissToast } = useToast();
+  const location = useLocation();
+  const { alertMode, dismissAlert } = useDoorbellAlert();
+
+  // Camera page needs full viewport - no padding/footer
+  const isCameraPage = location.pathname === '/cameras';
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
@@ -83,16 +89,18 @@ export function MainLayout() {
       </header>
 
       {/* Main Content */}
-      <main className="mx-auto px-4 py-6">
-        <Outlet />
+      <main className={isCameraPage ? '' : 'mx-auto px-4 py-6'}>
+        <Outlet context={{ alertMode, dismissAlert }} />
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[var(--color-surface)] border-t border-[var(--color-border)] mt-12">
-        <div className="container mx-auto px-4 py-4 text-center text-sm text-[var(--color-text-secondary)]">
-          Family Dashboard - Built with React + Home Assistant
-        </div>
-      </footer>
+      {/* Footer - hide on camera page */}
+      {!isCameraPage && (
+        <footer className="bg-[var(--color-surface)] border-t border-[var(--color-border)] mt-12">
+          <div className="container mx-auto px-4 py-4 text-center text-sm text-[var(--color-text-secondary)]">
+            Family Dashboard - Built with React + Home Assistant
+          </div>
+        </footer>
+      )}
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>

@@ -103,32 +103,26 @@ export async function createCalendarEvent(calendarId, eventData) {
 }
 
 /**
- * Update an existing calendar event
+ * Update an existing calendar event.
+ * HA's Google Calendar integration doesn't support calendar/event/update,
+ * so we delete the old event and create a new one.
  * @param {string} calendarId - Calendar entity ID
  * @param {string} uid - Event UID
  * @param {Object} eventData - Updated event data
+ * @param {string} [recurrenceId] - Recurrence ID for recurring events
  * @returns {Promise<Object>} Result of the operation
  */
-export async function updateCalendarEvent(calendarId, uid, eventData) {
+export async function updateCalendarEvent(calendarId, uid, eventData, recurrenceId = null) {
   try {
-    log.debug(`[Calendar Service] Updating event ${uid} in ${calendarId}:`, eventData);
+    log.debug(`[Calendar Service] Updating event ${uid} in ${calendarId} (delete + recreate):`, eventData);
 
-    const result = await haWebSocket.send({
-      type: 'call_service',
-      domain: 'calendar',
-      service: 'update_event',
-      service_data: {
-        entity_id: calendarId,
-        uid: uid,
-        summary: eventData.summary,
-        start_date_time: eventData.dtstart,
-        end_date_time: eventData.dtend,
-        description: eventData.description || '',
-        location: eventData.location || '',
-      },
-    });
+    // Delete the old event first
+    await deleteCalendarEvent(calendarId, uid, recurrenceId);
 
-    log.debug(`[Calendar Service] Event updated successfully:`, result);
+    // Create the new event with updated data
+    const result = await createCalendarEvent(calendarId, eventData);
+
+    log.debug(`[Calendar Service] Event updated successfully (delete + recreate):`, result);
     return { success: true, result };
   } catch (error) {
     log.error(`[Calendar Service] Failed to update event:`, error);
@@ -137,7 +131,9 @@ export async function updateCalendarEvent(calendarId, uid, eventData) {
 }
 
 /**
- * Delete a calendar event
+ * Delete a calendar event via WebSocket command.
+ * Uses calendar/event/delete WS command (not call_service — HA doesn't
+ * expose delete_event as a service for Google Calendar).
  * @param {string} calendarId - Calendar entity ID
  * @param {string} uid - Event UID
  * @param {string} [recurrenceId] - Recurrence ID for recurring events
@@ -147,21 +143,17 @@ export async function deleteCalendarEvent(calendarId, uid, recurrenceId = null) 
   try {
     log.debug(`[Calendar Service] Deleting event ${uid} from ${calendarId}`);
 
-    const serviceData = {
+    const command = {
+      type: 'calendar/event/delete',
       entity_id: calendarId,
       uid: uid,
     };
 
     if (recurrenceId) {
-      serviceData.recurrence_id = recurrenceId;
+      command.recurrence_id = recurrenceId;
     }
 
-    const result = await haWebSocket.send({
-      type: 'call_service',
-      domain: 'calendar',
-      service: 'delete_event',
-      service_data: serviceData,
-    });
+    const result = await haWebSocket.send(command);
 
     log.debug(`[Calendar Service] Event deleted successfully:`, result);
     return { success: true, result };

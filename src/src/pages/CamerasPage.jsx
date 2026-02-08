@@ -1,25 +1,18 @@
 /**
  * CamerasPage Component
- * Camera feeds (Phase 2D)
+ * Camera feeds with doorbell alert support
  */
 
-import { PageContainer } from '../components/layout/PageContainer';
+import { useOutletContext } from 'react-router-dom';
+import { CameraGrid } from '../components/features/cameras/CameraGrid';
 
 export function CamerasPage() {
+  const { alertMode, dismissAlert } = useOutletContext() || {};
+
   return (
-    <PageContainer>
-      <div
-        className="bg-[var(--color-surface)] rounded-xl p-12 text-center"
-        style={{
-          border: 'none',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        <p className="text-[var(--color-text-secondary)] text-lg">
-          This feature is coming in Phase 2D
-        </p>
-      </div>
-    </PageContainer>
+    <div className="camera-page">
+      <CameraGrid alertMode={alertMode} onDismissAlert={dismissAlert} />
+    </div>
   );
 }
 

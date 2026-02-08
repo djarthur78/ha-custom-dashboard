@@ -88,6 +88,30 @@ describe('getHAConfig', () => {
     expect(typeof config.url).toBe('string');
   });
 
+  it('returns current origin in HTTPS context to avoid mixed content', async () => {
+    window.HA_CONFIG = {
+      url: 'http://192.168.1.2:8123',
+      token: 'user-token',
+      useProxy: true,
+    };
+
+    Object.defineProperty(window, 'location', {
+      value: { protocol: 'https:', host: 'ha.example.com', origin: 'https://ha.example.com' },
+      writable: true,
+    });
+
+    const { getHAConfig } = await import('../ha-config.js');
+
+    // WebSocket (useProxy=false): should use current origin, not http:// URL
+    const wsConfig = getHAConfig();
+    expect(wsConfig.url).toBe('https://ha.example.com');
+    expect(wsConfig.token).toBe('user-token');
+
+    // REST (useProxy=true): should use relative URL
+    const restConfig = getHAConfig({ useProxy: true });
+    expect(restConfig.url).toBe('');
+  });
+
   it('returns empty URL when useProxy is true in dev mode', async () => {
     // This tests the proxy branch for REST API CORS avoidance
     // When VITE_HA_URL is set and DEV is true, useProxy should return ''

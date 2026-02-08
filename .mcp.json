@@ -6,6 +6,14 @@
         "-y",
         "@modelcontextprotocol/server-puppeteer"
       ]
+    },
+    "hass-mcp": {
+      "command": "/home/arthu/.local/bin/uvx",
+      "args": ["hass-mcp"],
+      "env": {
+        "HA_URL": "http://192.168.1.2:8123",
+        "HA_TOKEN": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhNTFjMzFkNzA4MzM0NzdkODNmNmE0NzUwZGE2NDZkMCIsImlhdCI6MTc2ODY1ODc1NSwiZXhwIjoyMDg0MDE4NzU1fQ.ULPVcBjPdaqDV0fp1CiUqGOomTSibjZW7Lqt-ikUBqQ"
+      }
     }
   }
 }

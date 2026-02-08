@@ -27,7 +27,8 @@ vi.mock('../../hooks/useToast', () => ({
   showToast: vi.fn(),
 }));
 
-import { fetchCalendarEvents, parseNaturalLanguage } from '../calendar-service';
+import { fetchCalendarEvents, parseNaturalLanguage, createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from '../calendar-service';
+import haWebSocket from '../ha-websocket';
 import haRest from '../ha-rest';
 
 describe('fetchCalendarEvents', () => {
@@ -123,6 +124,73 @@ describe('fetchCalendarEvents', () => {
     );
 
     expect(result).toEqual([]);
+  });
+});
+
+describe('deleteCalendarEvent', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('uses calendar/event/delete WebSocket command (not call_service)', async () => {
+    haWebSocket.send.mockResolvedValue(null);
+
+    await deleteCalendarEvent('calendar.daz', 'evt-123');
+
+    expect(haWebSocket.send).toHaveBeenCalledWith({
+      type: 'calendar/event/delete',
+      entity_id: 'calendar.daz',
+      uid: 'evt-123',
+    });
+  });
+
+  it('includes recurrence_id when provided', async () => {
+    haWebSocket.send.mockResolvedValue(null);
+
+    await deleteCalendarEvent('calendar.daz', 'evt-123', 'rec-456');
+
+    expect(haWebSocket.send).toHaveBeenCalledWith({
+      type: 'calendar/event/delete',
+      entity_id: 'calendar.daz',
+      uid: 'evt-123',
+      recurrence_id: 'rec-456',
+    });
+  });
+});
+
+describe('updateCalendarEvent', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('implements update as delete + create', async () => {
+    haWebSocket.send.mockResolvedValue(null);
+
+    const eventData = {
+      summary: 'Updated Event',
+      dtstart: '2026-02-07T10:00:00',
+      dtend: '2026-02-07T11:00:00',
+    };
+
+    await updateCalendarEvent('calendar.daz', 'evt-123', eventData);
+
+    // First call: delete
+    expect(haWebSocket.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'calendar/event/delete',
+        entity_id: 'calendar.daz',
+        uid: 'evt-123',
+      })
+    );
+
+    // Second call: create
+    expect(haWebSocket.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'call_service',
+        domain: 'calendar',
+        service: 'create_event',
+      })
+    );
   });
 });
 

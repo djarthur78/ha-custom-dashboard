@@ -18,12 +18,24 @@
  */
 export function getHAConfig({ useProxy = false } = {}) {
   if (window.HA_CONFIG && window.HA_CONFIG.url) {
-    // In the add-on, nginx proxies /api/ to HA, so use empty URL for REST calls
-    const proxyAvailable = useProxy && window.HA_CONFIG.useProxy;
-    return {
-      url: proxyAvailable ? '' : window.HA_CONFIG.url,
-      token: window.HA_CONFIG.token || window.HA_CONFIG.supervisorToken,
-    };
+    const token = window.HA_CONFIG.token || window.HA_CONFIG.supervisorToken;
+    const proxyAvailable = window.HA_CONFIG.useProxy;
+    const isSecure = window.location.protocol === 'https:';
+
+    // REST with proxy: use relative URL (nginx proxy handles routing locally,
+    // HA's own /api/ is on the same origin when accessed via Cloudflare/ingress)
+    if (useProxy && proxyAvailable) {
+      return { url: '', token };
+    }
+
+    // HTTPS context (Cloudflare tunnel / ingress): use current origin
+    // to avoid mixed content (browser blocks http:// in https:// pages)
+    if (isSecure) {
+      return { url: window.location.origin, token };
+    }
+
+    // Local HTTP: use configured HA URL directly
+    return { url: window.HA_CONFIG.url, token };
   }
 
   if (window.HA_CONFIG && window.HA_CONFIG.useIngress) {
