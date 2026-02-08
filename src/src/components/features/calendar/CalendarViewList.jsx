@@ -29,7 +29,7 @@ export function CalendarViewList() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState('week'); // 'day', 'week', 'month'
+  const [period, setPeriod] = useState('biweekly'); // 'day', 'week', 'biweekly', 'month'
   const [layout, setLayout] = useState('list'); // 'list', 'schedule'
   const [enabledCalendars, setEnabledCalendars] = useState(new Set(CALENDAR_IDS));
   const { isConnected } = useHAConnection();
