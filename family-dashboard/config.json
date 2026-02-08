@@ -1,6 +1,6 @@
 {
   "name": "Family Dashboard",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "slug": "family-dashboard",
   "description": "Modern family calendar and dashboard for Home Assistant",
   "url": "https://github.com/djarthur78/ha-custom-dashboard",
@@ -10,12 +10,6 @@
   "init": false,
   "ingress": true,
   "ingress_port": 8099,
-  "ports": {
-    "8099/tcp": 8099
-  },
-  "ports_description": {
-    "8099/tcp": "Direct HTTP access (local network only)"
-  },
   "options": {
     "ha_url": "http://192.168.1.2:8123",
     "ha_token": ""
