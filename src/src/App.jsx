@@ -10,6 +10,7 @@ import { CalendarViewList } from './components/features/calendar/CalendarViewLis
 import { MealsPage } from './pages/MealsPage';
 import { GamesRoomPage } from './pages/GamesRoomPage';
 import { CamerasPage } from './pages/CamerasPage';
+import { MusicPage } from './pages/MusicPage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="meals" element={<MealsPage />} />
         <Route path="games-room" element={<GamesRoomPage />} />
         <Route path="cameras" element={<CamerasPage />} />
+        <Route path="music" element={<MusicPage />} />
       </Route>
     </Routes>
   );
