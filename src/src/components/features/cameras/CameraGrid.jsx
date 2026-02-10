@@ -13,63 +13,22 @@ export function CameraGrid({ alertMode = false, onDismissAlert }) {
 
   return (
     <>
-      {/* Alert banner */}
-      {alertMode && <DoorbellBanner onDismiss={onDismissAlert} />}
-
-      {/* Camera grid */}
+      {/* Camera grid - always normal layout, no alert mode effects */}
       <div
-        className={`camera-grid ${alertMode ? 'camera-grid-alert doorbell-border doorbell-flash' : ''}`}
+        className="camera-grid"
         style={{
           display: 'grid',
           gap: '4px',
           height: 'calc(100vh - 56px)',
-          ...(alertMode ? {
-            // Alert mode: front door large (70%), other 2 front on right (30%)
-            gridTemplateColumns: '70fr 30fr',
-            gridTemplateRows: '1fr 1fr',
-          } : {
-            // Normal mode: Front door left 50%, Front R+L stacked right 50%, Back 5 bottom
-            gridTemplateColumns: 'repeat(10, 1fr)', // 10 columns for flexibility
-            gridTemplateRows: '32.5fr 32.5fr 35fr', // Top half split, then bottom
-          })
+          maxHeight: 'calc(100vh - 56px)',
+          overflow: 'hidden',
+          // Front door left 50%, Front R+L stacked right 50%, Back 5 bottom
+          gridTemplateColumns: 'repeat(10, 1fr)', // 10 columns for flexibility
+          gridTemplateRows: '32.5fr 32.5fr 35fr', // Top half split, then bottom
         }}
       >
-        {alertMode ? (
-          // Alert mode: front door large (70%), other 2 stacked on right
-          <>
-            {/* Front door - large, left side, full height */}
-            <div style={{ gridColumn: 1, gridRow: '1 / 3' }}>
-              <CameraFeed
-                camera={frontCameras[0]}
-                stream={true}
-                onClick={() => setSelectedCamera(frontCameras[0])}
-                className="h-full"
-              />
-            </div>
-
-            {/* Front right - top right */}
-            <div style={{ gridColumn: 2, gridRow: 1 }}>
-              <CameraFeed
-                camera={frontCameras[1]}
-                stream={true}
-                onClick={() => setSelectedCamera(frontCameras[1])}
-                className="h-full"
-              />
-            </div>
-
-            {/* Front left - bottom right */}
-            <div style={{ gridColumn: 2, gridRow: 2 }}>
-              <CameraFeed
-                camera={frontCameras[2]}
-                stream={true}
-                onClick={() => setSelectedCamera(frontCameras[2])}
-                className="h-full"
-              />
-            </div>
-          </>
-        ) : (
-          // Normal mode: Front door left 50%, Front R+L stacked right 50%, Back 5 bottom
-          <>
+        {/* Normal layout always */}
+        <>
             {/* Front door - left 50% width (columns 1-5), top 65% height (rows 1-2) */}
             <div style={{ gridColumn: '1 / 6', gridRow: '1 / 3' }}>
               <CameraFeed
@@ -112,7 +71,6 @@ export function CameraGrid({ alertMode = false, onDismissAlert }) {
               </div>
             ))}
           </>
-        )}
       </div>
 
       {/* Modal for enlarged view */}

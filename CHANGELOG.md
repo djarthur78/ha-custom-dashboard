@@ -6,6 +6,50 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.0.31] - 2026-02-10
+
+### Summary
+Bug fixes for Music Dashboard, Camera page layout, and doorbell alerts based on production testing.
+
+### Fixed
+
+**Music Dashboard**
+- Corrected speaker zone assignments:  - Office moved from "upstairs" to "downstairs"
+  - Gym moved from "outside" to "downstairs"
+- Fixed playlist playback - changed media_content_type from 'playlist' to 'music'
+- Playlists now play when clicked (was doing nothing before)
+
+**Camera Page**
+- Fixed layout overflow - cameras now fit without scrolling
+- Added `overflow: hidden` and `maxHeight` to grid container
+- Grid height remains stable after initial render
+
+**Doorbell Alerts**
+- Removed flashing border animation (was causing black images)
+- Removed doorbell banner overlay
+- Simplified to just navigate to camera page when doorbell rings
+- Doorbell hook still triggers navigation, but no visual effects
+
+### Technical Details
+
+**Files Modified (3)**
+- `musicConfig.js` - Fixed zone assignments for Office and Gym
+- `PlaylistPanel.jsx` - Changed media_content_type to 'music' for Spotify playback
+- `CameraGrid.jsx` - Removed alert mode layout/effects, fixed grid overflow
+
+**What Changed**
+- Music zones now accurate (11 speakers properly organized)
+- Playlist clicks trigger play_media service correctly
+- Camera grid locked to viewport height (no unexpected scrolling)
+- Doorbell just navigates (no flash/banner for cleaner UX)
+
+### Testing
+- ✅ All 48 unit tests pass
+- ✅ Build successful (958.52 kB bundle)
+- ⏳ Production testing needed for all fixes
+
+---
+
 ## [2.0.30] - 2026-02-10
 
 ### Summary
