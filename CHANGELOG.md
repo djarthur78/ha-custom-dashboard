@@ -6,6 +6,97 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.0.27] - 2026-02-10
+
+### Summary
+Fixed right side cutoff issue and implemented automatic Spotify playlist navigation via Sonos speaker browsing.
+
+### Changed
+
+**Layout Proportions - Rebalanced**
+- Changed from 40/35/25 → 35/30/35 → **30/30/40** (final)
+- Now Playing: 30% (album art takes full width)
+- Playlists: 30% (better text readability)
+- Speakers: 40% (much more room, no cutoff)
+
+**Speaker Panel - More Space**
+- Panel width: 25% → 40% (60% increase)
+- Volume text min-width: 42px → 50px
+- Ensures "100%" displays fully without cutoff
+
+**Automatic Spotify Navigation**
+- Browses via Sonos speaker to access Spotify playlists
+- Auto-detects Spotify service in Sonos music library
+- Navigates into Spotify automatically to show user playlists
+- Should display: Liked Songs, playlists (Hip Hop Collector, etc.)
+- Replaces direct Spotify entity browsing (which doesn't work)
+
+**Queue Display - Simplified**
+- Current track shown in highlighted box
+- Track count displayed ("N more tracks in queue")
+- Removed complex queue fetching (wasn't working reliably)
+- Note added: "Full queue display coming soon"
+
+### Technical Details
+
+**Files Modified (4)**
+- `MusicDashboard.jsx` - Layout proportions 30/30/40
+- `SpeakerCard.jsx` - Volume text min-width 50px
+- `PlaylistPanel.jsx` - Auto Spotify navigation via Sonos
+- `NowPlayingPanel.jsx` - Album art full width (removed max-w constraint)
+
+**How Auto-Navigation Works**
+1. Browse active Sonos speaker root
+2. Find Spotify in children (matches "spotify" or account ID)
+3. Navigate into Spotify service automatically
+4. Display playlists to user
+
+### Testing
+- ✅ All 48 unit tests pass
+- ✅ Build successful (955.19 kB bundle)
+- ✅ Layout verified at 1920x1080
+- ✅ Speaker panel 40% width with full volume visibility
+- ⏳ Spotify navigation needs production testing (requires real Sonos/Spotify data)
+
+---
+
+## [2.0.26] - 2026-02-10
+
+### Summary
+Fixed right side cutoff issue and improved text readability throughout Music Dashboard.
+
+### Changed
+
+**Layout Proportions**
+- Changed from 40/35/25 to 35/30/35
+- Speaker panel increased from 25% to 35%
+- Middle section reduced to 30% for better balance
+
+**Text Sizes Increased**
+- Tab labels: text-sm → text-base
+- Tab icons: 16px → 18px
+- Playlist titles: text-sm → text-base font-semibold
+- Error messages: Larger fonts throughout
+- Loading states: Bigger spinner and text
+
+**Album Art**
+- Removed max-w-[550px] constraint
+- Now takes full width of Now Playing section
+- Better use of available space
+
+**Queue Display**
+- Simplified to show current track + count
+- Removed complex queue fetching
+- Better visual hierarchy with highlighted current track
+
+### Files Modified (4)
+- `MusicDashboard.jsx` - Layout 35/30/35
+- `NowPlayingPanel.jsx` - Full width album art
+- `PlaylistPanel.jsx` - Bigger text, simplified queue
+- `PlaylistCard.jsx` - Larger title text
+
+---
+
 ## [2.0.25] - 2026-02-10
 
 ### Summary
