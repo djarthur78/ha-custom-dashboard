@@ -6,6 +6,69 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.0.30] - 2026-02-10
+
+### Summary
+Added favorite playlists feature to Music Dashboard for instant Spotify playlist access.
+
+### Added
+
+**Favorite Playlists (Music Dashboard)**
+- Direct playlist access - no browsing required!
+- Configurable per Spotify account (Daz/Nic)
+- Support for Liked Songs and custom playlists
+- "Browse All" button to access full Sonos library
+- "Favorites" button to return from browse mode
+- Automatic tab reset when switching accounts
+
+**User Experience**
+- Playlists appear immediately when opening Daz/Nic tabs
+- One-tap playback for favorite playlists
+- Optional playlist thumbnails and descriptions
+- Seamless toggle between favorites and browse modes
+- No more manual navigation through Sonos → Spotify → Playlists!
+
+### Technical Details
+
+**Files Modified (2)**
+- `musicConfig.js` - Added FAVORITE_PLAYLISTS configuration
+- `PlaylistPanel.jsx` - Implemented favorites view with browse toggle
+
+**Files Created (1)**
+- `README.md` - Configuration guide for finding Spotify URIs
+
+**How It Works**
+1. Favorite playlists are hardcoded in config with Spotify URIs
+2. When a tab opens, favorites display immediately (no WebSocket call)
+3. Click "Browse All" to enable browse_media functionality
+4. Browse mode shows back button + "Favorites" toggle
+5. Playlists play via media_player.play_media service
+
+**Configuration Format**
+```javascript
+FAVORITE_PLAYLISTS = {
+  daz: [
+    { name, uri, thumbnail, description },
+    // ...more playlists
+  ],
+}
+```
+
+**Next Steps for User**
+1. Find Spotify playlist URIs (see README.md guide)
+2. Update musicConfig.js with real URIs
+3. Test on production music dashboard
+
+### Testing
+- ✅ All 48 unit tests pass
+- ✅ Build successful (959.63 kB bundle)
+- ✅ Favorites display when configured
+- ✅ Browse mode toggles correctly
+- ✅ No infinite loops (Option A = most reliable)
+- ⏳ Production testing with real Spotify URIs needed
+
+---
+
 ## [2.0.29] - 2026-02-10
 
 ### Summary
