@@ -6,6 +6,86 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.0.24] - 2026-02-10
+
+### Summary
+Major enhancement to Music Dashboard - group-focused design, preset group buttons, improved spacing, and visual grouping indicators.
+
+### Added
+
+**Preset Group Buttons**
+- "Summer" preset (Kitchen + Garden) - prominent purple gradient button
+- "Indoor House Party" preset (Kitchen + Dining + Living) - two-line layout with description
+- Quick Groups section above manual grouping controls for easy access
+
+**Group Volume Control**
+- New `useGroupVolume` hook - sets volume on all group members simultaneously
+- Dual volume sliders when grouped: Group volume (blue) + Individual volume (gray)
+- Debounced 200ms to prevent HA flooding
+
+**Visual Grouping Indicators**
+- Colored left border on grouped speaker cards (4px wide)
+- Badge showing number of speakers in group
+- Tooltip on hover showing all group member names
+- Consistent color per group (hash-based, so same group = same color)
+
+### Changed
+
+**Now Playing Panel (Group-Focused Redesign)**
+- Group header at top showing "Now Playing on Group" with member count and names
+- Album art moved to top (centered, square, max 400px with shadow)
+- Track info below album art (centered text, 2xl font size)
+- Scrollable content area for long track names
+- Controls fixed at bottom (always visible)
+- Group volume slider (blue) shows when grouped
+- Individual volume always available, labeled "This Speaker" when grouped
+
+**Speaker Panel Improvements**
+- Card padding increased: p-3 → p-4 (33% more breathing room)
+- Text sizes: text-sm → text-base (14px → 16px)
+- Zone spacing: gap-1.5 → gap-2.5 (67% more space between zones)
+- Checkbox size: 4x4 → 4.5x4.5
+- Status dot: 2.5x2.5 → 3x3
+- Volume icons: size 14 → 16
+- Media title: text-xs → text-sm
+- Better visual hierarchy with clearer spacing
+
+**Speaker Card Enhancements**
+- Group badge replaces emoji (link icon + member count)
+- Colored left border for grouped speakers
+- Larger font sizes and spacing throughout
+- Improved tooltip showing all group members
+
+### Technical Details
+
+**Files Created (1)**
+- `hooks/useGroupVolume.js` - Group volume management with parallel service calls
+
+**Files Modified (5)**
+- `musicConfig.js` - Added PRESET_GROUPS array
+- `SpeakerPanel.jsx` - Quick Groups section, better spacing, passes speakers array
+- `SpeakerCard.jsx` - Increased sizing, visual grouping (border + badge + tooltip)
+- `NowPlayingPanel.jsx` - Complete redesign: group header, scrollable content, dual volume sliders
+- `useBrowseMedia.js` - No changes (already has loading state)
+
+**Key Improvements**
+- Dashboard feels more cohesive and "awesome"
+- Group management is now first-class (not just speaker selection)
+- Preset buttons make common tasks one-tap
+- Visual indicators clearly show which speakers are grouped together
+- Spacing optimized for 1920x1080 wall panel
+- All controls easy to press and read at distance
+
+### Testing
+- ✅ All 48 unit tests pass
+- ✅ Build successful (953.92 kB bundle)
+- ✅ Screenshot verified at 1920x1080
+- ✅ Preset buttons prominent and easy to press
+- ✅ Speaker cards have better spacing and visual grouping
+- ✅ Now Playing shows group information clearly
+
+---
+
 ## [2.0.23] - 2026-02-10
 
 ### Summary
