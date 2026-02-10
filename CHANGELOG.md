@@ -6,6 +6,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.0.29] - 2026-02-10
+
+### Summary
+Added event search and filtering to Calendar - v1.1 enhancement for high-priority feature.
+
+### Added
+
+**Calendar Search & Filter**
+- Search bar with live filtering by event title, description, and location
+- Quick filter buttons: All, Today, This Week, Upcoming
+- Active filter indicators showing applied filters
+- Clear all filters button
+- Search integrates with existing person calendar filters
+
+**User Experience**
+- Real-time search as you type
+- Visual feedback with highlight on focus
+- Clear button (X) appears when search has text
+- Colored filter badges show active filters
+- All filters work together (AND logic)
+
+### Technical Details
+
+**Files Created (1)**
+- `EventSearchFilter.jsx` - Search UI and filter logic
+
+**Files Modified (1)**
+- `CalendarViewList.jsx` - Integrated search/filter component and state
+
+**How It Works**
+1. Search filters events by matching text in title/description/location
+2. Quick filters apply date-based filtering (today, this week, upcoming)
+3. Person calendar filters (D/N/C/D buttons) still work independently
+4. All filters combine to show only matching events
+5. Filter state persists during navigation
+
+### Testing
+- ✅ All 48 unit tests pass
+- ✅ Build successful (957.60 kB bundle)
+- ✅ Search filters events correctly
+- ✅ Quick filters apply date ranges
+- ✅ Multiple filters work together
+- ⏳ Production testing needed
+
+---
+
 ## [2.0.27] - 2026-02-10
 
 ### Summary

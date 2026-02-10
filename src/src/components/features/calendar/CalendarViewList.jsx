@@ -24,6 +24,7 @@ import { MonthView } from './MonthView';
 import { TimelineView } from './TimelineView';
 import { WeekTimelineView } from './WeekTimelineView';
 import { DayCard } from './DayCard';
+import { EventSearchFilter, filterEvents } from './EventSearchFilter';
 
 export function CalendarViewList() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -32,6 +33,8 @@ export function CalendarViewList() {
   const [period, setPeriod] = useState('biweekly'); // 'day', 'week', 'biweekly', 'month'
   const [layout, setLayout] = useState('list'); // 'list', 'schedule'
   const [enabledCalendars, setEnabledCalendars] = useState(new Set(CALENDAR_IDS));
+  const [searchTerm, setSearchTerm] = useState('');
+  const [quickFilter, setQuickFilter] = useState('all');
   const { isConnected } = useHAConnection();
   const weather = useWeather();
 
@@ -150,11 +153,13 @@ export function CalendarViewList() {
     fetchEvents(); // Refresh after delete
   };
 
-  // Filter events by enabled calendars
-  const filteredEvents = useMemo(
-    () => events.filter(event => enabledCalendars.has(event.calendarId)),
-    [events, enabledCalendars]
-  );
+  // Filter events by enabled calendars, search term, and quick filter
+  const filteredEvents = useMemo(() => {
+    // First filter by enabled calendars
+    const calendarFiltered = events.filter(event => enabledCalendars.has(event.calendarId));
+    // Then apply search and quick filters
+    return filterEvents(calendarFiltered, searchTerm, quickFilter);
+  }, [events, enabledCalendars, searchTerm, quickFilter]);
 
   // Get week days
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -232,6 +237,16 @@ export function CalendarViewList() {
           </span>
         </div>
       )}
+
+      {/* Search and Filter */}
+      <div className="mb-6">
+        <EventSearchFilter
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          quickFilter={quickFilter}
+          onQuickFilterChange={setQuickFilter}
+        />
+      </div>
 
       {/* Top controls */}
       <div className="mb-6 flex items-center justify-between" style={{ gap: '12px', width: '100%' }}>
