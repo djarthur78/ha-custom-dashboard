@@ -6,6 +6,68 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.0.23] - 2026-02-10
+
+### Summary
+Added complete Music/Sonos dashboard with Spotify playlist browsing, multi-zone speaker control, and playback management.
+
+### Added
+
+**Music Dashboard** 🎵
+- New `/music` page with three-panel layout (Now Playing 40%, Playlists 35%, Speakers 25%)
+- **Now Playing Panel**: Large album art, track info, progress bar with seek, transport controls (play/pause/next/prev), shuffle/repeat, volume control
+- **Playlist Panel**: Browse Spotify playlists from Daz and Nic accounts, Queue view showing current playback
+- **Speaker Panel**: All 11 Sonos speakers organized by zone (Upstairs/Downstairs/Outside), individual volume control, multi-speaker grouping
+- Batch subscription to 11 Sonos entities via single WebSocket hook
+- Auto-detection of active speaker (first playing, then paused, then first in list)
+- Real-time progress animation using requestAnimationFrame
+- Speaker grouping controls: Group Selected, Play Everywhere, Ungroup All
+- Debounced volume sliders (200ms) to prevent flooding HA with service calls
+- Support for Spotify browse_media integration
+- Empty states for "Nothing Playing" and "No queue"
+- Full viewport layout (no padding/footer) for immersive music experience
+
+**Files Created (16)**
+- `musicConfig.js` - Entity IDs, Spotify accounts, feature bitmasks, zones
+- `hooks/useSonosSpeakers.js` - Batch subscription to 11 speakers
+- `hooks/useActiveSpeaker.js` - Active speaker selection with auto-detect
+- `hooks/usePlaybackControls.js` - All media_player service calls
+- `hooks/useBrowseMedia.js` - Spotify playlist browsing via WebSocket
+- `hooks/useSpeakerGroups.js` - Sonos grouping (join/unjoin)
+- `hooks/useProgressTimer.js` - Smooth rAF-based progress tracking
+- `ProgressBar.jsx` - Seekable progress bar component
+- `SpeakerCard.jsx` - Speaker card with volume, status, grouping checkbox
+- `PlaylistCard.jsx` - Playlist thumbnail with play button overlay
+- `QueueItem.jsx` - Queue track row component
+- `NowPlayingPanel.jsx` - Left panel with album art and controls
+- `PlaylistPanel.jsx` - Center panel with Daz/Nic/Queue tabs
+- `SpeakerPanel.jsx` - Right panel with speaker grid and group controls
+- `MusicDashboard.jsx` - Main three-panel layout
+- `pages/MusicPage.jsx` - Page wrapper
+
+**Files Modified (2)**
+- `App.jsx` - Added `/music` route
+- `MainLayout.jsx` - Added Music nav icon, added `/music` to full viewport conditional
+
+### Technical Details
+- Uses media_player feature bitmasks to conditionally show controls
+- Handles Spotify browse_media WebSocket command with history stack for navigation
+- Volume sliders use local state + debounced service calls for responsive UI
+- Speaker grouping preserves coordinator when active speaker is in selection
+- Progress bar computes elapsed time from media_position + time delta
+- Zone-based speaker organization with color-coded indicators
+
+### Testing
+- ✅ All 48 unit tests passing
+- ✅ Build successful (no errors)
+- ✅ UI verified at 1920x1080 resolution
+- ✅ Three-panel layout rendering correctly
+- ✅ Tab navigation working (Daz/Nic/Queue)
+- ✅ Speaker list with volume sliders operational
+- ✅ Empty states displaying correctly
+
+---
+
 ## [1.0.3] - 2026-01-26
 
 ### Summary
