@@ -6,6 +6,92 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.0.25] - 2026-02-10
+
+### Summary
+Major visual polish and usability improvements to Music Dashboard - bigger album art, better spacing, queue display, fixed browse media, and colorful preset buttons.
+
+### Added
+
+**Queue Display**
+- New `useQueue` hook - fetches actual playback queue via browse_media
+- Queue tab now shows all upcoming tracks (not just "N more in queue")
+- Refresh button to reload queue
+- Click-to-load functionality when queue data isn't immediately available
+
+**Status Tooltips**
+- Status dots now have tooltips: Green = Playing, Yellow = Paused, Gray = Idle
+- Helps users understand speaker states at a glance
+
+### Changed
+
+**Preset Buttons - Unique Colors**
+- Summer: Green gradient (#10b981 → #059669) for outdoor vibes
+- Indoor House Party: Orange gradient (#f97316 → #ea580c) for party energy
+- Increased spacing between buttons (gap-2 → gap-3)
+- Slightly taller (py-3 → py-3.5) for better touch targets
+
+**Speaker Cards - Full Background Shading**
+- Grouped speakers now have full card background tint (not just left border)
+- Uses semi-transparent HSL color (25% alpha) for readability
+- Same consistent hash-based color per group
+- Much more visually obvious which speakers are grouped together
+
+**Album Art - Bigger Size**
+- Increased from max-w-[400px] to max-w-[550px]
+- Better use of Now Playing panel space (40% of 1920px = 768px)
+- More impactful and immersive music experience
+- Enhanced shadow (shadow-lg → shadow-xl)
+
+**Volume Display - Fixed Cutoff**
+- Volume percentage now has min-w-[42px] (was 3ch) with % symbol
+- Text size increased: text-xs → text-sm font-medium
+- Better spacing (gap-2 → gap-2.5)
+- Now clearly visible and not cut off on right side
+- Added flex-shrink-0 to prevent compression
+
+**Speaker Panel Spacing**
+- Content padding: p-2 → p-3 for more breathing room
+- Volume properly visible on all speaker cards
+
+**Browse Media - Fixed**
+- Now browses via active Sonos speaker entity (not Spotify entity)
+- Fixes "Player does not support browsing media" error
+- Shows Sonos music library: Favorites, Music Library, Spotify accounts, etc.
+- Much more reliable and functional
+
+### Technical Details
+
+**Files Created (1)**
+- `hooks/useQueue.js` - Queue fetching via browse_media
+
+**Files Modified (5)**
+- `musicConfig.js` - Added color field to PRESET_GROUPS
+- `SpeakerPanel.jsx` - Dynamic gradient colors, increased padding/spacing
+- `SpeakerCard.jsx` - Full background shading, bigger volume text, status tooltip
+- `NowPlayingPanel.jsx` - Bigger album art (400px → 550px)
+- `PlaylistPanel.jsx` - useQueue integration, browse via Sonos speaker, queue display
+
+**Key Improvements**
+- Visual hierarchy much clearer with unique colors
+- Grouped speakers immediately obvious (full background tint)
+- Album art properly sized for 1920x1080 display
+- Volume display never cuts off
+- Queue is now actually useful (shows songs you can see)
+- Browse media works reliably via Sonos speakers
+- Status dots have helpful tooltips
+
+### Testing
+- ✅ All 48 unit tests pass
+- ✅ Build successful (955.72 kB bundle)
+- ✅ Screenshot verified at 1920x1080
+- ✅ Preset buttons have unique colors and better spacing
+- ✅ Volume percentage displays fully (e.g., "100%")
+- ✅ Browse media shows Sonos library correctly
+- ✅ Grouped speakers have full background shading
+
+---
+
 ## [2.0.24] - 2026-02-10
 
 ### Summary
