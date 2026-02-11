@@ -15,6 +15,7 @@ export function CameraFeed({ camera, stream = false, onClick, className = '' }) 
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
+      style={{ minHeight: 0, minWidth: 0, maxHeight: '100%', maxWidth: '100%' }}
     >
       {isLoading ? (
         <div className="absolute inset-0 flex items-center justify-center text-gray-400">

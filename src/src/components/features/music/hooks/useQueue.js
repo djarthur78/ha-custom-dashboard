@@ -1,67 +1,39 @@
 /**
  * useQueue Hook
- * Fetches and manages the playback queue for the active speaker.
- * Uses HA's media_player/browse_media to get queue items.
+ *
+ * IMPORTANT: The standard Home Assistant Sonos integration does NOT expose
+ * the full queue track list via API. Only queue_position and queue_size are
+ * available as entity attributes.
+ *
+ * This hook is a placeholder for potential future functionality. Currently,
+ * the queue display shows only:
+ * - Current track (from entity attributes)
+ * - Queue position (e.g., "2 of 50")
+ * - Tracks remaining
+ *
+ * To get full queue display, users would need to install:
+ * https://github.com/JackJPowell/sensor.sonos_upcoming_media
+ *
+ * Reference: https://www.home-assistant.io/integrations/sonos/
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import haWebSocket from '../../../../services/ha-websocket';
+import { useState, useCallback } from 'react';
 
 export function useQueue(activeSpeakerEntityId) {
-  const [queue, setQueue] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [queue] = useState([]);
+  const [loading] = useState(false);
+  const [error] = useState(null);
 
-  const fetchQueue = useCallback(async (entityId) => {
-    if (!entityId) {
-      setQueue([]);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const result = await haWebSocket.sendCommand({
-        type: 'media_player/browse_media',
-        entity_id: entityId,
-        media_content_type: 'queue',
-        media_content_id: 'queue',
-      });
-
-      if (result?.children) {
-        // Extract queue items from result
-        const queueItems = result.children.map((item, index) => ({
-          position: index + 1,
-          title: item.title,
-          artist: item.media_content_id?.split('/')?.pop() || '', // Try to extract artist
-          thumbnail: item.thumbnail,
-          mediaContentId: item.media_content_id,
-          mediaContentType: item.media_content_type,
-          canPlay: item.can_play,
-        }));
-        setQueue(queueItems);
-      } else {
-        setQueue([]);
-      }
-    } catch (err) {
-      console.error('[useQueue] Failed to fetch queue:', err);
-      setError(err.message || 'Failed to load queue');
-      setQueue([]);
-    } finally {
-      setLoading(false);
-    }
+  // Placeholder refetch function (no-op since we can't actually fetch queue)
+  const refetch = useCallback(() => {
+    // Note: There's no API to fetch the full queue from standard Sonos integration
+    console.warn('[useQueue] Full queue fetching not supported by HA Sonos integration');
   }, []);
-
-  // Auto-fetch when speaker changes
-  useEffect(() => {
-    fetchQueue(activeSpeakerEntityId);
-  }, [activeSpeakerEntityId, fetchQueue]);
 
   return {
     queue,
     loading,
     error,
-    refetch: () => fetchQueue(activeSpeakerEntityId),
+    refetch,
   };
 }

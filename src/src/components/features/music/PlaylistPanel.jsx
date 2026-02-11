@@ -113,16 +113,39 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia }) {
                   )}
                 </div>
 
-                {/* Queue size indicator */}
+                {/* Queue summary */}
                 {activeSpeaker.queueSize > 1 && (
-                  <div className="text-center py-8 text-[var(--color-text-secondary)]">
-                    <ListMusic size={40} className="mx-auto mb-2 opacity-50" />
-                    <p className="text-base mb-1">
-                      {activeSpeaker.queueSize - 1} more tracks in queue
-                    </p>
-                    <p className="text-sm opacity-75">
-                      Full queue display coming soon
-                    </p>
+                  <div className="bg-gray-50 rounded-lg p-4 text-center">
+                    <ListMusic size={48} className="mx-auto mb-3 text-gray-400" />
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-lg font-semibold text-[var(--color-text)]">
+                          {activeSpeaker.queueSize} tracks in queue
+                        </p>
+                        <p className="text-sm text-[var(--color-text-secondary)]">
+                          Currently playing track {activeSpeaker.queuePosition} of {activeSpeaker.queueSize}
+                        </p>
+                      </div>
+                      <div className="pt-2 border-t border-gray-200">
+                        <p className="text-sm text-[var(--color-text-secondary)] mb-2">
+                          {activeSpeaker.queueSize - activeSpeaker.queuePosition} tracks remaining
+                        </p>
+                        {/* Progress bar showing queue position */}
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-500 h-2 rounded-full transition-all"
+                            style={{
+                              width: `${(activeSpeaker.queuePosition / activeSpeaker.queueSize) * 100}%`
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="pt-3 text-xs text-gray-500">
+                        ℹ️ Full track list not available
+                        <br />
+                        (HA Sonos API limitation)
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

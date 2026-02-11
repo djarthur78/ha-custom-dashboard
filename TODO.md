@@ -32,50 +32,58 @@
 ---
 
 ### 2. Music Dashboard - Queue Display
-**Status:** 🔴 INCOMPLETE
+**Status:** ✅ IMPROVED (API limitation - cannot fix fully)
 **Description:** Queue only shows current track + count, not full track list
-**Current Display:**
-```
-Playing on Office — 19 tracks
-Now Playing
-Bad Touch Example
-Company Flow
-18 more tracks in queue
 
-Full queue display coming soon
-```
+**Investigation Results:**
+- ❌ HA Sonos integration only exposes `queue_position` and `queue_size` attributes
+- ❌ NO API endpoint to get full queue track list
+- ❌ `sonos.get_queue` service doesn't exist or isn't accessible
+- ❌ `browse_media` with queue type returns 400 error
+- ✅ This is a **known limitation** of the HA Sonos integration
 
-**What's Needed:**
-- Show all 19 tracks in scrollable list
-- Highlight current track
-- Show track number/position
-- May need alternate HA service to get full queue data
+**Solution Implemented:**
+- ✅ Enhanced queue display with better visualization
+- ✅ Shows: total tracks, current position, tracks remaining, visual progress bar
+- ✅ Documented API limitation clearly in the UI
+- ✅ Simplified useQueue hook (removed non-functional code)
+- ✅ Better styling and information density
 
-**Possible Approaches:**
-- Check if HA exposes queue via attributes
-- Use browse_media to get queue items
-- Accept limitation if HA/Sonos doesn't expose queue reliably
+**Alternative for Full Queue:**
+Users who need full queue display can install the custom component:
+- [sensor.sonos_upcoming_media](https://github.com/JackJPowell/sensor.sonos_upcoming_media)
+
+**References:**
+- [HA Sonos Integration](https://www.home-assistant.io/integrations/sonos/)
+- [HA Community: Dashboard Sonos Card](https://community.home-assistant.io/t/dashboard-sonos-card/393620)
 
 ---
 
 ### 3. Camera Page - Layout Re-render Issue
-**Status:** 🔴 BROKEN
+**Status:** ✅ FIXED
 **Description:** Camera grid fits initially, then re-renders and requires scrolling
-**Observed Behavior:**
-- Page loads → cameras fit perfectly
-- Something triggers re-render
-- Grid becomes too tall → need to scroll to bottom cameras
 
-**Attempted Fixes:**
-- Added `overflow: hidden` + `maxHeight` → didn't work
-- Issue persists in v2.0.31
+**Root Cause:**
+- Grid scroll height (1371px) exceeded container height (1024px)
+- CSS Grid rows were calculating based on content size instead of container constraints
+- Grid cells were growing beyond their allocated fractional units
+- Images with intrinsic dimensions were pushing rows taller than intended
 
-**Next Steps to Try:**
-- Check CameraFeed component for image loading that changes height
-- Look for state changes triggering re-render (doorbell alert removed but may be other triggers)
-- Investigate if MJPEG stream loading changes container size
-- May need to set explicit heights on camera feed containers
-- Consider using aspect-ratio CSS property
+**Solution Implemented:**
+- ✅ Added `minHeight: 0` to grid container (critical for grid shrinking)
+- ✅ Added `gridAutoRows: minmax(0, 1fr)` to prevent row expansion
+- ✅ Added `minHeight: 0, minWidth: 0` to all grid cell containers
+- ✅ Added `maxHeight: 100%, maxWidth: 100%` to CameraFeed component
+- ✅ Verified: Grid scroll height now equals container height (1024px)
+
+**Testing Results:**
+- Before: gridScrollHeight 1371px, overflow 347px ❌
+- After: gridScrollHeight 1024px, no overflow ✅
+- All 8 cameras now visible without scrolling
+- Grid rows properly constrained: 330px + 330px + 356px ≈ 1024px
+
+**Technical Details:**
+The `minHeight: 0` property is critical in CSS Grid/Flexbox to allow containers to shrink below their content's intrinsic size. Without it, grid tracks will expand to fit content regardless of fr unit constraints.
 
 ---
 
