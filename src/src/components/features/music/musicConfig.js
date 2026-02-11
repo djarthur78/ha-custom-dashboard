@@ -71,35 +71,38 @@ export const SPOTIFY_ACCOUNTS = [
 // Hardcoded quick-access playlists for each Spotify account.
 // These are displayed directly when a tab is opened (no browsing required).
 //
-// To find Spotify URIs:
+// HOW TO GET SPOTIFY PLAYLIST URIs:
 // 1. Open Spotify → Right-click playlist → Share → Copy Spotify URI
-// 2. Or use Spotify Web API to get playlist IDs
+// 2. URI format: spotify:playlist:37i9dQZF1DXcBWIGoYBM5M
+// 3. Or from Spotify web: https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M
+//    → Convert to: spotify:playlist:37i9dQZF1DXcBWIGoYBM5M
 //
-// For Liked Songs, the URI is typically: spotify:user:{username}:collection
+// IMPORTANT - LIKED SONGS:
+// ⚠️ Liked Songs doesn't have a standard URI that works with HA's Spotify integration.
+// ⚠️ You must use the media browser or create a real playlist of your liked songs.
+// ⚠️ Alternatively, browse to "Liked Songs" using "Browse All" button.
+//
+// See README.md in this folder for detailed instructions.
 
 export const FAVORITE_PLAYLISTS = {
   daz: [
-    {
-      name: 'Liked Songs',
-      uri: 'spotify:user:djarthur78:collection',
-      thumbnail: null, // Will use default icon
-      description: 'Your liked songs',
-    },
+    // Example: Replace these with your actual Spotify playlist URIs
     {
       name: 'Hip Hop Collector',
-      uri: 'spotify:playlist:YOUR_PLAYLIST_ID_1', // TODO: Replace with actual playlist ID
+      uri: 'spotify:playlist:YOUR_PLAYLIST_ID', // TODO: Replace with your actual playlist URI
       thumbnail: null,
       description: 'Hip hop collection',
     },
     {
-      name: 'I Love My Underground Classics',
-      uri: 'spotify:playlist:YOUR_PLAYLIST_ID_2', // TODO: Replace with actual playlist ID
+      name: 'Underground Classics',
+      uri: 'spotify:playlist:YOUR_PLAYLIST_ID', // TODO: Replace with your actual playlist URI
       thumbnail: null,
       description: 'Underground classics',
     },
+    // Add more playlists here as needed
   ],
   nic: [
-    // TODO: Add Nic's favorite playlists when Spotify is connected
+    // TODO: Add Nic's favorite playlists when Spotify integration is connected
   ],
 };
 

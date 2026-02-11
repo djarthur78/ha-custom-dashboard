@@ -3,18 +3,31 @@
 ## High Priority - Production Issues
 
 ### 1. Music Dashboard - Playlists Not Playing
-**Status:** 🔴 BROKEN
+**Status:** ✅ FIXED (needs user action)
 **Description:** Clicking favorite playlists does nothing - no music plays
-**Current State:**
-- Playlists display correctly in Daz tab
-- Click action fires but music doesn't start
-- May need different Spotify URI format or service call parameters
+**Root Cause:**
+1. Wrong `media_content_type` - was 'music', should be 'playlist'
+2. Placeholder URIs in config need to be replaced with real Spotify playlist IDs
 
-**Possible Fixes:**
-- Check Spotify URI format (spotify:playlist:... vs spotify://...)
-- Verify media_content_type (tried 'music', may need 'spotify' or other)
-- Test with direct service call via HA UI to find working format
-- May need to use Spotify entity directly instead of Sonos
+**Fix Applied:**
+- ✅ Changed `media_content_type` from 'music' to 'playlist' in PlaylistPanel.jsx:185
+- ✅ Updated musicConfig.js with better documentation
+- ✅ Updated README.md with correct instructions and Liked Songs limitation
+- ✅ Tested with public Spotify playlist - works perfectly!
+
+**USER ACTION REQUIRED:**
+1. Get your actual Spotify playlist URIs:
+   - Open Spotify → Right-click playlist → Share → Copy Spotify URI
+   - Format: `spotify:playlist:37i9dQZF1DXcBWIGoYBM5M`
+2. Edit `musicConfig.js` and replace `YOUR_PLAYLIST_ID` placeholders
+3. Build and deploy: `./build-addon.sh` → Update in HA
+4. Test by clicking playlists in Music Dashboard
+
+**Note:** "Liked Songs" cannot be played directly (HA Spotify API limitation). Use "Browse All" button to access it via media browser.
+
+**References:**
+- [Home Assistant Spotify Integration](https://www.home-assistant.io/integrations/spotify/)
+- [HA Community: Playing Spotify on Sonos](https://community.home-assistant.io/t/playing-spotify-playlist-on-sonos-triggered-by-automation/230579)
 
 ---
 

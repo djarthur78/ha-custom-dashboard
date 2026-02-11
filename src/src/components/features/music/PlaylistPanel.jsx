@@ -182,7 +182,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia }) {
                         item={{
                           title: playlist.name,
                           media_content_id: playlist.uri,
-                          media_content_type: 'music',
+                          media_content_type: 'playlist',
                           thumbnail: playlist.thumbnail,
                           can_play: true,
                           can_expand: false,

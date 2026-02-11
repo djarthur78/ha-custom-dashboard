@@ -19,23 +19,16 @@ To add your favorite playlists to `FAVORITE_PLAYLISTS` in `musicConfig.js`, you 
 3. The URL will be: `https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M`
 4. Convert to URI format: `spotify:playlist:37i9dQZF1DXcBWIGoYBM5M`
 
-### Special Case: Liked Songs
+### Special Case: Liked Songs ⚠️
 
-Your "Liked Songs" collection has a special URI format:
-```
-spotify:user:{your_username}:collection
-```
+**Important:** The standard Home Assistant Spotify integration **does not support** playing "Liked Songs" directly via URI. This is a limitation of the Spotify API.
 
-To find your Spotify username:
-1. Go to your Spotify profile
-2. Click **⋯** → **Share** → **Copy Profile Link**
-3. The link will be: `https://open.spotify.com/user/{username}`
-4. Use that username in: `spotify:user:{username}:collection`
+**Workarounds:**
+1. **Use "Browse All" button** → Navigate to "Liked Songs" in the media browser
+2. **Create a playlist** → Make a real Spotify playlist with your liked songs and use that URI
+3. **Install SpotifyPlus** → The custom [SpotifyPlus integration](https://github.com/hokiebrian/spotify_plus) adds support for Liked Songs
 
-For example, if your link is `https://open.spotify.com/user/djarthur78`, your Liked Songs URI is:
-```
-spotify:user:djarthur78:collection
-```
+We recommend using option #1 (Browse All) for easiest access to Liked Songs.
 
 ## Adding Playlists to Config
 
@@ -92,14 +85,31 @@ Example:
 
 ## Troubleshooting
 
-**Problem:** Playlist doesn't play
-**Solution:** Check that the URI format is correct (spotify:playlist:ID)
+**Problem:** Playlist doesn't play when clicked
+**Solutions:**
+- Verify the URI format is correct: `spotify:playlist:YOUR_ACTUAL_ID`
+- Make sure you replaced `YOUR_PLAYLIST_ID` with a real Spotify playlist ID
+- Test the URI manually in HA Developer Tools:
+  ```yaml
+  service: media_player.play_media
+  data:
+    entity_id: media_player.office  # Or any Sonos speaker
+    media_content_id: "spotify:playlist:37i9dQZF1DXcBWIGoYBM5M"
+    media_content_type: "playlist"
+  ```
+- Check that your Spotify account is properly linked to Home Assistant
 
 **Problem:** "No favorite playlists configured"
 **Solution:** Ensure the `FAVORITE_PLAYLISTS` object has entries for your account (daz or nic)
 
 **Problem:** Wrong playlists showing
 **Solution:** Clear browser cache and refresh
+
+**Problem:** "HTTP 500" error when playing
+**Solutions:**
+- Verify your Spotify integration is set up correctly in HA
+- Check that the playlist exists and is accessible
+- Try playing the playlist from Spotify app first to ensure it's valid
 
 ## Architecture Notes
 
