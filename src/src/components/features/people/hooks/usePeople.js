@@ -64,7 +64,7 @@ function extractPersonData(personEntity, sensorPrefix) {
     gpsAccuracy: attributes.gps_accuracy || null,
     entityPicture: attributes.entity_picture || null,
     friendlyName: attributes.friendly_name || '',
-    lastChanged: state.last_changed,
+    lastChanged: state.last_updated, // Use last_updated instead of last_changed for more recent timestamps
     // Battery
     batteryLevel: batteryLevel ? parseInt(batteryLevel, 10) : null,
     batteryState: batteryState,
