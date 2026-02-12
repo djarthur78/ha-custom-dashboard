@@ -11,6 +11,7 @@ import { MealsPage } from './pages/MealsPage';
 import { GamesRoomPage } from './pages/GamesRoomPage';
 import { CamerasPage } from './pages/CamerasPage';
 import { MusicPage } from './pages/MusicPage';
+import { PeoplePage } from './pages/PeoplePage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="calendar" element={<CalendarViewList />} />
         <Route path="meals" element={<MealsPage />} />
         <Route path="games-room" element={<GamesRoomPage />} />
+        <Route path="people" element={<PeoplePage />} />
         <Route path="cameras" element={<CamerasPage />} />
         <Route path="music" element={<MusicPage />} />
       </Route>

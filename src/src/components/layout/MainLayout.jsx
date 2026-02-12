@@ -4,7 +4,7 @@
  */
 
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { Calendar, Utensils, Gamepad2, Camera, Home, Music } from 'lucide-react';
+import { Calendar, Utensils, Gamepad2, Camera, Home, Music, Users } from 'lucide-react';
 import { useWeather } from '../../hooks/useWeather';
 import { useHAConnection } from '../../hooks/useHAConnection';
 import { getWeatherIcon } from '../../utils/weather';
@@ -19,6 +19,7 @@ const navItems = [
   { to: '/meals', icon: Utensils, label: 'Meals' },
   { to: '/games-room', icon: Gamepad2, label: 'Games Room' },
   { to: '/music', icon: Music, label: 'Music' },
+  { to: '/people', icon: Users, label: 'People' },
   { to: '/cameras', icon: Camera, label: 'Cameras' },
 ];
 
@@ -29,8 +30,8 @@ export function MainLayout() {
   const location = useLocation();
   const { alertMode, dismissAlert } = useDoorbellAlert();
 
-  // Camera, Games Room, and Music pages need full viewport - no padding/footer
-  const isFullViewport = ['/cameras', '/games-room', '/music'].includes(location.pathname);
+  // Camera, Games Room, Music, and People pages need full viewport - no padding/footer
+  const isFullViewport = ['/cameras', '/games-room', '/music', '/people'].includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
