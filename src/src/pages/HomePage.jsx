@@ -4,9 +4,8 @@
  */
 
 import { Link } from 'react-router-dom';
-import { Calendar, Utensils, Gamepad2, Camera } from 'lucide-react';
+import { Calendar, Utensils, Gamepad2, Camera, Music, Users } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
-import { useEntity } from '../hooks/useEntity';
 
 const features = [
   {
@@ -31,6 +30,20 @@ const features = [
     color: 'from-purple-500 to-purple-600',
   },
   {
+    to: '/music',
+    icon: Music,
+    title: 'Music',
+    description: 'Control Sonos speakers and playlists',
+    color: 'from-pink-500 to-pink-600',
+  },
+  {
+    to: '/people',
+    icon: Users,
+    title: 'People & Location',
+    description: 'Track family members and locations',
+    color: 'from-indigo-500 to-indigo-600',
+  },
+  {
     to: '/cameras',
     icon: Camera,
     title: 'Camera Feeds',
@@ -40,11 +53,9 @@ const features = [
 ];
 
 export function HomePage() {
-  const { state: testLightState } = useEntity('light.reading_light');
-
   return (
     <PageContainer>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {/* eslint-disable-next-line no-unused-vars */}
         {features.map(({ to, icon: Icon, title, description, color }) => (
           <Link
@@ -74,23 +85,17 @@ export function HomePage() {
         ))}
       </div>
 
-      {/* Quick Status */}
+      {/* Version Info */}
       <div
-        className="bg-[var(--color-surface)] rounded-xl p-6"
+        className="bg-[var(--color-surface)] rounded-xl p-4 text-center"
         style={{
           border: 'none',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
         }}
       >
-        <h3 className="text-lg font-semibold mb-4">Quick Status</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <p className="text-sm text-[var(--color-text-secondary)]">Test Light</p>
-            <p className="text-lg font-semibold">
-              {testLightState === 'on' ? '✅ On' : '⭕ Off'}
-            </p>
-          </div>
-        </div>
+        <p className="text-sm text-[var(--color-text-secondary)]">
+          Family Dashboard <span className="font-semibold text-[var(--color-text)]">v2.0.34</span>
+        </p>
       </div>
     </PageContainer>
   );
