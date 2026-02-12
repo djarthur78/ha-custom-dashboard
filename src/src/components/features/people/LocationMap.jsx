@@ -64,12 +64,25 @@ function createAvatarIcon(person) {
 }
 
 /**
- * Component to auto-fit map bounds
+ * Component to auto-fit map bounds and center on selected person
  */
-function MapBoundsUpdater({ people }) {
+function MapBoundsUpdater({ people, selectedPersonId }) {
   const map = useMap();
 
   useEffect(() => {
+    // If a person is selected, center on them
+    if (selectedPersonId) {
+      const person = people.find(p => p.id === selectedPersonId);
+      if (person && person.latitude && person.longitude) {
+        map.setView([person.latitude, person.longitude], 15, {
+          animate: true,
+          duration: 0.5
+        });
+        return;
+      }
+    }
+
+    // Otherwise, fit all markers
     const bounds = [];
 
     // Add people positions
@@ -90,7 +103,7 @@ function MapBoundsUpdater({ people }) {
         maxZoom: 16
       });
     }
-  }, [people, map]);
+  }, [people, selectedPersonId, map]);
 
   return null;
 }
@@ -99,7 +112,7 @@ function MapBoundsUpdater({ people }) {
  * Location Map Component
  * Shows dark Leaflet map with zone circles and person markers
  */
-export function LocationMap({ people, selectedPersonId }) {
+export function LocationMap({ people, selectedPersonId, showZones = true }) {
   // Default center to Home zone
   const homeZone = ZONES.find(z => z.entityId === 'zone.home');
   const center = [homeZone?.latitude || 51.619455, homeZone?.longitude || 0.520416];
@@ -120,8 +133,8 @@ export function LocationMap({ people, selectedPersonId }) {
         maxZoom={MAP_MAX_ZOOM}
       />
 
-      {/* Zone circles */}
-      {ZONES.map(zone => (
+      {/* Zone circles - only show if enabled */}
+      {showZones && ZONES.map(zone => (
         <Circle
           key={zone.entityId}
           center={[zone.latitude, zone.longitude]}
@@ -129,9 +142,10 @@ export function LocationMap({ people, selectedPersonId }) {
           pathOptions={{
             color: zone.color,
             fillColor: zone.color,
-            fillOpacity: 0.15,
-            weight: 2,
-            dashArray: '5, 5'
+            fillOpacity: 0.2,
+            weight: 3,
+            dashArray: '10, 10',
+            opacity: 0.8
           }}
         >
           {/* Zone tooltip */}
@@ -176,8 +190,8 @@ export function LocationMap({ people, selectedPersonId }) {
         );
       })}
 
-      {/* Auto-fit bounds */}
-      <MapBoundsUpdater people={people} />
+      {/* Auto-fit bounds and center on selection */}
+      <MapBoundsUpdater people={people} selectedPersonId={selectedPersonId} />
     </MapContainer>
   );
 }
