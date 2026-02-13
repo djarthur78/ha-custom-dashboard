@@ -3,41 +3,46 @@
  * Center panel (35%) — Spotify playlist browser with account tabs + queue view.
  *
  * Two modes:
- * 1. Playlists: Browse Daz's or Nic's Spotify playlists
+ * 1. Playlists: Auto-fetched from Spotify via Sonos speaker browse_media
  * 2. Queue: Show what's coming up on the active speaker
  */
 
-import { useState, useEffect } from 'react';
-import { Music, ChevronLeft, ListMusic, Library, RefreshCw, Grid3x3 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Music, ChevronLeft, ListMusic, Library, RefreshCw } from 'lucide-react';
 import { PlaylistCard } from './PlaylistCard';
-import { QueueItem } from './QueueItem';
 import { useBrowseMedia } from './hooks/useBrowseMedia';
-import { useQueue } from './hooks/useQueue';
-import { SPOTIFY_ACCOUNTS, FAVORITE_PLAYLISTS } from './musicConfig';
+import { SPOTIFY_ACCOUNTS } from './musicConfig';
 
 export function PlaylistPanel({ activeSpeaker, onPlayMedia }) {
   const [activeTab, setActiveTab] = useState('daz'); // 'daz' | 'nic' | 'queue'
-  const [showBrowse, setShowBrowse] = useState(false); // Toggle between favorites and browse
-  const { items, title, loading, error, browse, browseInto, goBack, canGoBack } = useBrowseMedia();
-  const { queue, loading: queueLoading, error: queueError, refetch: refetchQueue } = useQueue(
-    activeSpeaker?.entityId
-  );
+  const { items, title, loading, error, browseToPlaylists, browseInto, goBack, reset, canGoBack } =
+    useBrowseMedia();
+  const hasLoadedRef = useRef(false);
+  const lastSpeakerRef = useRef(null);
 
   const activeAccount = SPOTIFY_ACCOUNTS.find((a) => a.id === activeTab);
-  const favoritePlaylists = FAVORITE_PLAYLISTS[activeTab] || [];
 
-  // Reset browse mode when switching tabs
+  // Auto-load Spotify playlists when the Daz tab is active
   useEffect(() => {
-    setShowBrowse(false);
-  }, [activeTab]);
+    if (activeTab === 'queue' || !activeSpeaker?.entityId) return;
 
-  // Fetch playlists when browse mode is enabled
+    // If this account doesn't have Spotify connected, don't try to browse
+    if (activeAccount && !activeAccount.entityId) return;
+
+    // Only load once per speaker selection (or on first mount)
+    const speakerChanged = lastSpeakerRef.current !== activeSpeaker.entityId;
+    if (hasLoadedRef.current && !speakerChanged) return;
+
+    hasLoadedRef.current = true;
+    lastSpeakerRef.current = activeSpeaker.entityId;
+    browseToPlaylists(activeSpeaker.entityId);
+  }, [activeTab, activeSpeaker?.entityId, activeAccount, browseToPlaylists]);
+
+  // Reset when switching tabs
   useEffect(() => {
-    if (showBrowse && activeSpeaker?.entityId) {
-      // Browse the Sonos speaker to show music library (includes Spotify)
-      browse(activeSpeaker.entityId);
-    }
-  }, [showBrowse, activeSpeaker?.entityId, browse]);
+    hasLoadedRef.current = false;
+    reset();
+  }, [activeTab, reset]);
 
   const handlePlayPlaylist = (mediaContentId, mediaContentType) => {
     if (activeSpeaker) {
@@ -45,16 +50,18 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia }) {
     }
   };
 
+  // IMPORTANT: Always browse using the Sonos speaker entity (not Spotify entity)
   const handleBrowseInto = (item) => {
-    if (activeAccount?.entityId) {
-      browseInto(activeAccount.entityId, item);
+    if (activeSpeaker?.entityId) {
+      browseInto(activeSpeaker.entityId, item);
     }
   };
 
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl h-full flex flex-col overflow-hidden"
-         style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-
+    <div
+      className="bg-[var(--color-surface)] rounded-xl h-full flex flex-col overflow-hidden"
+      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}
+    >
       {/* Tab Bar */}
       <div className="flex border-b border-[var(--color-border)] flex-shrink-0">
         {SPOTIFY_ACCOUNTS.map((account) => (
@@ -90,75 +97,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia }) {
       <div className="flex-1 overflow-y-auto p-3">
         {/* Queue View */}
         {activeTab === 'queue' && (
-          <div>
-            {activeSpeaker && (activeSpeaker.state === 'playing' || activeSpeaker.state === 'paused') ? (
-              <div>
-                <h3 className="text-base font-semibold text-[var(--color-text)] mb-3">
-                  Playing on {activeSpeaker.label}
-                  {activeSpeaker.queueSize && ` — ${activeSpeaker.queueSize} tracks`}
-                </h3>
-
-                {/* Current track */}
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg mb-3">
-                  <div className="text-xs font-medium text-blue-700 uppercase tracking-wider mb-1">
-                    Now Playing
-                  </div>
-                  <div className="text-base font-semibold text-[var(--color-text)] mb-1">
-                    {activeSpeaker.mediaTitle || 'Unknown Track'}
-                  </div>
-                  {activeSpeaker.mediaArtist && (
-                    <div className="text-sm text-[var(--color-text-secondary)]">
-                      {activeSpeaker.mediaArtist}
-                    </div>
-                  )}
-                </div>
-
-                {/* Queue summary */}
-                {activeSpeaker.queueSize > 1 && (
-                  <div className="bg-gray-50 rounded-lg p-4 text-center">
-                    <ListMusic size={48} className="mx-auto mb-3 text-gray-400" />
-                    <div className="space-y-2">
-                      <div>
-                        <p className="text-lg font-semibold text-[var(--color-text)]">
-                          {activeSpeaker.queueSize} tracks in queue
-                        </p>
-                        <p className="text-sm text-[var(--color-text-secondary)]">
-                          Currently playing track {activeSpeaker.queuePosition} of {activeSpeaker.queueSize}
-                        </p>
-                      </div>
-                      <div className="pt-2 border-t border-gray-200">
-                        <p className="text-sm text-[var(--color-text-secondary)] mb-2">
-                          {activeSpeaker.queueSize - activeSpeaker.queuePosition} tracks remaining
-                        </p>
-                        {/* Progress bar showing queue position */}
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-500 h-2 rounded-full transition-all"
-                            style={{
-                              width: `${(activeSpeaker.queuePosition / activeSpeaker.queueSize) * 100}%`
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div className="pt-3 text-xs text-gray-500">
-                        ℹ️ Full track list not available
-                        <br />
-                        (HA Sonos API limitation)
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                <ListMusic size={48} className="text-gray-300 mb-3" />
-                <p className="text-base text-[var(--color-text-secondary)]">No queue</p>
-                <p className="text-sm text-[var(--color-text-secondary)]">
-                  Play something to see the queue
-                </p>
-              </div>
-            )}
-          </div>
+          <QueueView activeSpeaker={activeSpeaker} />
         )}
 
         {/* Playlist Browser (Daz or Nic tab) */}
@@ -175,79 +114,28 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia }) {
                   Add {activeAccount.label}&apos;s Spotify integration in
                 </p>
                 <p className="text-base text-[var(--color-text-secondary)]">
-                  HA Settings → Integrations → Add → Spotify
+                  HA Settings &rarr; Integrations &rarr; Add &rarr; Spotify
                 </p>
               </div>
             )}
 
-            {/* Favorite Playlists (Default View) */}
-            {activeAccount.entityId && !showBrowse && (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-semibold text-[var(--color-text)]">
-                    Favorite Playlists
-                  </h3>
-                  <button
-                    onClick={() => setShowBrowse(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium
-                               bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                  >
-                    <Grid3x3 size={14} />
-                    Browse All
-                  </button>
-                </div>
-
-                {favoritePlaylists.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    {favoritePlaylists.map((playlist, idx) => (
-                      <PlaylistCard
-                        key={playlist.uri || idx}
-                        item={{
-                          title: playlist.name,
-                          media_content_id: playlist.uri,
-                          media_content_type: 'playlist',
-                          thumbnail: playlist.thumbnail,
-                          can_play: true,
-                          can_expand: false,
-                        }}
-                        onPlay={(uri, type) => handlePlayPlaylist(uri, type)}
-                        onBrowse={undefined}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Music size={48} className="text-gray-300 mb-3 mx-auto" />
-                    <p className="text-base text-[var(--color-text-secondary)] mb-4">
-                      No favorite playlists configured
-                    </p>
-                    <button
-                      onClick={() => setShowBrowse(true)}
-                      className="px-4 py-2 text-base font-medium bg-[var(--color-primary)]
-                                 text-white rounded-lg hover:opacity-90 transition-opacity"
-                    >
-                      Browse All Playlists
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Loading (only in browse mode) */}
-            {activeAccount.entityId && showBrowse && loading && (
+            {/* Loading */}
+            {activeAccount.entityId && loading && (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
                 <div className="w-8 h-8 border-3 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
                 <p className="text-base text-[var(--color-text-secondary)]">Loading playlists...</p>
               </div>
             )}
 
-            {/* Error (only in browse mode) */}
-            {activeAccount.entityId && showBrowse && error && (
+            {/* Error */}
+            {activeAccount.entityId && error && !loading && (
               <div className="text-center py-12">
-                <p className="text-lg font-semibold text-[var(--color-error)] mb-2">Failed to load playlists</p>
+                <p className="text-lg font-semibold text-[var(--color-error)] mb-2">
+                  Failed to load playlists
+                </p>
                 <p className="text-base text-[var(--color-text-secondary)] mt-1 mb-4">{error}</p>
                 <button
-                  onClick={() => browse(activeAccount.entityId)}
+                  onClick={() => browseToPlaylists(activeSpeaker?.entityId)}
                   className="mt-3 px-5 py-2.5 text-base font-medium bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
                 >
                   Retry
@@ -255,10 +143,10 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia }) {
               </div>
             )}
 
-            {/* Browse results */}
-            {activeAccount.entityId && showBrowse && !loading && !error && (
+            {/* Playlist/Browse results */}
+            {activeAccount.entityId && !loading && !error && (
               <>
-                {/* Back buttons + title */}
+                {/* Header with back button + title + refresh */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     {canGoBack && (
@@ -271,22 +159,20 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia }) {
                         Back
                       </button>
                     )}
-                    {title && !canGoBack && (
+                    {title && (
                       <h3 className="text-base font-semibold text-[var(--color-text)]">
                         {title}
                       </h3>
                     )}
                   </div>
-                  {favoritePlaylists.length > 0 && (
-                    <button
-                      onClick={() => setShowBrowse(false)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium
-                                 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                    >
-                      <Music size={14} />
-                      Favorites
-                    </button>
-                  )}
+                  <button
+                    onClick={() => browseToPlaylists(activeSpeaker?.entityId)}
+                    className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text)]
+                               hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Refresh playlists"
+                  >
+                    <RefreshCw size={16} />
+                  </button>
                 </div>
 
                 {/* Playlist grid */}
@@ -296,7 +182,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia }) {
                       key={item.media_content_id || idx}
                       item={item}
                       onPlay={handlePlayPlaylist}
-                      onBrowse={item.can_expand ? handleBrowseInto : undefined}
+                      onBrowse={item.can_expand && !item.can_play ? handleBrowseInto : undefined}
                     />
                   ))}
                 </div>
@@ -304,7 +190,16 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia }) {
                 {items.length === 0 && (
                   <div className="text-center py-12">
                     <Music size={48} className="text-gray-300 mb-3 mx-auto" />
-                    <p className="text-base text-[var(--color-text-secondary)]">No playlists found</p>
+                    <p className="text-base text-[var(--color-text-secondary)]">
+                      No playlists found
+                    </p>
+                    <button
+                      onClick={() => browseToPlaylists(activeSpeaker?.entityId)}
+                      className="mt-4 px-4 py-2 text-base font-medium bg-[var(--color-primary)]
+                                 text-white rounded-lg hover:opacity-90 transition-opacity"
+                    >
+                      Reload
+                    </button>
                   </div>
                 )}
               </>
@@ -312,6 +207,90 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia }) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Queue View - shows currently playing track and queue position.
+ */
+function QueueView({ activeSpeaker }) {
+  const isActive =
+    activeSpeaker &&
+    (activeSpeaker.state === 'playing' || activeSpeaker.state === 'paused');
+
+  if (!isActive) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center py-12">
+        <ListMusic size={48} className="text-gray-300 mb-3" />
+        <p className="text-base text-[var(--color-text-secondary)]">No queue</p>
+        <p className="text-sm text-[var(--color-text-secondary)]">
+          Play something to see the queue
+        </p>
+      </div>
+    );
+  }
+
+  const queuePosition = activeSpeaker.queuePosition || 0;
+  const queueSize = activeSpeaker.queueSize || 0;
+  const remaining = queueSize > queuePosition ? queueSize - queuePosition : 0;
+  const progress = queueSize > 0 ? (queuePosition / queueSize) * 100 : 0;
+
+  return (
+    <div>
+      <h3 className="text-base font-semibold text-[var(--color-text)] mb-3">
+        Playing on {activeSpeaker.label}
+        {queueSize > 0 && ` \u2014 ${queueSize} tracks`}
+      </h3>
+
+      {/* Current track */}
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg mb-3">
+        <div className="text-xs font-medium text-blue-700 uppercase tracking-wider mb-1">
+          Now Playing
+        </div>
+        <div className="text-base font-semibold text-[var(--color-text)] mb-1">
+          {activeSpeaker.mediaTitle || 'Unknown Track'}
+        </div>
+        {activeSpeaker.mediaArtist && (
+          <div className="text-sm text-[var(--color-text-secondary)]">
+            {activeSpeaker.mediaArtist}
+          </div>
+        )}
+        {activeSpeaker.mediaAlbumName && (
+          <div className="text-xs text-[var(--color-text-secondary)] mt-1">
+            {activeSpeaker.mediaAlbumName}
+          </div>
+        )}
+      </div>
+
+      {/* Queue progress */}
+      {queueSize > 1 && (
+        <div className="bg-gray-50 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-[var(--color-text)]">
+              Track {queuePosition} of {queueSize}
+            </span>
+            <span className="text-sm text-[var(--color-text-secondary)]">
+              {remaining} remaining
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+            <div
+              className="bg-blue-500 h-2 rounded-full transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          {/* Source info */}
+          {activeSpeaker.source && (
+            <div className="text-xs text-[var(--color-text-secondary)]">
+              Source: {activeSpeaker.source}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
