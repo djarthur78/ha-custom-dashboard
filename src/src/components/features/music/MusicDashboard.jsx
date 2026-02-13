@@ -38,6 +38,7 @@ export function MusicDashboard() {
         <PlaylistPanel
           activeSpeaker={activeSpeaker}
           onPlayMedia={controls.playMedia}
+          onNextTrack={controls.next}
         />
       </div>
 
