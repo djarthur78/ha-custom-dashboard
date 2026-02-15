@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.40] - 2026-02-15
+
+### Mac Migration Complete
+- Fixed `sed` commands for macOS compatibility in `build-addon.sh`, `deploy.sh`, `family-dashboard/run.sh`
+- Added OS detection to automatically use correct sed syntax (macOS BSD vs Linux GNU)
+- Created `.env` file for local development
+- Configured git to use HTTPS with Personal Access Token
+
+### Navigation Improvements
+- **Calendar is now the default landing page** (previously Home)
+- Home page moved to `/home` route (still accessible via navbar)
+- Added 5-minute inactivity timer that auto-redirects to Calendar
+- Created `useInactivityTimer` hook for user activity detection
+- Timer detects: mousedown, mousemove, keypress, scroll, touchstart, click
+
+### Development Environment
+- Project now fully compatible with Mac mini (macOS)
+- Build scripts work on both macOS and Linux
+- Git configured for HTTPS push (was SSH)
+
+### Next Steps (Not Yet Implemented)
+- **Camera Performance Optimization** - Progressive loading, timeout handling, error states
+  - Plan exists at `.claude/plans/quiet-wondering-hamming.md`
+  - Will implement priority-based camera loading (front cameras first)
+  - Add proper error handling for offline cameras
+  - Reduce nginx timeout from 24h to 30s
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
