@@ -8,6 +8,13 @@
 
 set -e
 
+# Detect OS for sed compatibility
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  SED_INPLACE="sed -i ''"
+else
+  SED_INPLACE="sed -i"
+fi
+
 ADDON_DIR="family-dashboard"
 CONFIG="$ADDON_DIR/config.json"
 HA_URL="http://192.168.1.2:8123"
@@ -88,7 +95,7 @@ echo ""
 # Step 4: Inject config.js
 echo -e "${CYAN}[4/7]${NC} Injecting runtime config loader..."
 if ! grep -q 'config.js' "$ADDON_DIR/build/index.html"; then
-  sed -i 's|<head>|<head>\n    <script src="./config.js"></script>|' "$ADDON_DIR/build/index.html"
+  $SED_INPLACE 's|<head>|<head>\n    <script src="./config.js"></script>|' "$ADDON_DIR/build/index.html"
   echo -e "${GREEN}  Injected.${NC}"
 else
   echo -e "${YELLOW}  Already present, skipped.${NC}"
@@ -97,7 +104,7 @@ echo ""
 
 # Step 5: Bump version
 echo -e "${CYAN}[5/7]${NC} Bumping version $CURRENT_VERSION → $NEW_VERSION..."
-sed -i "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" "$CONFIG"
+$SED_INPLACE "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" "$CONFIG"
 echo -e "${GREEN}  Version updated.${NC}"
 echo ""
 

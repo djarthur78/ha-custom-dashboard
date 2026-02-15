@@ -12,9 +12,10 @@ import { Clock } from './Clock';
 import { ToastContainer } from '../common/Toast';
 import { useToast } from '../../hooks/useToast';
 import { useDoorbellAlert } from '../features/cameras/hooks/useDoorbellAlert';
+import { useInactivityTimer } from '../../hooks/useInactivityTimer';
 
 const navItems = [
-  { to: '/', icon: Home, label: 'Home' },
+  { to: '/home', icon: Home, label: 'Home' },
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/meals', icon: Utensils, label: 'Meals' },
   { to: '/games-room', icon: Gamepad2, label: 'Games Room' },
@@ -29,6 +30,9 @@ export function MainLayout() {
   const { toasts, dismissToast } = useToast();
   const location = useLocation();
   const { alertMode, dismissAlert } = useDoorbellAlert();
+
+  // 5-minute inactivity timer - return to calendar
+  useInactivityTimer(300000, '/calendar');
 
   // Camera, Games Room, Music, and People pages need full viewport - no padding/footer
   const isFullViewport = ['/cameras', '/games-room', '/music', '/people'].includes(location.pathname);

@@ -5,6 +5,13 @@
 
 set -e
 
+# Detect OS for sed compatibility
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  SED_INPLACE="sed -i ''"
+else
+  SED_INPLACE="sed -i"
+fi
+
 echo "🏗️  Building Family Dashboard Add-on..."
 
 # Step 1: Build the React app
@@ -20,7 +27,7 @@ cp -r src/dist family-dashboard/build
 
 # Step 3: Inject config.js script into index.html
 echo "🔧 Injecting runtime config loader..."
-sed -i 's|<head>|<head>\n    <script src="./config.js"></script>|' family-dashboard/build/index.html
+$SED_INPLACE 's|<head>|<head>\n    <script src="./config.js"></script>|' family-dashboard/build/index.html
 
 # Step 3: Update version in config.json (optional)
 VERSION=$(date +%Y.%m.%d)

@@ -1,6 +1,13 @@
 #!/bin/sh
 set -e
 
+# Detect OS for sed compatibility (sh compatible)
+if [ "$(uname)" = "Darwin" ]; then
+  SED_INPLACE="sed -i ''"
+else
+  SED_INPLACE="sed -i"
+fi
+
 echo "[INFO] Starting Family Dashboard..."
 
 # Get the Supervisor token (automatically available with homeassistant_api: true)
@@ -33,7 +40,7 @@ chmod -R 755 /var/lib/nginx /var/log/nginx /run/nginx
 # Inject runtime config directly into index.html as inline script
 # useProxy: true because nginx IS proxying REST API calls
 echo "[INFO] Injecting runtime configuration into HTML..."
-sed -i 's|<script src="./config.js"></script>|<script>window.HA_CONFIG={url:"'"${HA_URL}"'",token:"'"${HA_TOKEN}"'",supervisorToken:"'"${SUPERVISOR_TOKEN}"'",useIngress:true,useProxy:true};</script>|' /usr/share/nginx/html/index.html
+$SED_INPLACE 's|<script src="./config.js"></script>|<script>window.HA_CONFIG={url:"'"${HA_URL}"'",token:"'"${HA_TOKEN}"'",supervisorToken:"'"${SUPERVISOR_TOKEN}"'",useIngress:true,useProxy:true};</script>|' /usr/share/nginx/html/index.html
 
 echo "[INFO] Configuration injected: url=${HA_URL}, useProxy=true"
 
@@ -42,8 +49,8 @@ PROXY_TOKEN="${HA_TOKEN:-${SUPERVISOR_TOKEN}}"
 
 # Inject HA URL and token into nginx config for REST API proxy
 echo "[INFO] Configuring nginx REST API proxy to ${HA_URL}..."
-sed -i "s|%%HA_URL%%|${HA_URL}|g" /etc/nginx/nginx.conf
-sed -i "s|%%HA_TOKEN%%|${PROXY_TOKEN}|g" /etc/nginx/nginx.conf
+$SED_INPLACE "s|%%HA_URL%%|${HA_URL}|g" /etc/nginx/nginx.conf
+$SED_INPLACE "s|%%HA_TOKEN%%|${PROXY_TOKEN}|g" /etc/nginx/nginx.conf
 
 # List files for debugging
 echo "[INFO] Files in /usr/share/nginx/html:"

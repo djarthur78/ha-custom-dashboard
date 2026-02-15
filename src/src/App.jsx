@@ -3,7 +3,7 @@
  * Router configuration with MainLayout
  */
 
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
 import { HomePage } from './pages/HomePage';
 import { CalendarViewList } from './components/features/calendar/CalendarViewList';
@@ -17,7 +17,8 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>
-        <Route index element={<HomePage />} />
+        <Route index element={<Navigate to="/calendar" replace />} />
+        <Route path="home" element={<HomePage />} />
         <Route path="calendar" element={<CalendarViewList />} />
         <Route path="meals" element={<MealsPage />} />
         <Route path="games-room" element={<GamesRoomPage />} />
