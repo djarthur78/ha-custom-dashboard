@@ -13,49 +13,49 @@ const features = [
     icon: Calendar,
     title: 'Family Calendar',
     description: 'View all family calendars in one place',
-    color: 'from-blue-500 to-blue-600',
+    gradient: 'linear-gradient(135deg, #3b82f6, #2563eb)',
   },
   {
     to: '/meals',
     icon: Utensils,
     title: 'Meal Planner',
     description: 'Plan meals for this week and next week',
-    color: 'from-green-500 to-green-600',
+    gradient: 'linear-gradient(135deg, #22c55e, #16a34a)',
   },
   {
     to: '/games-room',
     icon: Gamepad2,
     title: 'Games Room',
     description: 'Control climate, media, and devices',
-    color: 'from-purple-500 to-purple-600',
+    gradient: 'linear-gradient(135deg, #a855f7, #9333ea)',
   },
   {
     to: '/music',
     icon: Music,
     title: 'Music',
     description: 'Control Sonos speakers and playlists',
-    color: 'from-pink-500 to-pink-600',
+    gradient: 'linear-gradient(135deg, #ec4899, #db2777)',
   },
   {
     to: '/people',
     icon: Users,
     title: 'People & Location',
     description: 'Track family members and locations',
-    color: 'from-indigo-500 to-indigo-600',
+    gradient: 'linear-gradient(135deg, #6366f1, #4f46e5)',
   },
   {
     to: '/health',
     icon: Heart,
     title: 'Health & Wellness',
     description: 'Oura Ring data and Cold Plunge controls',
-    color: 'from-rose-500 to-rose-600',
+    gradient: 'linear-gradient(135deg, #f43f5e, #e11d48)',
   },
   {
     to: '/cameras',
     icon: Camera,
     title: 'Camera Feeds',
     description: 'View all camera feeds',
-    color: 'from-red-500 to-red-600',
+    gradient: 'linear-gradient(135deg, #ef4444, #dc2626)',
   },
 ];
 
@@ -64,12 +64,14 @@ export function HomePage() {
     <PageContainer>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {/* eslint-disable-next-line no-unused-vars */}
-        {features.map(({ to, icon: Icon, title, description, color }) => (
+        {features.map(({ to, icon: Icon, title, description, gradient }) => (
           <Link
             key={to}
             to={to}
-            className={`block p-6 bg-gradient-to-br ${color} rounded-xl transition-all transform hover:-translate-y-1 hover:scale-[1.02]`}
+            className="block rounded-xl transition-all transform hover:-translate-y-1 hover:scale-[1.02]"
             style={{
+              background: gradient,
+              padding: '1.5rem',
               boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)',
             }}
             onMouseEnter={(e) => {
@@ -80,12 +82,12 @@ export function HomePage() {
             }}
           >
             <div className="flex items-start gap-4">
-              <div className="p-3 bg-white/20 rounded-xl">
-                <Icon size={32} className="text-white" />
+              <div style={{ padding: '0.75rem', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '0.75rem' }}>
+                <Icon size={32} style={{ color: 'white' }} />
               </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-white mb-1">{title}</h3>
-                <p className="text-white/90 text-sm">{description}</p>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'white', marginBottom: '0.25rem' }}>{title}</h3>
+                <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.9)' }}>{description}</p>
               </div>
             </div>
           </Link>
