@@ -109,6 +109,7 @@ export async function toggle(entityId) {
  */
 export async function ping() {
   try {
+    const { url: HA_URL, token: HA_TOKEN } = getHAConfig({ useProxy: true });
     const response = await fetch(`${HA_URL}/api/`, {
       headers: {
         'Authorization': `Bearer ${HA_TOKEN}`,

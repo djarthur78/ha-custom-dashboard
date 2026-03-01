@@ -12,6 +12,7 @@ import { GamesRoomPage } from './pages/GamesRoomPage';
 import { CamerasPage } from './pages/CamerasPage';
 import { MusicPage } from './pages/MusicPage';
 import { PeoplePage } from './pages/PeoplePage';
+import { HealthPage } from './pages/HealthPage';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="people" element={<PeoplePage />} />
         <Route path="cameras" element={<CamerasPage />} />
         <Route path="music" element={<MusicPage />} />
+        <Route path="health" element={<HealthPage />} />
       </Route>
     </Routes>
   );

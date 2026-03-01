@@ -3,7 +3,7 @@
  * Calendar with list/card layout matching HA style
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { format, startOfWeek, addWeeks, subWeeks, addDays, subDays, addMonths, subMonths, isSameDay } from 'date-fns';
 import { isEventOnDay } from '../../../utils/calendar';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from 'lucide-react';
@@ -37,6 +37,7 @@ export function CalendarViewList() {
   const [quickFilter, setQuickFilter] = useState('all');
   const { isConnected } = useHAConnection();
   const weather = useWeather();
+  const hasLoadedOnce = useRef(false);
 
   // Modal states
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -49,7 +50,10 @@ export function CalendarViewList() {
   const fetchEvents = useCallback(async () => {
     if (!isConnected) return;
 
-    setLoading(true);
+    // Only show full loading spinner on initial load
+    if (!hasLoadedOnce.current) {
+      setLoading(true);
+    }
     try {
       const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday
       const weekEnd = addDays(weekStart, 6); // Sunday
@@ -63,6 +67,7 @@ export function CalendarViewList() {
       );
 
       setEvents(calendarEvents);
+      hasLoadedOnce.current = true;
     } catch (error) {
       console.error('Failed to load calendar events:', error);
     } finally {
@@ -73,6 +78,13 @@ export function CalendarViewList() {
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
+
+  // Auto-refresh every 5 minutes for fresh data
+  useEffect(() => {
+    if (!isConnected) return;
+    const interval = setInterval(fetchEvents, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isConnected, fetchEvents]);
 
   // Force list layout for biweekly period
   useEffect(() => {
@@ -210,16 +222,6 @@ export function CalendarViewList() {
     return { nextDayWasteEvents, daysUntilCollection };
   }, [events]);
 
-  if (!isConnected) {
-    return (
-      <PageContainer>
-        <div className="text-center py-12 text-[var(--color-text-secondary)]">
-          Connecting to Home Assistant...
-        </div>
-      </PageContainer>
-    );
-  }
-
   return (
     <div style={{
       margin: '-1.5rem -1rem',
@@ -227,6 +229,13 @@ export function CalendarViewList() {
       width: 'calc(100% + 2rem)',
       boxSizing: 'border-box'
     }}>
+      {/* Reconnecting banner */}
+      {!isConnected && hasLoadedOnce.current && (
+        <div className="mb-4 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-medium text-center">
+          Reconnecting to Home Assistant...
+        </div>
+      )}
+
       {/* Header with waste collection info */}
       {nextDayWasteEvents.length > 0 && (
         <div className="mb-4 text-sm flex items-center gap-2" style={{ color: '#666666', width: '100%' }}>

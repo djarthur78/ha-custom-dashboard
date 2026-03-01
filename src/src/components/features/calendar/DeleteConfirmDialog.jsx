@@ -26,17 +26,17 @@ export function DeleteConfirmDialog({
   if (!event) return null;
 
   const handleDelete = async () => {
+    if (!event.uid) {
+      console.error('Cannot delete event: missing UID', event);
+      setError('Cannot delete: this event is missing a UID. It may be a read-only or external calendar event.');
+      return;
+    }
+
     setIsDeleting(true);
     setError(null);
 
     try {
-      // Extract UID from event
-      // Event IDs are in format: "calendar.xxx-start-title"
-      // But we need the actual UID from the calendar
-      // For now, we'll use the event's uid property if available
-      const uid = event.uid || event.id;
-
-      await deleteCalendarEvent(event.calendarId, uid);
+      await deleteCalendarEvent(event.calendarId, event.uid, event.recurrence_id);
 
       onConfirm?.();
       onClose();

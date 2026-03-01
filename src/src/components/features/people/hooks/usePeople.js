@@ -97,15 +97,17 @@ export function usePeople() {
   useEffect(() => {
     if (!isConnected) return;
 
-    // Wait a moment for state cache to populate, then load initial data
-    const initTimer = setTimeout(() => {
+    const updatePeople = () => {
       setPeople(
         FAMILY_MEMBERS.map(member => ({
           ...member,
           ...extractPersonData(member.personEntity, member.sensorPrefix)
         }))
       );
-    }, 500);
+    };
+
+    // Wait for state cache to be ready, then load initial data
+    haWebSocket.onStateCacheReady(updatePeople);
 
     // Build subscription list: person entities + sensors
     const subscriptions = [];
@@ -129,22 +131,12 @@ export function usePeople() {
       subscriptions.push(getSensorId(member.sensorPrefix, 'focus'));
     });
 
-    const updatePeople = () => {
-      setPeople(
-        FAMILY_MEMBERS.map(member => ({
-          ...member,
-          ...extractPersonData(member.personEntity, member.sensorPrefix)
-        }))
-      );
-    };
-
     // Subscribe to updates
     const unsubscribes = subscriptions.map(entityId =>
       haWebSocket.subscribeToEntity(entityId, updatePeople)
     );
 
     return () => {
-      clearTimeout(initTimer);
       unsubscribes.forEach(unsub => unsub());
     };
   }, [isConnected]);

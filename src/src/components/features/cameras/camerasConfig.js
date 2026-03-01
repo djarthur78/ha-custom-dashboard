@@ -1,15 +1,15 @@
 export const CAMERAS = [
   // Front cameras (large, top row) — use MJPEG streams
-  { id: 'camera.front_door_high_resolution_channel', label: 'Front Door', zone: 'front', priority: 1 },
-  { id: 'camera.front_right_high_resolution_channel', label: 'Front Right', zone: 'front', priority: 2 },
-  { id: 'camera.front_left_high_resolution_channel', label: 'Front Left', zone: 'front', priority: 3 },
+  { id: 'camera.front_door_high_resolution_channel', label: 'Front Door', zone: 'front', priority: 1, interval: 3000 },
+  { id: 'camera.front_right_high_resolution_channel', label: 'Front Right', zone: 'front', priority: 2, interval: 3000 },
+  { id: 'camera.front_left_high_resolution_channel', label: 'Front Left', zone: 'front', priority: 3, interval: 3000 },
 
   // Back/side cameras (small, bottom row) — use snapshot refresh
-  { id: 'camera.front_door_package_camera', label: 'Package Cam', zone: 'other', priority: 4 },
-  { id: 'camera.back_shed_high_resolution_channel', label: 'Back Shed', zone: 'other', priority: 5 },
-  { id: 'camera.back_gym_high_resolution_channel', label: 'Back Gym', zone: 'other', priority: 6 },
-  { id: 'camera.side_gate_high_resolution_channel', label: 'Side Gate', zone: 'other', priority: 7 },
-  { id: 'camera.outdoor_kitchen_high_resolution_channel', label: 'Outdoor Kitchen', zone: 'other', priority: 8 },
+  { id: 'camera.front_door_package_camera', label: 'Package Cam', zone: 'other', priority: 4, interval: 5000 },
+  { id: 'camera.back_shed_high_resolution_channel', label: 'Back Shed', zone: 'other', priority: 5, interval: 5000 },
+  { id: 'camera.back_gym_high_resolution_channel', label: 'Back Gym', zone: 'other', priority: 6, interval: 5000 },
+  { id: 'camera.side_gate_high_resolution_channel', label: 'Side Gate', zone: 'other', priority: 7, interval: 5000 },
+  { id: 'camera.outdoor_kitchen_high_resolution_channel', label: 'Outdoor Kitchen', zone: 'other', priority: 8, interval: 5000 },
 ];
 
 export const DOORBELL_ENTITY = 'event.front_door_doorbell';

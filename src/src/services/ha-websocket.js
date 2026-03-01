@@ -23,6 +23,7 @@ class HAWebSocket {
     this.reconnectTimeout = null;
     this.stateCache = new Map(); // entity_id → full state object
     this.stateCacheReady = false;
+    this.stateCacheReadyCallbacks = [];
 
     const config = getHAConfig();
     this.url = config.url;
@@ -151,6 +152,9 @@ class HAWebSocket {
       });
       this.stateCacheReady = true;
       log.debug(`State cache populated with ${states.length} entities`);
+      // Fire any pending cache-ready callbacks
+      this.stateCacheReadyCallbacks.forEach(cb => cb());
+      this.stateCacheReadyCallbacks = [];
     } catch (error) {
       log.error('Failed to populate state cache:', error);
     }
@@ -267,6 +271,18 @@ class HAWebSocket {
    */
   getCachedState(entityId) {
     return this.stateCache.get(entityId) || null;
+  }
+
+  /**
+   * Register a callback for when the state cache is ready.
+   * If already ready, fires immediately. Otherwise queues it.
+   */
+  onStateCacheReady(callback) {
+    if (this.stateCacheReady) {
+      callback();
+    } else {
+      this.stateCacheReadyCallbacks.push(callback);
+    }
   }
 
   /**
@@ -448,6 +464,7 @@ class HAWebSocket {
     this.stateSubscribers.clear();
     this.stateCache.clear();
     this.stateCacheReady = false;
+    this.stateCacheReadyCallbacks = [];
   }
 
   /**

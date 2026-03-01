@@ -1,0 +1,79 @@
+/**
+ * Health & Wellness Configuration
+ * Entity IDs for Oura Ring sensors and Cold Plunge controls
+ */
+
+export const OURA_SCORES = {
+  sleep: 'sensor.oura_ring_sleep_score',
+  readiness: 'sensor.oura_ring_readiness_score',
+  activity: 'sensor.oura_ring_activity_score',
+};
+
+export const OURA_SLEEP = {
+  efficiency: 'sensor.oura_ring_sleep_efficiency',
+  restfulness: 'sensor.oura_ring_restfulness',
+  regularity: 'sensor.oura_ring_sleep_regularity',
+  timing: 'sensor.oura_ring_sleep_timing',
+};
+
+export const OURA_HEART = {
+  current: 'sensor.oura_ring_current_heart_rate',
+  average: 'sensor.oura_ring_average_heart_rate',
+  min: 'sensor.oura_ring_lowest_heart_rate',
+  max: 'sensor.oura_ring_highest_heart_rate',
+  resting_score: 'sensor.oura_ring_resting_heart_rate_score',
+  hrv_balance: 'sensor.oura_ring_hrv_balance',
+  cardio_age: 'sensor.oura_ring_cardiovascular_age',
+};
+
+export const OURA_ACTIVITY = {
+  steps: 'sensor.oura_ring_steps',
+  active_calories: 'sensor.oura_ring_active_calories',
+  total_calories: 'sensor.oura_ring_total_calories',
+  target_calories: 'sensor.oura_ring_target_calories',
+  high_activity: 'sensor.oura_ring_high_activity_time',
+  medium_activity: 'sensor.oura_ring_medium_activity_time',
+  low_activity: 'sensor.oura_ring_low_activity_time',
+};
+
+export const OURA_BODY = {
+  temp_deviation: 'sensor.oura_ring_temperature_deviation',
+  spo2: 'sensor.oura_ring_average_blood_oxygen',
+  breathing_index: 'sensor.oura_ring_breathing_disturbance_index',
+};
+
+export const OURA_STRESS = {
+  day_summary: 'sensor.oura_ring_stress_day_summary',
+  resilience: 'sensor.oura_ring_resilience_level',
+  stress_high: 'sensor.oura_ring_stress_high_duration',
+  recovery_high: 'sensor.oura_ring_recovery_high_duration',
+  recovery_score: 'sensor.oura_ring_recovery_index_score',
+};
+
+export const COLD_PLUNGE = {
+  chiller: 'switch.cold_plunge_devices_p304m_cold_plunge_chiller',
+  pump: 'switch.cold_plunge_devices_p304m_cold_plunge_pump',
+  fan: 'switch.cold_plunge_devices_p304m_cold_plunge_fan',
+  ozone: 'switch.cold_plunge_devices_p304m_cold_plunge_ozone',
+};
+
+export const COLD_PLUNGE_POWER = {
+  chiller: 'sensor.cold_plunge_devices_p304m_cold_plunge_chiller_power',
+  pump: 'sensor.cold_plunge_devices_p304m_cold_plunge_pump_power',
+  fan: 'sensor.cold_plunge_devices_p304m_cold_plunge_fan_power',
+  ozone: 'sensor.cold_plunge_devices_p304m_cold_plunge_ozone_power',
+};
+
+export const SCORE_COLORS = {
+  high: '#22c55e',    // green - 80+
+  medium: '#f59e0b',  // amber - 60-79
+  low: '#ef4444',     // red - below 60
+};
+
+export function getScoreColor(score) {
+  const num = parseInt(score, 10);
+  if (isNaN(num)) return '#9ca3af';
+  if (num >= 80) return SCORE_COLORS.high;
+  if (num >= 60) return SCORE_COLORS.medium;
+  return SCORE_COLORS.low;
+}

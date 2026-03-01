@@ -4,7 +4,7 @@
  */
 
 import { Link } from 'react-router-dom';
-import { Calendar, Utensils, Gamepad2, Camera, Music, Users } from 'lucide-react';
+import { Calendar, Utensils, Gamepad2, Camera, Music, Users, Heart } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 
 const features = [
@@ -42,6 +42,13 @@ const features = [
     title: 'People & Location',
     description: 'Track family members and locations',
     color: 'from-indigo-500 to-indigo-600',
+  },
+  {
+    to: '/health',
+    icon: Heart,
+    title: 'Health & Wellness',
+    description: 'Oura Ring data and Cold Plunge controls',
+    color: 'from-rose-500 to-rose-600',
   },
   {
     to: '/cameras',
@@ -94,7 +101,7 @@ export function HomePage() {
         }}
       >
         <p className="text-sm text-[var(--color-text-secondary)]">
-          Family Dashboard <span className="font-semibold text-[var(--color-text)]">v2.0.40</span>
+          Family Dashboard <span className="font-semibold text-[var(--color-text)]">v2.1.0</span>
         </p>
       </div>
     </PageContainer>
