@@ -1,108 +1,161 @@
 /**
  * ColdPlungeControls Component
- * Master on/off toggle and individual device status for cold plunge
+ * Master ON/OFF toggle + individual device status for cold plunge
+ * ON = chiller + pump + fan, OFF = all off
  */
 
-import { useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Power, Snowflake, Waves, Wind, Sparkles } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
-import { useServiceCall } from '../../../hooks/useServiceCall';
+import haWebSocket from '../../../services/ha-websocket';
 import { COLD_PLUNGE, COLD_PLUNGE_POWER } from './healthConfig';
 
 const DEVICES = [
-  { key: 'chiller', label: 'Chiller', icon: Snowflake },
-  { key: 'pump', label: 'Pump', icon: Waves },
-  { key: 'fan', label: 'Fan', icon: Wind },
-  { key: 'ozone', label: 'Ozone', icon: Sparkles },
+  { key: 'chiller', label: 'Chiller', icon: Snowflake, color: '#3b82f6' },
+  { key: 'pump', label: 'Pump', icon: Waves, color: '#06b6d4' },
+  { key: 'fan', label: 'Fan', icon: Wind, color: '#8b5cf6' },
+  { key: 'ozone', label: 'Ozone', icon: Sparkles, color: '#f59e0b' },
 ];
 
-// eslint-disable-next-line no-unused-vars
-function DeviceToggle({ entityId, powerEntityId, label, icon: Icon }) {
+function DeviceStatus({ entityId, powerEntityId, label, icon: Icon, color }) {
   const { state } = useEntity(entityId);
   const { state: power } = useEntity(powerEntityId);
-  const { toggle, loading } = useServiceCall();
   const isOn = state === 'on';
 
   return (
-    <button
-      onClick={() => toggle(entityId)}
-      disabled={loading}
-      className="flex items-center gap-3 p-3 rounded-xl transition-all w-full"
+    <div
+      className="flex items-center gap-3 p-3 rounded-xl transition-all duration-300"
       style={{
-        backgroundColor: isOn ? 'rgba(59, 130, 246, 0.1)' : 'rgba(0,0,0,0.03)',
-        border: isOn ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(0,0,0,0.06)',
+        backgroundColor: isOn ? `${color}10` : 'rgba(0,0,0,0.02)',
+        border: isOn ? `1px solid ${color}30` : '1px solid rgba(0,0,0,0.04)',
       }}
     >
-      <Icon size={20} className={isOn ? 'text-blue-500' : 'text-gray-400'} />
-      <div className="flex-1 text-left">
-        <div className="text-sm font-semibold text-[var(--color-text)]">{label}</div>
+      <div className="rounded-lg p-1.5" style={{
+        backgroundColor: isOn ? `${color}15` : 'rgba(0,0,0,0.04)',
+      }}>
+        <Icon size={16} style={{ color: isOn ? color : '#9ca3af' }} />
+      </div>
+      <div className="flex-1">
+        <div className="text-sm font-bold text-[var(--color-text)]">{label}</div>
         {power && power !== 'unavailable' && (
-          <div className="text-xs text-[var(--color-text-secondary)]">{parseFloat(power).toFixed(1)}W</div>
+          <div className="text-xs font-medium" style={{ color: isOn ? color : 'var(--color-text-secondary)' }}>
+            {parseFloat(power).toFixed(1)}W
+          </div>
         )}
       </div>
-      <div className={`w-3 h-3 rounded-full ${isOn ? 'bg-blue-500' : 'bg-gray-300'}`} />
-    </button>
+      <div className="rounded-full transition-all duration-300" style={{
+        width: 10,
+        height: 10,
+        backgroundColor: isOn ? color : '#d1d5db',
+        boxShadow: isOn ? `0 0 8px ${color}60` : 'none',
+      }} />
+    </div>
   );
 }
 
 export function ColdPlungeControls() {
-  const { toggle, loading } = useServiceCall();
+  const [loading, setLoading] = useState(false);
 
-  // Check if any device is on
   const chillerEntity = useEntity(COLD_PLUNGE.chiller);
   const pumpEntity = useEntity(COLD_PLUNGE.pump);
   const fanEntity = useEntity(COLD_PLUNGE.fan);
   const ozoneEntity = useEntity(COLD_PLUNGE.ozone);
 
+  const coreOn = chillerEntity.state === 'on' && pumpEntity.state === 'on' && fanEntity.state === 'on';
   const anyOn = [chillerEntity, pumpEntity, fanEntity, ozoneEntity].some(e => e.state === 'on');
 
-  const handleMasterToggle = useCallback(async () => {
-    // Toggle all devices to opposite of current majority state
-    const targetState = anyOn ? 'turn_off' : 'turn_on';
-    const entities = Object.values(COLD_PLUNGE);
-    for (const entityId of entities) {
-      try {
-        if (targetState === 'turn_on') {
-          await toggle(entityId);
-        } else {
-          await toggle(entityId);
-        }
-      } catch (err) {
-        console.error(`Failed to ${targetState} ${entityId}:`, err);
-      }
+  const handleMasterOn = useCallback(async () => {
+    setLoading(true);
+    try {
+      await haWebSocket.callService('switch', 'turn_on', { entity_id: COLD_PLUNGE.chiller });
+      await haWebSocket.callService('switch', 'turn_on', { entity_id: COLD_PLUNGE.pump });
+      await haWebSocket.callService('switch', 'turn_on', { entity_id: COLD_PLUNGE.fan });
+    } catch (err) {
+      console.error('Failed to turn on cold plunge:', err);
+    } finally {
+      setLoading(false);
     }
-  }, [anyOn, toggle]);
+  }, []);
+
+  const handleMasterOff = useCallback(async () => {
+    setLoading(true);
+    try {
+      await haWebSocket.callService('switch', 'turn_off', { entity_id: COLD_PLUNGE.chiller });
+      await haWebSocket.callService('switch', 'turn_off', { entity_id: COLD_PLUNGE.pump });
+      await haWebSocket.callService('switch', 'turn_off', { entity_id: COLD_PLUNGE.fan });
+      await haWebSocket.callService('switch', 'turn_off', { entity_id: COLD_PLUNGE.ozone });
+    } catch (err) {
+      console.error('Failed to turn off cold plunge:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return (
-    <div className="bg-[var(--color-surface)] rounded-2xl p-6" style={{
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    <div className="rounded-2xl overflow-hidden" style={{
+      backgroundColor: 'var(--color-surface)',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
     }}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-[var(--color-text)]">Cold Plunge</h3>
-        <button
-          onClick={handleMasterToggle}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all"
-          style={{
-            backgroundColor: anyOn ? 'rgba(59, 130, 246, 0.15)' : '#f3f4f6',
-            color: anyOn ? '#3b82f6' : '#6b7280',
-          }}
-        >
-          <Power size={16} />
-          {anyOn ? 'All On' : 'All Off'}
-        </button>
+      <div className="px-5 py-3 flex items-center gap-2" style={{
+        background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+      }}>
+        <Snowflake size={18} style={{ color: 'white' }} />
+        <h3 className="text-sm font-bold text-white uppercase tracking-wider">Cold Plunge</h3>
       </div>
+      <div className="p-5">
+        {/* Master ON/OFF buttons */}
+        <div className="flex gap-3 mb-4">
+          <button
+            onClick={handleMasterOn}
+            disabled={loading || coreOn}
+            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-black uppercase tracking-wider transition-all"
+            style={{
+              background: coreOn
+                ? 'linear-gradient(135deg, #3b82f6, #2563eb)'
+                : 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+              color: coreOn ? 'white' : '#3b82f6',
+              opacity: loading ? 0.6 : 1,
+              boxShadow: coreOn ? '0 4px 12px rgba(59, 130, 246, 0.4)' : 'none',
+            }}
+          >
+            <Power size={18} />
+            ON
+          </button>
+          <button
+            onClick={handleMasterOff}
+            disabled={loading || !anyOn}
+            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-black uppercase tracking-wider transition-all"
+            style={{
+              background: !anyOn
+                ? 'linear-gradient(135deg, #374151, #1f2937)'
+                : 'linear-gradient(135deg, #fee2e2, #fecaca)',
+              color: !anyOn ? '#6b7280' : '#ef4444',
+              opacity: loading ? 0.6 : 1,
+              boxShadow: !anyOn ? 'none' : '0 4px 12px rgba(239, 68, 68, 0.2)',
+            }}
+          >
+            <Power size={18} />
+            OFF
+          </button>
+        </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        {DEVICES.map(({ key, label, icon }) => (
-          <DeviceToggle
-            key={key}
-            entityId={COLD_PLUNGE[key]}
-            powerEntityId={COLD_PLUNGE_POWER[key]}
-            label={label}
-            icon={icon}
-          />
-        ))}
+        {/* Device statuses */}
+        <div className="grid grid-cols-2 gap-2">
+          {DEVICES.map(({ key, label, icon, color }) => (
+            <DeviceStatus
+              key={key}
+              entityId={COLD_PLUNGE[key]}
+              powerEntityId={COLD_PLUNGE_POWER[key]}
+              label={label}
+              icon={icon}
+              color={color}
+            />
+          ))}
+        </div>
+
+        <p className="text-[10px] text-[var(--color-text-secondary)] mt-3 text-center font-medium">
+          ON = Chiller + Pump + Fan &bull; OFF = All devices
+        </p>
       </div>
     </div>
   );

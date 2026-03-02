@@ -1,15 +1,15 @@
 /**
  * SleepBreakdown Component
- * Visual bar showing sleep stage distribution (deep/light/REM/awake)
+ * Visual stacked bar showing sleep stage distribution with percentages
  */
 
 import { useEntity } from '../../../hooks/useEntity';
 
 const STAGES = [
-  { key: 'deep', label: 'Deep', color: '#6366f1' },
-  { key: 'light', label: 'Light', color: '#818cf8' },
-  { key: 'rem', label: 'REM', color: '#22d3ee' },
-  { key: 'awake', label: 'Awake', color: '#f97316' },
+  { key: 'deep', label: 'Deep', color: '#6366f1', gradient: 'linear-gradient(135deg, #6366f1, #4f46e5)' },
+  { key: 'light', label: 'Light', color: '#818cf8', gradient: 'linear-gradient(135deg, #818cf8, #6366f1)' },
+  { key: 'rem', label: 'REM', color: '#22d3ee', gradient: 'linear-gradient(135deg, #22d3ee, #06b6d4)' },
+  { key: 'awake', label: 'Awake', color: '#f97316', gradient: 'linear-gradient(135deg, #f97316, #ea580c)' },
 ];
 
 function formatHours(val) {
@@ -38,31 +38,41 @@ export function SleepBreakdown({ deepId, lightId, remId, awakeId }) {
   return (
     <div>
       {/* Stacked bar */}
-      <div className="flex rounded-lg overflow-hidden" style={{ height: '28px' }}>
-        {STAGES.map(({ key, color }) => {
+      <div className="flex rounded-xl overflow-hidden" style={{ height: '36px' }}>
+        {STAGES.map(({ key, gradient }) => {
           const pct = (values[key] / total) * 100;
           if (pct === 0) return null;
           return (
             <div
               key={key}
+              className="relative flex items-center justify-center transition-all duration-700"
               style={{
                 width: `${pct}%`,
-                backgroundColor: color,
-                minWidth: pct > 0 ? '2px' : 0,
+                background: gradient,
+                minWidth: pct > 3 ? '40px' : '2px',
               }}
-            />
+            >
+              {pct > 8 && (
+                <span className="text-[10px] font-bold text-white" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>
+                  {Math.round(pct)}%
+                </span>
+              )}
+            </div>
           );
         })}
       </div>
 
-      {/* Legend */}
-      <div className="flex justify-between mt-2">
+      {/* Legend with durations */}
+      <div className="grid grid-cols-4 gap-2 mt-3">
         {STAGES.map(({ key, label, color }) => (
-          <div key={key} className="flex items-center gap-1.5">
-            <div className="rounded-full" style={{ width: 10, height: 10, backgroundColor: color }} />
-            <span className="text-xs text-[var(--color-text-secondary)]">
-              {label}: <span className="font-semibold text-[var(--color-text)]">{formatHours(values[key])}</span>
-            </span>
+          <div key={key} className="flex items-center gap-2 rounded-lg p-2" style={{
+            backgroundColor: `${color}08`,
+          }}>
+            <div className="rounded-full flex-shrink-0" style={{ width: 10, height: 10, backgroundColor: color }} />
+            <div>
+              <div className="text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase">{label}</div>
+              <div className="text-sm font-bold text-[var(--color-text)]">{formatHours(values[key])}</div>
+            </div>
           </div>
         ))}
       </div>
