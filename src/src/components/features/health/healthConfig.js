@@ -1,6 +1,7 @@
 /**
  * Health & Wellness Configuration
  * Entity IDs for Oura Ring sensors and Cold Plunge controls
+ * Verified against actual HA entities 2026-03-02
  */
 
 export const OURA_SCORES = {
@@ -12,17 +13,32 @@ export const OURA_SCORES = {
 export const OURA_SLEEP = {
   efficiency: 'sensor.oura_ring_sleep_efficiency',
   restfulness: 'sensor.oura_ring_restfulness',
-  regularity: 'sensor.oura_ring_sleep_regularity',
+  regularity: 'sensor.oura_ring_sleep_regularity_score',
   timing: 'sensor.oura_ring_sleep_timing',
+  total_duration: 'sensor.oura_ring_total_sleep_duration',
+  deep_duration: 'sensor.oura_ring_deep_sleep_duration',
+  deep_pct: 'sensor.oura_ring_deep_sleep_percentage',
+  light_duration: 'sensor.oura_ring_light_sleep_duration',
+  rem_duration: 'sensor.oura_ring_rem_sleep_duration',
+  rem_pct: 'sensor.oura_ring_rem_sleep_percentage',
+  awake_time: 'sensor.oura_ring_awake_time',
+  time_in_bed: 'sensor.oura_ring_time_in_bed',
+  latency: 'sensor.oura_ring_sleep_latency',
+  bedtime_start: 'sensor.oura_ring_bedtime_start',
+  bedtime_end: 'sensor.oura_ring_bedtime_end',
+  recovery_score: 'sensor.oura_ring_sleep_recovery_score',
 };
 
 export const OURA_HEART = {
   current: 'sensor.oura_ring_current_heart_rate',
   average: 'sensor.oura_ring_average_heart_rate',
-  min: 'sensor.oura_ring_lowest_heart_rate',
-  max: 'sensor.oura_ring_highest_heart_rate',
+  avg_sleep: 'sensor.oura_ring_average_sleep_heart_rate',
+  lowest_sleep: 'sensor.oura_ring_lowest_sleep_heart_rate',
+  min: 'sensor.oura_ring_minimum_heart_rate',
+  max: 'sensor.oura_ring_maximum_heart_rate',
   resting_score: 'sensor.oura_ring_resting_heart_rate_score',
-  hrv_balance: 'sensor.oura_ring_hrv_balance',
+  hrv_balance: 'sensor.oura_ring_hrv_balance_score',
+  avg_sleep_hrv: 'sensor.oura_ring_average_sleep_hrv',
   cardio_age: 'sensor.oura_ring_cardiovascular_age',
 };
 
@@ -38,16 +54,17 @@ export const OURA_ACTIVITY = {
 
 export const OURA_BODY = {
   temp_deviation: 'sensor.oura_ring_temperature_deviation',
-  spo2: 'sensor.oura_ring_average_blood_oxygen',
+  spo2: 'sensor.oura_ring_spo2_average',
   breathing_index: 'sensor.oura_ring_breathing_disturbance_index',
 };
 
 export const OURA_STRESS = {
   day_summary: 'sensor.oura_ring_stress_day_summary',
   resilience: 'sensor.oura_ring_resilience_level',
+  resilience_score: 'sensor.oura_ring_stress_resilience_score',
   stress_high: 'sensor.oura_ring_stress_high_duration',
   recovery_high: 'sensor.oura_ring_recovery_high_duration',
-  recovery_score: 'sensor.oura_ring_recovery_index_score',
+  daytime_recovery: 'sensor.oura_ring_daytime_recovery_score',
 };
 
 export const COLD_PLUNGE = {
