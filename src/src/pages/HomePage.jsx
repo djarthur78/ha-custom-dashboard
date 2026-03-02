@@ -103,7 +103,7 @@ export function HomePage() {
         }}
       >
         <p className="text-sm text-[var(--color-text-secondary)]">
-          Family Dashboard <span className="font-semibold text-[var(--color-text)]">v2.1.1</span>
+          Family Dashboard <span className="font-semibold text-[var(--color-text)]">v2.1.2</span>
         </p>
       </div>
     </PageContainer>

@@ -81,6 +81,16 @@ export const COLD_PLUNGE_POWER = {
   ozone: 'sensor.cold_plunge_devices_p304m_cold_plunge_ozone_power',
 };
 
+/** All Oura entity IDs for bulk refresh */
+export const ALL_OURA_ENTITIES = [
+  ...Object.values(OURA_SCORES),
+  ...Object.values(OURA_SLEEP),
+  ...Object.values(OURA_HEART),
+  ...Object.values(OURA_ACTIVITY),
+  ...Object.values(OURA_BODY),
+  ...Object.values(OURA_STRESS),
+];
+
 export const SCORE_COLORS = {
   high: '#22c55e',    // green - 80+
   medium: '#f59e0b',  // amber - 60-79

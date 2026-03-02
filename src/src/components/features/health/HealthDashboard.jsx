@@ -3,11 +3,13 @@
  * Main layout for Health & Wellness tab with Oura Ring data and Cold Plunge controls
  */
 
-import { Heart, Activity, Thermometer, Brain, Moon, Clock } from 'lucide-react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { Heart, Activity, Thermometer, Brain, Moon, Clock, RefreshCw } from 'lucide-react';
 import { ScoreRing } from './ScoreRing';
 import { MetricCard, MetricRow } from './MetricCard';
 import { ColdPlungeControls } from './ColdPlungeControls';
 import { SleepBreakdown } from './SleepBreakdown';
+import haWebSocket from '../../../services/ha-websocket';
 import {
   OURA_SCORES,
   OURA_SLEEP,
@@ -15,6 +17,7 @@ import {
   OURA_ACTIVITY,
   OURA_BODY,
   OURA_STRESS,
+  ALL_OURA_ENTITIES,
 } from './healthConfig';
 
 function formatHours(val) {
@@ -49,12 +52,65 @@ function SectionCard({ icon: Icon, iconColor, title, children }) {
 }
 
 export function HealthDashboard() {
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  // Refresh on tab/page visit
+  const refreshOura = useCallback(async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      await haWebSocket.callService('homeassistant', 'update_entity', {
+        entity_id: ALL_OURA_ENTITIES,
+      });
+      if (mountedRef.current) setLastRefreshed(new Date());
+    } catch (err) {
+      console.error('Failed to refresh Oura data:', err);
+    } finally {
+      if (mountedRef.current) setRefreshing(false);
+    }
+  }, [refreshing]);
+
+  // Auto-refresh when the page mounts
+  const hasAutoRefreshed = useRef(false);
+  useEffect(() => {
+    if (!hasAutoRefreshed.current) {
+      hasAutoRefreshed.current = true;
+      refreshOura();
+    }
+  }, [refreshOura]);
+
   return (
     <div className="space-y-6">
       {/* Score Rings Row */}
       <div className="bg-[var(--color-surface)] rounded-2xl p-6" style={{
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       }}>
+        {/* Refresh button */}
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={refreshOura}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+            style={{
+              backgroundColor: refreshing ? '#e5e7eb' : '#f3f4f6',
+              color: '#6b7280',
+            }}
+          >
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+            {refreshing ? 'Syncing...' : 'Sync Oura'}
+            {lastRefreshed && !refreshing && (
+              <span className="text-[10px] opacity-60">
+                {lastRefreshed.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </button>
+        </div>
         <div className="flex justify-around items-start">
           <ScoreRing
             entityId={OURA_SCORES.sleep}
