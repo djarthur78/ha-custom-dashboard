@@ -121,6 +121,37 @@ export async function ping() {
   }
 }
 
+/**
+ * Get the last state value from yesterday for an entity
+ * Uses history/period endpoint filtered to yesterday
+ */
+export async function getYesterdayState(entityId) {
+  const now = new Date();
+  const yesterdayStart = new Date(now);
+  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+  yesterdayStart.setHours(0, 0, 0, 0);
+
+  const yesterdayEnd = new Date(now);
+  yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+  yesterdayEnd.setHours(23, 59, 59, 999);
+
+  const params = new URLSearchParams({
+    filter_entity_id: entityId,
+    end_time: yesterdayEnd.toISOString(),
+    minimal_response: '',
+    no_attributes: '',
+  });
+
+  const data = await request(`/history/period/${yesterdayStart.toISOString()}?${params}`);
+
+  if (data && data[0] && data[0].length > 0) {
+    // Return the last state entry from yesterday
+    const lastEntry = data[0][data[0].length - 1];
+    return lastEntry.state;
+  }
+  return null;
+}
+
 export default {
   getConfig,
   getStates,
@@ -128,6 +159,7 @@ export default {
   callService,
   getServices,
   getCalendarEvents,
+  getYesterdayState,
   turnOn,
   turnOff,
   toggle,

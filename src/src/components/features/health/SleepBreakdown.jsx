@@ -1,6 +1,6 @@
 /**
  * SleepBreakdown Component
- * Visual stacked bar showing sleep stage distribution with percentages
+ * Compact stacked bar showing sleep stage distribution
  */
 
 import { useEntity } from '../../../hooks/useEntity';
@@ -38,7 +38,7 @@ export function SleepBreakdown({ deepId, lightId, remId, awakeId }) {
   return (
     <div>
       {/* Stacked bar */}
-      <div className="flex rounded-xl overflow-hidden" style={{ height: '36px' }}>
+      <div className="flex rounded-lg overflow-hidden" style={{ height: '28px' }}>
         {STAGES.map(({ key, gradient }) => {
           const pct = (values[key] / total) * 100;
           if (pct === 0) return null;
@@ -49,11 +49,11 @@ export function SleepBreakdown({ deepId, lightId, remId, awakeId }) {
               style={{
                 width: `${pct}%`,
                 background: gradient,
-                minWidth: pct > 3 ? '40px' : '2px',
+                minWidth: pct > 3 ? '36px' : '2px',
               }}
             >
-              {pct > 8 && (
-                <span className="text-[10px] font-bold text-white" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>
+              {pct > 10 && (
+                <span className="text-[9px] font-bold text-white" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>
                   {Math.round(pct)}%
                 </span>
               )}
@@ -63,15 +63,15 @@ export function SleepBreakdown({ deepId, lightId, remId, awakeId }) {
       </div>
 
       {/* Legend with durations */}
-      <div className="grid grid-cols-4 gap-2 mt-3">
+      <div className="grid grid-cols-4 gap-1.5 mt-2">
         {STAGES.map(({ key, label, color }) => (
-          <div key={key} className="flex items-center gap-2 rounded-lg p-2" style={{
+          <div key={key} className="flex items-center gap-1.5 rounded-md p-1.5" style={{
             backgroundColor: `${color}08`,
           }}>
-            <div className="rounded-full flex-shrink-0" style={{ width: 10, height: 10, backgroundColor: color }} />
+            <div className="rounded-full flex-shrink-0" style={{ width: 8, height: 8, backgroundColor: color }} />
             <div>
-              <div className="text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase">{label}</div>
-              <div className="text-sm font-bold text-[var(--color-text)]">{formatHours(values[key])}</div>
+              <div className="text-[9px] font-semibold text-[var(--color-text-secondary)] uppercase">{label}</div>
+              <div className="text-xs font-bold text-[var(--color-text)]">{formatHours(values[key])}</div>
             </div>
           </div>
         ))}

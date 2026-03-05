@@ -1,7 +1,6 @@
 /**
  * ColdPlungeControls Component
- * Master ON/OFF toggle + individual device status for cold plunge
- * ON = chiller + pump + fan, OFF = all off
+ * Compact cold plunge controls for grid cell layout
  */
 
 import { useState, useCallback } from 'react';
@@ -24,30 +23,26 @@ function DeviceStatus({ entityId, powerEntityId, label, icon: Icon, color }) {
 
   return (
     <div
-      className="flex items-center gap-3 p-3 rounded-xl transition-all duration-300"
+      className="flex items-center gap-2 p-2 rounded-lg transition-all duration-300"
       style={{
         backgroundColor: isOn ? `${color}10` : 'rgba(0,0,0,0.02)',
         border: isOn ? `1px solid ${color}30` : '1px solid rgba(0,0,0,0.04)',
       }}
     >
-      <div className="rounded-lg p-1.5" style={{
-        backgroundColor: isOn ? `${color}15` : 'rgba(0,0,0,0.04)',
-      }}>
-        <Icon size={16} style={{ color: isOn ? color : '#9ca3af' }} />
-      </div>
+      <Icon size={14} style={{ color: isOn ? color : '#9ca3af' }} />
       <div className="flex-1">
-        <div className="text-sm font-bold text-[var(--color-text)]">{label}</div>
+        <div className="text-xs font-bold text-[var(--color-text)]">{label}</div>
         {power && power !== 'unavailable' && (
-          <div className="text-xs font-medium" style={{ color: isOn ? color : 'var(--color-text-secondary)' }}>
+          <div className="text-[10px] font-medium" style={{ color: isOn ? color : 'var(--color-text-secondary)' }}>
             {parseFloat(power).toFixed(1)}W
           </div>
         )}
       </div>
-      <div className="rounded-full transition-all duration-300" style={{
-        width: 10,
-        height: 10,
+      <div className="rounded-full" style={{
+        width: 8,
+        height: 8,
         backgroundColor: isOn ? color : '#d1d5db',
-        boxShadow: isOn ? `0 0 8px ${color}60` : 'none',
+        boxShadow: isOn ? `0 0 6px ${color}60` : 'none',
       }} />
     </div>
   );
@@ -92,70 +87,59 @@ export function ColdPlungeControls() {
   }, []);
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{
-      backgroundColor: 'var(--color-surface)',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)',
-    }}>
-      <div className="px-5 py-3 flex items-center gap-2" style={{
-        background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-      }}>
-        <Snowflake size={18} style={{ color: 'white' }} />
-        <h3 className="text-sm font-bold text-white uppercase tracking-wider">Cold Plunge</h3>
+    <div className="h-full flex flex-col">
+      <div className="text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+        <Snowflake size={12} className="text-blue-500" />
+        Cold Plunge
       </div>
-      <div className="p-5">
-        {/* Master ON/OFF buttons */}
-        <div className="flex gap-3 mb-4">
-          <button
-            onClick={handleMasterOn}
-            disabled={loading || coreOn}
-            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-black uppercase tracking-wider transition-all"
-            style={{
-              background: coreOn
-                ? 'linear-gradient(135deg, #3b82f6, #2563eb)'
-                : 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-              color: coreOn ? 'white' : '#3b82f6',
-              opacity: loading ? 0.6 : 1,
-              boxShadow: coreOn ? '0 4px 12px rgba(59, 130, 246, 0.4)' : 'none',
-            }}
-          >
-            <Power size={18} />
-            ON
-          </button>
-          <button
-            onClick={handleMasterOff}
-            disabled={loading || !anyOn}
-            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-black uppercase tracking-wider transition-all"
-            style={{
-              background: !anyOn
-                ? 'linear-gradient(135deg, #374151, #1f2937)'
-                : 'linear-gradient(135deg, #fee2e2, #fecaca)',
-              color: !anyOn ? '#6b7280' : '#ef4444',
-              opacity: loading ? 0.6 : 1,
-              boxShadow: !anyOn ? 'none' : '0 4px 12px rgba(239, 68, 68, 0.2)',
-            }}
-          >
-            <Power size={18} />
-            OFF
-          </button>
-        </div>
 
-        {/* Device statuses */}
-        <div className="grid grid-cols-2 gap-2">
-          {DEVICES.map(({ key, label, icon, color }) => (
-            <DeviceStatus
-              key={key}
-              entityId={COLD_PLUNGE[key]}
-              powerEntityId={COLD_PLUNGE_POWER[key]}
-              label={label}
-              icon={icon}
-              color={color}
-            />
-          ))}
-        </div>
+      {/* Master ON/OFF buttons */}
+      <div className="flex gap-2 mb-3">
+        <button
+          onClick={handleMasterOn}
+          disabled={loading || coreOn}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all"
+          style={{
+            background: coreOn
+              ? 'linear-gradient(135deg, #3b82f6, #2563eb)'
+              : 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+            color: coreOn ? 'white' : '#3b82f6',
+            opacity: loading ? 0.6 : 1,
+            boxShadow: coreOn ? '0 2px 8px rgba(59, 130, 246, 0.4)' : 'none',
+          }}
+        >
+          <Power size={14} />
+          ON
+        </button>
+        <button
+          onClick={handleMasterOff}
+          disabled={loading || !anyOn}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all"
+          style={{
+            background: !anyOn
+              ? 'linear-gradient(135deg, #374151, #1f2937)'
+              : 'linear-gradient(135deg, #fee2e2, #fecaca)',
+            color: !anyOn ? '#6b7280' : '#ef4444',
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
+          <Power size={14} />
+          OFF
+        </button>
+      </div>
 
-        <p className="text-[10px] text-[var(--color-text-secondary)] mt-3 text-center font-medium">
-          ON = Chiller + Pump + Fan &bull; OFF = All devices
-        </p>
+      {/* Device statuses - 2x2 grid */}
+      <div className="grid grid-cols-2 gap-2 flex-1">
+        {DEVICES.map(({ key, label, icon, color }) => (
+          <DeviceStatus
+            key={key}
+            entityId={COLD_PLUNGE[key]}
+            powerEntityId={COLD_PLUNGE_POWER[key]}
+            label={label}
+            icon={icon}
+            color={color}
+          />
+        ))}
       </div>
     </div>
   );

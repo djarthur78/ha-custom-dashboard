@@ -1,6 +1,6 @@
 /**
  * ScoreRing Component
- * SVG circular gauge with gradient stroke, glow effect, and sub-metrics
+ * Compact SVG circular gauge for light background
  */
 
 import { useEntity } from '../../../hooks/useEntity';
@@ -30,7 +30,7 @@ function getScoreLabel(score) {
   return 'Low';
 }
 
-export function ScoreRing({ entityId, label, size = 160, strokeWidth = 14, subMetrics = [] }) {
+export function ScoreRing({ entityId, label, size = 110, strokeWidth = 10 }) {
   const { state, loading } = useEntity(entityId);
   const score = parseInt(state, 10);
   const isValid = !isNaN(score);
@@ -53,25 +53,15 @@ export function ScoreRing({ entityId, label, size = 160, strokeWidth = 14, subMe
               <stop offset="0%" stopColor={gradient.start} />
               <stop offset="100%" stopColor={gradient.end} />
             </linearGradient>
-            <filter id={`glow-${label.toLowerCase()}`}>
-              <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
           </defs>
-          {/* Background circle */}
           <circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="rgba(255,255,255,0.1)"
+            stroke="rgba(0,0,0,0.06)"
             strokeWidth={strokeWidth - 2}
-            opacity={1}
           />
-          {/* Progress circle with gradient and glow */}
           <circle
             cx={size / 2}
             cy={size / 2}
@@ -82,44 +72,21 @@ export function ScoreRing({ entityId, label, size = 160, strokeWidth = 14, subMe
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
-            filter={`url(#glow-${label.toLowerCase()})`}
             className="transition-all duration-1000 ease-out"
           />
         </svg>
-        {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-4xl font-black" style={{ color, letterSpacing: '-1px' }}>
+          <span className="text-2xl font-black" style={{ color, letterSpacing: '-1px' }}>
             {loading ? '--' : isValid ? score : '--'}
           </span>
           {isValid && (
-            <span className="text-[11px] font-semibold mt-0.5" style={{ color, opacity: 0.8 }}>
+            <span className="text-[9px] font-semibold" style={{ color, opacity: 0.8 }}>
               {scoreLabel}
             </span>
           )}
         </div>
       </div>
-      <span className="mt-2 text-sm font-bold tracking-wide uppercase" style={{ color: 'rgba(255,255,255,0.9)' }}>{label}</span>
-      {/* Sub-metrics */}
-      {subMetrics.length > 0 && (
-        <div className="mt-2 flex gap-4">
-          {subMetrics.map(sub => (
-            <SubMetric key={sub.entityId} entityId={sub.entityId} label={sub.label} unit={sub.unit} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SubMetric({ entityId, label, unit = '' }) {
-  const { state } = useEntity(entityId);
-  const val = state && state !== 'unavailable' && state !== 'unknown' ? state : null;
-  return (
-    <div className="text-center">
-      <div className="text-[10px] font-medium uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.45)' }}>{label}</div>
-      <div className="text-sm font-bold" style={{ color: 'rgba(255,255,255,0.85)' }}>
-        {val ?? '--'}{val && unit ? unit : ''}
-      </div>
+      <span className="mt-1 text-xs font-bold tracking-wide uppercase text-[var(--color-text-secondary)]">{label}</span>
     </div>
   );
 }

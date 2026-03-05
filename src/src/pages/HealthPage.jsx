@@ -1,16 +1,20 @@
 /**
  * HealthPage
- * Route page wrapper for Health & Wellness dashboard
+ * Viewport-filling health dashboard (no scroll, like CamerasPage)
  */
 
-import { PageContainer } from '../components/layout/PageContainer';
 import { HealthDashboard } from '../components/features/health/HealthDashboard';
 
 export function HealthPage() {
   return (
-    <PageContainer title="Health & Wellness" subtitle="Oura Ring data and Cold Plunge controls">
+    <div style={{
+      height: 'calc(100vh - 56px)',
+      maxHeight: 'calc(100vh - 56px)',
+      overflow: 'hidden',
+      padding: '12px',
+    }}>
       <HealthDashboard />
-    </PageContainer>
+    </div>
   );
 }
 
