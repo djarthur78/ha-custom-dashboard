@@ -1,18 +1,21 @@
 /**
  * Main App Component
  * Router configuration with MainLayout
+ * Routes are lazy-loaded for performance
  */
 
+import { lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
-import { HomePage } from './pages/HomePage';
-import { CalendarViewList } from './components/features/calendar/CalendarViewList';
-import { MealsPage } from './pages/MealsPage';
-import { GamesRoomPage } from './pages/GamesRoomPage';
-import { CamerasPage } from './pages/CamerasPage';
-import { MusicPage } from './pages/MusicPage';
-import { PeoplePage } from './pages/PeoplePage';
-import { HealthPage } from './pages/HealthPage';
+
+const HomePage = lazy(() => import('./pages/HomePage'));
+const CalendarViewList = lazy(() => import('./pages/CalendarViewList'));
+const MealsPage = lazy(() => import('./pages/MealsPage'));
+const GamesRoomPage = lazy(() => import('./pages/GamesRoomPage'));
+const CamerasPage = lazy(() => import('./pages/CamerasPage'));
+const MusicPage = lazy(() => import('./pages/MusicPage'));
+const PeoplePage = lazy(() => import('./pages/PeoplePage'));
+const HealthPage = lazy(() => import('./pages/HealthPage'));
 
 function App() {
   return (

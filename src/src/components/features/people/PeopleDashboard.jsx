@@ -43,7 +43,7 @@ export function PeopleDashboard() {
       {/* Left Panel: Person Cards (25%) */}
       <div className="flex-[25] flex flex-col gap-2 overflow-hidden">
         {/* Summary Header */}
-        <div className="bg-[var(--color-surface)] rounded-lg p-3">
+        <div className="bg-white rounded-lg border border-[#e0e0e0] p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-[var(--color-text)]">
               <Users size={18} />
@@ -83,7 +83,7 @@ export function PeopleDashboard() {
         </div>
 
         {/* Person Visibility Toggles */}
-        <div className="bg-[var(--color-surface)] rounded-lg p-2">
+        <div className="bg-white rounded-lg border border-[#e0e0e0] p-2">
           <div className="flex items-center gap-1.5 flex-wrap">
             {people.map(person => (
               <button
@@ -119,7 +119,7 @@ export function PeopleDashboard() {
       </div>
 
       {/* Right Panel: Map (75%) */}
-      <div className="flex-[75] bg-[var(--color-surface)] rounded-xl overflow-hidden">
+      <div className="flex-[75] bg-white rounded-lg border border-[#e0e0e0] overflow-hidden">
         <LocationMap
           people={visiblePeople}
           selectedPersonId={selectedPersonId}

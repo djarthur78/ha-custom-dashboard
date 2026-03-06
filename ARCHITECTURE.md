@@ -1,351 +1,151 @@
-# Architecture Documentation
+# Architecture
 
-**Project:** Home Assistant Custom Dashboard
-**Last Updated:** 2026-01-17 (Phase 1 Complete)
-
-> 📊 **Visual Diagrams:** See `DIAGRAMS.md` for professional Mermaid diagrams (system architecture, data flow, sequence diagrams, etc.)
-
----
+**Version:** 2.3.0
+**Last Updated:** 2026-03-06
 
 ## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        iPad (Client)                        │
-│                   http://192.168.1.6:5173                   │
-│                                                             │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │            React 19 App (Vite)                       │  │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐    │  │
-│  │  │ Components │  │   Hooks    │  │  Services  │    │  │
-│  │  └────────────┘  └────────────┘  └────────────┘    │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                          │ │                                │
-└──────────────────────────┼─┼────────────────────────────────┘
-                           │ │
-                  ┌────────┘ └────────┐
-                  │                   │
-            WebSocket              REST API
-          (Real-time)           (One-time queries)
-                  │                   │
-                  ▼                   ▼
-    ┌─────────────────────────────────────────────┐
-    │      Home Assistant Server                  │
-    │      ws://192.168.1.2:8123/api/websocket   │
-    │      http://192.168.1.2:8123/api           │
-    │                                             │
-    │  - Entities (lights, sensors, etc.)        │
-    │  - Calendars (8 Google calendars)          │
-    │  - Automations                             │
-    │  - Cameras (9 feeds)                       │
-    └─────────────────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  Android Tablet / Browser            │
+│  http://192.168.1.2:8099             │
+│                                      │
+│  React 19 SPA (Vite)                 │
+│  ├── Lazy-loaded routes (Suspense)   │
+│  ├── Feature components              │
+│  ├── Hooks (useEntity, etc.)         │
+│  └── Services (singleton WS + REST)  │
+└──────────┬───────────┬───────────────┘
+           │           │
+      WebSocket     REST API
+     (real-time)   (one-time)
+           │           │
+┌──────────▼───────────▼───────────────┐
+│  Home Assistant (192.168.1.2:8123)   │
+│  ├── 8 Google Calendars              │
+│  ├── 8 UniFi Cameras                 │
+│  ├── Sonos speakers                  │
+│  ├── Climate (games room)            │
+│  ├── Oura Ring sensors               │
+│  ├── Person tracking                 │
+│  └── Harmony Hub                     │
+└──────────────────────────────────────┘
 ```
 
----
+## Key Design Decisions
 
-## Technology Stack
+### Singleton WebSocket
+Single persistent connection shared by all components. Managed by `ha-websocket.js` with auto-reconnect (exponential backoff, max 10 attempts, 30s cap).
 
-### Frontend
-- **Framework:** React 19 (latest stable)
-- **Build Tool:** Vite 7.3.1
-- **Styling:** Tailwind CSS v4 (PostCSS plugin)
-- **Icons:** Lucide React
-- **Date/Time:** date-fns (not yet implemented)
-- **State Management:** React hooks + singleton services (no Zustand/Redux yet)
-
-### Development Environment
-- **Platform:** WSL2 Ubuntu on Windows 11
-- **Node.js:** v22+ (check with `node --version`)
-- **Package Manager:** npm
-- **IDE:** VS Code
-
-### Home Assistant Integration
-- **Connection:** WebSocket (primary) + REST API (backup)
-- **Authentication:** Long-lived access token
-- **Protocol:** Home Assistant WebSocket API v1
-
----
-
-## Design Decisions
-
-### 1. WebSocket as Primary Connection Method
-**Decision:** Use WebSocket for real-time updates, REST for one-time queries
-**Rationale:**
-- WebSocket provides real-time entity state updates
-- No polling required (more efficient)
-- Single persistent connection
-- Automatic reconnection on disconnect
-
-**Implementation:** `src/src/services/ha-websocket.js` (singleton service)
-
-### 2. Singleton Service Pattern
-**Decision:** Single WebSocket instance shared across all components
-**Rationale:**
-- Only one connection to HA needed
-- Shared state across app
-- Centralized reconnection logic
-
-**Critical Fix Applied:** React hooks now initialize state from singleton service to prevent stale state issues (see Bug #1 in CHANGELOG.md)
-
-### 3. No Calendar Google OAuth (For MVP)
-**Decision:** Use HA's existing calendar entities, not direct Google Calendar API
-**Rationale:**
-- HA already has calendar integration configured
-- Simpler authentication (no OAuth setup)
-- Faster MVP delivery
-- Can enhance later with direct Google API
-
-**Future Enhancement:** Direct Google Calendar API in v1.1
-
-### 4. React Hooks for HA Integration
-**Decision:** Custom hooks (`useHAConnection`, `useEntity`, `useServiceCall`)
-**Rationale:**
-- Clean component API
-- Reusable logic
-- Easy to test
-- Follows React best practices
-
-### 5. WSL2 + Port Forwarding
-**Decision:** Develop in WSL2, forward ports to Windows host
-**Rationale:**
-- Linux-native development experience
-- Better npm/Node.js performance
-- Access from iPad on LAN via Windows host IP
-
-**Implementation:**
-```powershell
-# Port forwarding: Windows (192.168.1.6) → WSL2 (172.27.69.40)
-netsh interface portproxy add v4tov4 listenport=5173 listenaddress=0.0.0.0 connectport=5173 connectaddress=172.27.69.40
-
-# Firewall rule
-New-NetFirewallRule -DisplayName "Vite Dev Server" -Direction Inbound -LocalPort 5173 -Protocol TCP -Action Allow
+**Critical pattern:** Hooks must initialize state from the singleton to avoid stale state:
+```js
+const [status, setStatus] = useState(() => haWebSocket.getStatus()); // correct
 ```
 
----
+### Lazy Routes
+All page routes use `React.lazy()` with a `Suspense` boundary in MainLayout. Each page loads its bundle on first visit. Leaflet (39KB) only loads on the People page.
 
-## Application Architecture
+### Camera Priority Loading
+Front 3 cameras use MJPEG streams (loaded immediately). Back 5 cameras use snapshot polling with `IntersectionObserver` to pause when off-screen. Snapshot interval: 10s (was 3s).
 
-### Component Hierarchy (Phase 1)
+### Feature-Based Organization
+Each feature has its own directory under `components/features/`:
 ```
-App.jsx
-├── ConnectionStatus.jsx (header, always visible)
-├── LoadingSpinner.jsx (during connection)
-├── TestEntity.jsx (demo entity card)
-│   ├── useEntity(entityId)
-│   └── useServiceCall()
-└── ErrorBoundary.jsx (wraps entire app)
+features/calendar/
+  ├── CalendarViewList.jsx
+  ├── DayView.jsx
+  ├── hooks/useCalendarEvents.js     (if needed)
+  └── utils/eventHelpers.js          (if needed)
 ```
 
-### Service Layer
+### Visual Design
+Calendar's design language applied everywhere:
+- White cards, 1px `#e0e0e0` border, 8px radius
+- No drop shadows
+- Accent colors via left stripe or purposeful highlights
+- Large scannable numbers, secondary text in `#666`
 
-**`ha-websocket.js`** - WebSocket Connection Manager
-- Singleton instance
-- Handles connection, authentication, reconnection
-- Manages message ID tracking
-- Provides subscription mechanism for entity updates
-- Implements exponential backoff for reconnection (1s, 2s, 4s, 8s... max 30s)
-- 10-second timeout on all requests
+## Component Tree
 
-**`ha-rest.js`** - REST API Client (not yet used)
-- Backup for one-time queries
-- Future use for configuration updates
-
-### Hook Layer
-
-**`useHAConnection()`**
-- Returns connection status, error, reconnect info
-- Subscribes to connection state changes
-- **Critical:** Initializes state from service to prevent stale state
-
-**`useEntity(entityId)`**
-- Fetches initial entity state
-- Subscribes to real-time updates
-- Returns: `{ state, attributes, loading, error }`
-
-**`useServiceCall()`**
-- Provides `toggle(entityId)` function
-- Handles turn_on/turn_off service calls
-- Returns: `{ toggle, loading }`
-
----
+```
+App.jsx (lazy routes)
+└── MainLayout
+    ├── Header (blue bar, nav icons, clock, weather, status)
+    ├── Suspense boundary
+    │   ├── CalendarViewList (biweekly default)
+    │   ├── HomePage (clean cards with live previews)
+    │   ├── MealsPage → MealGrid
+    │   ├── GamesRoomPage → GamesRoomDashboard
+    │   │   ├── NowPlaying
+    │   │   ├── SceneButtons
+    │   │   ├── ClimateCard
+    │   │   └── PowerGrid
+    │   ├── MusicPage → MusicDashboard
+    │   │   ├── NowPlayingPanel
+    │   │   ├── PlaylistPanel
+    │   │   └── SpeakerPanel
+    │   ├── PeoplePage → PeopleDashboard
+    │   │   ├── PersonCard list
+    │   │   └── LocationMap (Leaflet)
+    │   ├── HealthPage → HealthDashboard
+    │   │   ├── Sleep, Heart, Activity panels
+    │   │   └── ColdPlungeControls
+    │   └── CamerasPage → CameraGrid
+    │       ├── CameraFeed (stream or snapshot)
+    │       └── CameraModal
+    └── Footer (hidden on full-viewport pages)
+```
 
 ## Data Flow
 
-### Entity State Updates
+### Entity Updates
 ```
-1. Home Assistant → WebSocket message
-2. ha-websocket.js receives message
-3. ha-websocket.js notifies subscribers
-4. useEntity hook receives update
-5. Component re-renders with new state
+HA state change → WebSocket event → ha-websocket.js
+→ notify subscribers → useEntity hook setState → component re-render
 ```
 
-### Service Calls (Toggle Light)
+### Service Calls
 ```
-1. User clicks toggle button
-2. Component calls toggle(entityId)
-3. useServiceCall → ha-websocket.callService()
-4. WebSocket sends call_service message
-5. HA processes command
-6. HA broadcasts state_changed event
-7. useEntity receives update (via flow above)
-8. Component re-renders showing new state
+Component action → useServiceCall.callService()
+→ ha-websocket.js → HA → state_changed event → component update
 ```
 
-### Connection Flow
-```
-1. App mounts → useHAConnection initializes
-2. useHAConnection calls haWebSocket.connect()
-3. WebSocket opens → HA sends auth_required
-4. haWebSocket sends auth token
-5. HA sends auth_ok
-6. haWebSocket subscribes to state_changed events
-7. useHAConnection sets status to 'connected'
-8. Components can now fetch entities
-```
+### Camera Feeds
+- **MJPEG:** Direct stream URL with entity access_token
+- **Snapshot:** Polling URL with cache-busting timestamp, paused when off-screen
 
----
+## Services
 
-## Error Handling
+| Service | File | Purpose |
+|---------|------|---------|
+| WebSocket | `ha-websocket.js` | Persistent connection, entity subscriptions, service calls |
+| REST | `ha-rest.js` | Calendar events, history queries, one-time data |
+| Calendar | `calendar-service.js` | CRUD operations for calendar events |
 
-### Connection Errors
-- **Timeout:** 10-second timeout on all WebSocket requests
-- **Reconnection:** Exponential backoff (max 10 attempts)
-- **Auth Failure:** Display error, offer retry button
-- **Network Interruption:** Auto-reconnect when network returns
+## Hooks
 
-### Component Errors
-- **ErrorBoundary:** Catches React errors, displays fallback UI
-- **Loading States:** Show spinner during data fetch
-- **Entity Not Found:** Display error message in card
+| Hook | Purpose |
+|------|---------|
+| `useHAConnection` | Connection status, reconnect |
+| `useEntity` | Subscribe to entity state |
+| `useServiceCall` | Call HA services |
+| `useWeather` | Weather entity |
+| `useInactivityTimer` | 5-min redirect to calendar |
+| `useDoorbellAlert` | Doorbell event detection |
+| `useYesterdayValue` | REST history for comparisons |
 
----
+## Performance
 
-## Security Considerations
+- Lazy-loaded routes (code splitting per page)
+- Camera IntersectionObserver (no off-screen polling)
+- Single WebSocket connection (not per-component)
+- Debounced volume sliders (200ms)
+- 10s snapshot interval for back cameras (was 3s)
 
-### Authentication
-- **Token Storage:** `.env` file (not in git)
-- **Token Type:** Long-lived access token from HA
-- **Transmission:** WebSocket/HTTP (no TLS in local network)
+## Known Constraints
 
-**Production Note:** For internet access, use HTTPS/WSS and HA remote access (https://ha.99swanlane.uk)
-
-### Network Security
-- **Local Network:** iPad and PC on trusted 192.168.1.x network
-- **No Authentication:** Dev server has no auth (local dev only)
-
-**Production Note:** Add authentication layer before internet deployment
-
----
-
-## Performance Considerations
-
-### WebSocket Efficiency
-- Single connection for entire app (not per-component)
-- Only subscribe to entities actually in use
-- Unsubscribe when components unmount
-
-### Rendering Optimization
-- Minimal re-renders (only on state changes)
-- No optimization applied yet (future: React.memo, useMemo)
-
-### Bundle Size
-- Not optimized yet (Phase 1 focus on functionality)
-- Future: Code splitting, tree shaking, lazy loading
-
----
-
-## Testing Strategy (Not Yet Implemented)
-
-### Planned Testing
-- **Unit Tests:** Vitest for hooks and services
-- **Integration Tests:** Test HA WebSocket communication
-- **E2E Tests:** Playwright for iPad UI testing
-- **Manual Testing:** iPad testing checklist
-
-### Current Testing
-- Manual testing on localhost and iPad
-- Entity toggle verification
-- Connection/reconnection testing
-
----
-
-## Deployment Strategy
-
-### Development
-- **Local:** http://localhost:5173/ (WSL2)
-- **iPad:** http://192.168.1.6:5173/ (via port forwarding)
-
-### Production (Future)
-- **Option 1:** Serve from Raspberry Pi on LAN
-- **Option 2:** Deploy to HA add-on
-- **Option 3:** Host on local web server (nginx)
-
-**Not Decided Yet:** Will determine in Phase 3
-
----
-
-## Known Limitations (Phase 1)
-
-1. **No TypeScript** - Using JavaScript for faster MVP
-2. **No Tests** - Manual testing only
-3. **No Error Logging** - Console logs only
-4. **No Analytics** - No usage tracking
-5. **No Offline Support** - Requires HA connection
-6. **HTTP Only** - No HTTPS (local network only)
-7. **Single User** - No multi-user support
-
----
-
-## Future Enhancements
-
-### Phase 2+ Features
-- Calendar integration (HA calendar entities)
-- Meal planner (input_text entities)
-- Games room controls (climate, Harmony hub)
-- Camera feeds (9 camera entities)
-
-### Technical Improvements
-- TypeScript migration
-- Automated testing
-- CI/CD pipeline
-- Docker deployment
-- HTTPS/WSS for remote access
-- Direct Google Calendar API (post-MVP)
-
----
-
-## Troubleshooting Guide
-
-### iPad Can't Connect
-1. Check port forwarding: `powershell.exe "netsh interface portproxy show all"`
-2. Check firewall: `powershell.exe "Get-NetFirewallRule -DisplayName 'Vite Dev Server'"`
-3. Verify dev server running: `curl http://localhost:5173`
-4. Check Windows IP: Should be 192.168.1.6
-
-### WebSocket Won't Connect
-1. Check HA is running: http://192.168.1.2:8123
-2. Check `.env` has valid token
-3. Check browser console for errors
-4. Try reconnecting (retry button)
-
-### Entity Loading Stuck
-1. Check connection status indicator (should be green)
-2. Check browser console for `[useEntity]` logs
-3. Verify entity exists in HA
-4. Hard refresh page (Ctrl+Shift+R)
-
----
-
-## Contact & Resources
-
-**GitHub:** https://github.com/djarthur78/ha-custom-dashboard
-**HA Community:** https://community.home-assistant.io/
-**React Docs:** https://react.dev/
-**Tailwind Docs:** https://tailwindcss.com/
-**HA WebSocket API:** https://developers.home-assistant.io/docs/api/websocket
-
----
-
-**Last Updated:** 2026-01-17 (Phase 1 Complete)
-**Next Review:** Phase 2A Start (Calendar Feature)
+- JavaScript only (no TypeScript)
+- No automated tests (manual testing)
+- HTTP only on local network
+- Single WebSocket connection (singleton)
+- Yesterday comparisons only work in production (CORS in dev)

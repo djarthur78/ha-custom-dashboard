@@ -109,10 +109,7 @@ export function NowPlaying() {
 
     return (
       <div
-        className="bg-[var(--color-surface)] rounded-xl h-full p-6 flex gap-6"
-        style={{
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-        }}
+        className="bg-white rounded-lg border border-[#e0e0e0] h-full p-6 flex gap-6"
       >
         {/* Album Art / Movie Poster */}
         <div className="flex-shrink-0 w-[35%] max-w-[300px]">
@@ -229,10 +226,7 @@ export function NowPlaying() {
   // Mode 2: Nothing playing (idle)
   return (
     <div
-      className="bg-[var(--color-surface)] rounded-xl h-full flex flex-col items-center justify-center text-center"
-      style={{
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-      }}
+      className="bg-white rounded-lg border border-[#e0e0e0] h-full flex flex-col items-center justify-center text-center"
     >
       <Gamepad2 size={80} className="text-gray-300 mb-4" />
       <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Nothing Playing</h2>

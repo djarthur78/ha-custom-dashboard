@@ -70,11 +70,11 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
       onClick={() => onSelect(speaker.entityId)}
       className={`
         rounded-lg p-4 cursor-pointer transition-all
-        ${isSelected ? 'ring-2 ring-[var(--color-primary)] shadow-md' : 'hover:shadow-sm'}
+        border border-[#e0e0e0]
+        ${isSelected ? 'ring-2 ring-[var(--color-primary)]' : 'hover:border-[#bbb]'}
       `}
       style={{
         backgroundColor: groupBgColor,
-        boxShadow: isSelected ? undefined : '0 1px 2px rgba(0,0,0,0.05)',
       }}
     >
       {/* Top row: checkbox, name, status dot */}

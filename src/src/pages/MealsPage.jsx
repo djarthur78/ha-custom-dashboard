@@ -108,7 +108,7 @@ export function MealsPage() {
         </div>
 
         {/* Meal Grid */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-lg border border-[#e0e0e0] overflow-hidden">
           <MealGrid
             meals={meals}
             loading={loading}

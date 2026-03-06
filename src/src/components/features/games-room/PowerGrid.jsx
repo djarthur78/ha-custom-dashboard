@@ -17,10 +17,7 @@ export function PowerGrid() {
 
   return (
     <div
-      className="bg-[var(--color-surface)] rounded-xl h-full p-4 flex flex-col"
-      style={{
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-      }}
+      className="bg-white rounded-lg border border-[#e0e0e0] h-full p-4 flex flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">

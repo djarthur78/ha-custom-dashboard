@@ -78,8 +78,7 @@ export function NowPlayingPanel({ speaker, controls }) {
   // ─── Nothing Playing State ───
   if (!speaker || !hasMedia) {
     return (
-      <div className="bg-[var(--color-surface)] rounded-xl h-full flex flex-col items-center justify-center text-center"
-           style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      <div className="bg-white rounded-lg border border-[#e0e0e0] h-full flex flex-col items-center justify-center text-center">
         <Music size={80} className="text-gray-300 mb-4" />
         <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Nothing Playing</h2>
         <p className="text-[var(--color-text-secondary)]">
@@ -94,8 +93,7 @@ export function NowPlayingPanel({ speaker, controls }) {
 
   // ─── Active Playback State ───
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl h-full p-5 flex flex-col overflow-hidden"
-         style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+    <div className="bg-white rounded-lg border border-[#e0e0e0] h-full p-5 flex flex-col overflow-hidden">
 
       {/* Group Header */}
       <div className="flex-shrink-0 mb-3 pb-3 border-b border-[var(--color-border)]">

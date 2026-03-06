@@ -7,3 +7,5 @@ import { PeopleDashboard } from '../components/features/people/PeopleDashboard';
 export function PeoplePage() {
   return <PeopleDashboard />;
 }
+
+export default PeoplePage;

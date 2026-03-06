@@ -57,8 +57,7 @@ export function SpeakerPanel({
   }
 
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl h-full flex flex-col overflow-hidden"
-         style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+    <div className="bg-white rounded-lg border border-[#e0e0e0] h-full flex flex-col overflow-hidden">
 
       {/* Header */}
       <div className="px-3 py-2.5 border-b border-[var(--color-border)] flex-shrink-0">

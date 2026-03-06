@@ -55,10 +55,7 @@ export function SceneButtons() {
 
   return (
     <div
-      className="bg-[var(--color-surface)] rounded-xl h-full p-4 flex flex-col gap-2"
-      style={{
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-      }}
+      className="bg-white rounded-lg border border-[#e0e0e0] h-full p-4 flex flex-col gap-2"
     >
       {/* 2x2 Grid for first 4 scenes */}
       <div className="grid grid-cols-2 gap-2 flex-1">

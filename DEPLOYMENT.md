@@ -1,332 +1,129 @@
-# Dashboard Deployment & Access Guide
+# Deployment Guide
 
-**Current Version:** 0.9.0
-**Status:** ✅ DEPLOYED AND WORKING
-**Last Updated:** Jan 25, 2026
+**Version:** 2.3.0
+**Status:** Deployed and working
 
----
+## Access Methods
 
-## 🚀 Quick Access
+| Method | URL | Notes |
+|--------|-----|-------|
+| Direct (local) | http://192.168.1.2:8099 | Primary access |
+| Home Assistant | http://192.168.1.2:8123 | Arthur Dashboard in sidebar |
+| Remote | https://ha.99swanlane.uk | Via Cloudflare tunnel |
 
-### Method 1: Direct Access (Recommended)
-**URL:** http://192.168.1.2:8099
+## How It Works
 
-**Works for:**
-- iPad (kitchen tablet)
-- Desktop browsers
-- Mobile devices on same network
-
-### Method 2: Via Home Assistant (HA Companion App)
-**Dashboard:** "Arthur Dashboard" in HA sidebar
-**URL:** http://192.168.1.2:8123/arthur-dashboard
-
-**How it works:**
-- Dedicated Lovelace dashboard
-- Fullscreen iframe to port 8099
-- Works in HA Companion App on iOS/Android
-- Accessible locally and remotely via Cloudflare tunnel
-
----
-
-## 📱 iPad Setup (Kitchen Tablet)
-
-### Option A: Direct Access (Standalone App)
-1. Open Safari → http://192.168.1.2:8099
-2. Tap Share button → "Add to Home Screen"
-3. Name it "Family Dashboard"
-4. Tap icon on home screen → Opens as fullscreen app
-
-### Option B: Via HA Companion App
-1. Install HA Companion App from App Store
-2. Login to your Home Assistant
-3. Tap "Arthur Dashboard" in sidebar
-4. Dashboard loads fullscreen
-
-**Recommended:** Use Option A for best performance
-
----
-
-## 🏠 How the Dashboard is Deployed
-
-The dashboard runs as a **Home Assistant add-on** in a Docker container:
-
-- **Name:** Family Dashboard
-- **Version:** 0.9.0
+The dashboard runs as a Home Assistant add-on in a Docker container:
+- **Add-on:** Family Dashboard (`c2ba14e6_family-dashboard`)
 - **Port:** 8099
-- **Stack:** React + Nginx
-- **Location:** Raspberry Pi @ 192.168.1.2
+- **Stack:** React SPA served by Nginx
+- **Container:** Built from `family-dashboard/Dockerfile`
 
-### Architecture
-```
-┌─────────────────────────────────────────┐
-│  Client Device (iPad/Desktop/Phone)    │
-└───────────┬─────────────────────────────┘
-            │
-     ┌──────┴───────┐
-     │              │
-  Direct:      HA Dashboard:
-  :8099        :8123/arthur-dashboard
-     │              │
-     └──────┬───────┘
-            │
-┌───────────▼─────────────────────────────┐
-│  Home Assistant Pi (192.168.1.2)        │
-│  ┌──────────────────────────────────┐   │
-│  │ Family Dashboard Add-on (:8099)  │   │
-│  │  - React SPA                     │   │
-│  │  - WebSocket → HA Core           │   │
-│  │  - Nginx serving static files    │   │
-│  └──────────────────────────────────┘   │
-└──────────────────────────────────────────┘
-```
+## Updating the Dashboard
 
----
-
-## 🔧 Updating the Dashboard
-
-### From GitHub (Production Method)
-
-1. **Push changes to GitHub:**
-   ```bash
-   cd /home/arthu/projects/ha-custom-dashboard
-   # Make your changes
-   npm run build  # Build React app
-   ./build-addon.sh  # Copy to add-on directory
-   git add -A
-   git commit -m "Your update message"
-   git push
-   ```
-
-2. **Update in Home Assistant:**
-   - Settings → Add-ons → Family Dashboard
-   - Click "Check for updates"
-   - Click "Update" if available
-   - Click "Restart" to apply changes
-
-### Manual Update (Development)
-
-If you need to test before pushing to GitHub:
+### Step 1: Build
 
 ```bash
-# 1. Build locally
-cd src
-npm run build
-
-# 2. Copy to add-on
-rm -rf ../family-dashboard/build
-cp -r dist ../family-dashboard/build
-
-# 3. Bump version in config.json
-# Edit family-dashboard/config.json, increment version
-
-# 4. Commit and push
-git add -A
-git commit -m "Manual update"
-git push
-
-# 5. Rebuild add-on in HA
-# Settings → Add-ons → Family Dashboard → Rebuild
+cd src && npm run build && cd ..
+./build-addon.sh
 ```
 
----
+### Step 2: Version bump
 
-## 🎯 Arthur Dashboard (HA Integration)
+Update version in **both** files:
+- `family-dashboard/config.json` (line 3)
+- `src/src/pages/HomePage.jsx` (version display)
 
-The "Arthur Dashboard" in Home Assistant sidebar provides fullscreen access to the React app.
+### Step 3: Push
 
-### How it Works
+```bash
+git add -A
+git commit -m "feat: description (vX.X.X)"
+git push
+```
 
-**Lovelace Dashboard Configuration:**
+### Step 4: Update addon
+
+**Via HA UI:**
+Settings -> Add-ons -> Family Dashboard -> Check for updates -> Update
+
+**Via Puppeteer (automated):**
+```js
+const hass = document.querySelector('home-assistant').hass;
+await hass.callWS({ type: 'supervisor/api', endpoint: '/store/reload', method: 'post' });
+// Wait 3-5 seconds
+await hass.callWS({ type: 'supervisor/api', endpoint: '/addons/c2ba14e6_family-dashboard/update', method: 'post' });
+// Wait 15 seconds for rebuild
+```
+
+### Step 5: Verify
+
+Open http://192.168.1.2:8099 and check version number.
+
+## Tablet Setup
+
+### Android Tablet (PoE)
+
+1. Open Chrome -> http://192.168.1.2:8099
+2. Menu -> Add to Home Screen -> "Family Dashboard"
+3. Launch from home screen for fullscreen app experience
+
+### iPad (alternative)
+
+1. Safari -> http://192.168.1.2:8099
+2. Share -> Add to Home Screen
+
+## Remote Access (Cloudflare Tunnel)
+
+The dashboard is accessible remotely via Cloudflare tunnel.
+
+### Setup
+
+1. Log in to https://dash.cloudflare.com
+2. Zero Trust -> Access -> Tunnels
+3. Configure existing tunnel, add public hostname:
+   - Subdomain: `dashboard`
+   - Domain: `99swanlane.uk`
+   - Type: HTTP
+   - URL: `192.168.1.2:8099`
+
+### HA Dashboard (iframe)
+
+The "Arthur Dashboard" in HA sidebar uses an iframe:
 ```json
 {
-  "title": "Arthur Dashboard",
-  "views": [{
-    "panel": true,
-    "cards": [{
-      "type": "iframe",
-      "url": "http://192.168.1.2:8099",
-      "aspect_ratio": "100%"
-    }]
-  }]
+  "url": "https://dashboard.99swanlane.uk"
 }
 ```
 
-**Location:** `/config/.storage/lovelace.arthur_dashboard` on HA Pi
+Config location: `/config/.storage/lovelace.arthur_dashboard` on HA
 
-### Recreating Arthur Dashboard
+### Mixed Content Fix
 
-If you need to recreate it:
+If HA is accessed via HTTPS (Cloudflare) but dashboard uses HTTP, browsers block the iframe. Solution: route dashboard through Cloudflare too, so both are HTTPS.
 
-1. **SSH to HA Pi:**
-   ```bash
-   ssh hassio@192.168.1.2
-   # Password: hassio
-   ```
+## Troubleshooting
 
-2. **Create dashboard file:**
-   ```bash
-   sudo tee /config/.storage/lovelace.arthur_dashboard > /dev/null << 'EOF'
-   {
-     "version": 1,
-     "minor_version": 1,
-     "key": "lovelace.arthur_dashboard",
-     "data": {
-       "config": {
-         "title": "Arthur Dashboard",
-         "views": [{
-           "panel": true,
-           "cards": [{
-             "type": "iframe",
-             "url": "http://192.168.1.2:8099",
-             "aspect_ratio": "100%"
-           }]
-         }]
-       }
-     }
-   }
-   EOF
-   ```
+### Dashboard won't load (port 8099)
+1. Check add-on is running: Settings -> Add-ons -> Family Dashboard
+2. Check logs in the add-on page
+3. Restart the add-on
 
-3. **Restart Home Assistant:**
-   - Settings → System → Restart
-
-4. **Verify:**
-   - Check sidebar for "Arthur Dashboard"
-   - Click it - should load fullscreen React app
-
----
-
-## 🐛 Troubleshooting
-
-### Dashboard Won't Load (Port 8099)
-
-**Check add-on is running:**
-1. Settings → Add-ons → Family Dashboard
-2. Look for "Running" status
-3. If stopped, click "Start"
-
-**Check logs:**
-1. In Family Dashboard add-on page
-2. Click "Log" tab
-3. Look for errors
-
-**Restart add-on:**
-1. Click "Restart" button
-2. Wait 10 seconds
-3. Try accessing again
-
-### Arthur Dashboard Shows Blank Screen
-
-**Symptom:** HA sidebar shows dashboard but iframe is blank
-
-**Fix:**
-1. Verify add-on is running (see above)
-2. Test direct URL works: http://192.168.1.2:8099
-3. If direct URL works but iframe doesn't, hard refresh:
-   - Desktop: Ctrl+F5 or Cmd+Shift+R
-   - Mobile: Pull down to refresh
-
-**Still broken:** Recreate dashboard (see "Recreating Arthur Dashboard" above)
-
-### "Connected" Status Shows Red
-
-**Symptom:** Dashboard loads but shows "Disconnected" in header
-
-**Cause:** WebSocket connection to Home Assistant failed
-
-**Fix:**
-1. Check Home Assistant is accessible: http://192.168.1.2:8123
-2. Verify token in add-on configuration:
-   - Settings → Add-ons → Family Dashboard → Configuration
-   - Check "ha_token" is set (should be auto-configured)
+### "Disconnected" in header
+1. Check HA is accessible: http://192.168.1.2:8123
+2. Verify token in add-on configuration
 3. Restart add-on
 4. Hard refresh browser
 
-### Remote Access Not Working
+### Addon won't update
+1. Ensure git push completed
+2. Run store reload: `hass.callWS({ type: 'supervisor/api', endpoint: '/store/reload', method: 'post' })`
+3. Wait 5 seconds, then check addon info
+4. If version_latest hasn't changed, the git push may not have included `family-dashboard/config.json`
 
-**Symptom:** Works locally but not via Cloudflare
+## SSH Access
 
-**Check Cloudflare tunnel:**
-1. HA Settings → Add-ons → Cloudflare Tunnel
-2. Verify it's running
-3. Test: https://ha.99swanlane.uk
-
-**Arthur Dashboard via Cloudflare:**
-1. https://ha.99swanlane.uk → Opens HA
-2. Click "Arthur Dashboard" in sidebar
-3. iframe loads from client's network context
-4. If you're on VPN or local network, :8099 is accessible
-5. If remote without VPN, only HA (:8123) is accessible
-
----
-
-## 📋 Development Workflow
-
-### Local Development
 ```bash
-cd src
-npm run dev
-# Access: http://localhost:5173
+ssh hassio@192.168.1.2
+# Password: hassio
 ```
-
-### Build for Production
-```bash
-cd src
-npm run build
-# Output: src/dist/
-```
-
-### Deploy to HA Add-on
-```bash
-# From project root
-./build-addon.sh
-# Then push to GitHub or copy to HA manually
-```
-
-### Version Management
-
-**Version numbers:**
-- React app: `src/package.json`
-- Add-on: `family-dashboard/config.json`
-
-**Keep them in sync:**
-```bash
-# After updating features
-cd src
-npm version patch  # or minor/major
-cd ..
-# Update family-dashboard/config.json to match
-```
-
----
-
-## 🔗 Related Documentation
-
-- **ROADMAP.md** - Complete feature plan and phases
-- **DEVELOPMENT.md** - Setup and development guide
-- **ARCHITECTURE.md** - Technical design decisions
-- **CHANGELOG.md** - Version history
-
----
-
-## ✅ Current Setup (Working Configuration)
-
-**What you have:**
-- ✅ Family Dashboard add-on v0.9.0 running on port 8099
-- ✅ Arthur Dashboard in HA sidebar (iframe to :8099)
-- ✅ Direct access via http://192.168.1.2:8099
-- ✅ HA Companion App access via Arthur Dashboard
-- ✅ Remote access via Cloudflare tunnel
-- ✅ Compact header with icon navigation
-- ✅ Date/time/weather in header
-- ✅ 6 calendar view modes + biweekly view
-- ✅ Event creation, editing, deletion
-- ✅ Real-time updates via WebSocket
-
-**Access methods tested and working:**
-- ✅ Safari on iPad @ http://192.168.1.2:8099
-- ✅ Desktop browser @ http://192.168.1.2:8099
-- ✅ HA Companion App → Arthur Dashboard
-- ✅ Remote via Cloudflare → Arthur Dashboard
-
-**Last verified:** Jan 25, 2026

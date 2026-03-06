@@ -3,6 +3,7 @@
  * Main application layout with compact header navigation
  */
 
+import { Suspense } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { Calendar, Utensils, Gamepad2, Camera, Home, Music, Users, Heart } from 'lucide-react';
 import { useWeather } from '../../hooks/useWeather';
@@ -97,7 +98,13 @@ export function MainLayout() {
 
       {/* Main Content */}
       <main className={isFullViewport ? '' : 'mx-auto px-4 py-6'}>
-        <Outlet context={{ alertMode, dismissAlert }} />
+        <Suspense fallback={
+          <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 56px)' }}>
+            <div className="w-8 h-8 border-3 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+          </div>
+        }>
+          <Outlet context={{ alertMode, dismissAlert }} />
+        </Suspense>
       </main>
 
       {/* Footer - hide on full viewport pages */}

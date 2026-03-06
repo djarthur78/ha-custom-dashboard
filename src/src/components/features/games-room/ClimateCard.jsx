@@ -57,7 +57,7 @@ export function ClimateCard() {
 
   if (loading) {
     return (
-      <div className="bg-[var(--color-surface)] rounded-xl h-full flex items-center justify-center">
+      <div className="bg-white rounded-lg border border-[#e0e0e0] h-full flex items-center justify-center">
         <div className="text-[var(--color-text-secondary)]">Loading...</div>
       </div>
     );
@@ -65,10 +65,7 @@ export function ClimateCard() {
 
   return (
     <div
-      className="bg-[var(--color-surface)] rounded-xl h-full p-4 flex flex-col gap-3"
-      style={{
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)',
-      }}
+      className="bg-white rounded-lg border border-[#e0e0e0] h-full p-4 flex flex-col gap-3"
     >
       {/* Header */}
       <h3 className="text-lg font-bold text-[var(--color-text)]">Climate</h3>

@@ -1,8 +1,51 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import { Camera, RefreshCw } from 'lucide-react';
 import { useCameraSnapshot } from './hooks/useCameraSnapshot';
 import { useMjpegStream } from './hooks/useMjpegStream';
 
-function CameraShell({ camera, imageUrl, isLoading, onClick, className }) {
+function LoadingSkeleton({ label }) {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-gray-800 animate-pulse">
+      <div className="text-center">
+        <Camera size={32} className="text-gray-500 mx-auto mb-2" />
+        <div className="text-xs text-gray-500">{label}</div>
+      </div>
+    </div>
+  );
+}
+
+function ErrorState({ label, onRetry }) {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+      <div className="text-center">
+        <Camera size={32} className="text-gray-600 mx-auto mb-2" />
+        <div className="text-sm text-gray-400 mb-1">{label}</div>
+        <div className="text-xs text-red-400 mb-2">Offline</div>
+        {onRetry && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onRetry(); }}
+            className="flex items-center gap-1 mx-auto px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs transition-colors"
+          >
+            <RefreshCw size={12} />
+            Retry
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CameraShell({ camera, imageUrl, isLoading, hasError, onRetry, onClick, className }) {
+  const [imgError, setImgError] = useState(false);
+
+  // Reset img error when URL changes
+  useEffect(() => {
+    if (imageUrl) setImgError(false);
+  }, [imageUrl]);
+
+  const showError = hasError || imgError;
+  const showLoading = isLoading && !showError;
+
   return (
     <div
       className={`relative overflow-hidden bg-gray-900 cursor-pointer group ${className}`}
@@ -12,32 +55,17 @@ function CameraShell({ camera, imageUrl, isLoading, onClick, className }) {
       onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
       style={{ minHeight: 0, minWidth: 0, maxHeight: '100%', maxWidth: '100%' }}
     >
-      {isLoading ? (
-        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-          <div className="text-center">
-            <div className="text-sm mb-2">Loading...</div>
-            <div className="text-xs text-gray-500">{camera.label}</div>
-          </div>
-        </div>
-      ) : (
-        <>
-          <img
-            src={imageUrl}
-            alt={camera.label}
-            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-            loading="lazy"
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextElementSibling?.classList.remove('hidden');
-            }}
-          />
-          <div className="hidden absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-800">
-            <div className="text-center">
-              <div className="text-sm mb-1">{camera.label}</div>
-              <div className="text-xs text-red-400">Offline</div>
-            </div>
-          </div>
-        </>
+      {showLoading && <LoadingSkeleton label={camera.label} />}
+      {showError && <ErrorState label={camera.label} onRetry={onRetry} />}
+
+      {!showError && imageUrl && (
+        <img
+          src={imageUrl}
+          alt={camera.label}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          onError={() => setImgError(true)}
+        />
       )}
 
       <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-3 py-2 text-white text-sm font-medium">
@@ -49,7 +77,7 @@ function CameraShell({ camera, imageUrl, isLoading, onClick, className }) {
 
 function SnapshotFeed({ camera, onClick, className }) {
   const ref = useRef(null);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -62,19 +90,44 @@ function SnapshotFeed({ camera, onClick, className }) {
     return () => observer.disconnect();
   }, []);
 
-  const interval = camera.interval || 3000;
-  const { url } = useCameraSnapshot(camera.id, interval, isVisible);
+  const interval = camera.interval || 10000;
+  const { url, refresh, hasToken, error } = useCameraSnapshot(camera.id, interval, isVisible);
 
   return (
-    <div ref={ref}>
-      <CameraShell camera={camera} imageUrl={url} isLoading={!url} onClick={onClick} className={className} />
+    <div ref={ref} className="h-full">
+      <CameraShell
+        camera={camera}
+        imageUrl={url}
+        isLoading={!url && !error && isVisible}
+        hasError={!!error || (isVisible && !hasToken)}
+        onRetry={refresh}
+        onClick={onClick}
+        className={className}
+      />
     </div>
   );
 }
 
 function StreamFeed({ camera, onClick, className }) {
-  const { url } = useMjpegStream(camera.id);
-  return <CameraShell camera={camera} imageUrl={url} isLoading={!url} onClick={onClick} className={className} />;
+  const { url, hasToken, error } = useMjpegStream(camera.id);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const handleRetry = useCallback(() => {
+    setRetryCount(c => c + 1);
+  }, []);
+
+  return (
+    <CameraShell
+      key={retryCount}
+      camera={camera}
+      imageUrl={url}
+      isLoading={!url && !error}
+      hasError={!!error || !hasToken}
+      onRetry={handleRetry}
+      onClick={onClick}
+      className={className}
+    />
+  );
 }
 
 export function CameraFeed({ camera, stream = false, onClick, className = '' }) {

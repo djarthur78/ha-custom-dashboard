@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useEntity } from '../../../../hooks/useEntity';
 import { getHAConfig } from '../../../../utils/ha-config';
 
-export function useCameraSnapshot(entityId, intervalMs = 3000, enabled = true) {
-  const { attributes } = useEntity(entityId);
+export function useCameraSnapshot(entityId, intervalMs = 10000, enabled = true) {
+  const { attributes, error } = useEntity(entityId);
   const [url, setUrl] = useState('');
 
   const refresh = useCallback(() => {
@@ -19,5 +19,7 @@ export function useCameraSnapshot(entityId, intervalMs = 3000, enabled = true) {
     return () => clearInterval(timer);
   }, [refresh, intervalMs, enabled]);
 
-  return { url, refresh };
+  const hasToken = !!attributes?.access_token;
+
+  return { url, refresh, hasToken, error };
 }
