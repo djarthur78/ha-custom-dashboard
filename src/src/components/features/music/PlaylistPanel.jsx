@@ -62,7 +62,8 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
 
   return (
     <div
-      className="bg-white rounded-lg border border-[#e0e0e0] h-full flex flex-col overflow-hidden"
+      className="ds-card h-full flex flex-col overflow-hidden"
+      style={{ padding: 0 }}
     >
       {/* Tab Bar */}
       <div className="flex border-b border-[var(--color-border)] flex-shrink-0">
@@ -70,11 +71,11 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
           <button
             key={account.id}
             onClick={() => setActiveTab(account.id)}
-            className={`flex-1 px-4 py-3.5 text-base font-medium transition-colors ${
-              activeTab === account.id
-                ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-            }`}
+            className="flex-1 px-4 py-3.5 text-base font-medium transition-colors"
+            style={activeTab === account.id
+              ? { color: 'var(--ds-accent)', borderBottom: '2px solid var(--ds-accent)' }
+              : { color: 'var(--ds-text-secondary)' }
+            }
           >
             <Library size={18} className="inline mr-1.5 -mt-0.5" />
             {account.label}
@@ -84,11 +85,11 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
         {/* Queue tab */}
         <button
           onClick={() => setActiveTab('queue')}
-          className={`flex-1 px-4 py-3.5 text-base font-medium transition-colors ${
-            activeTab === 'queue'
-              ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]'
-              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-          }`}
+          className="flex-1 px-4 py-3.5 text-base font-medium transition-colors"
+          style={activeTab === 'queue'
+            ? { color: 'var(--ds-accent)', borderBottom: '2px solid var(--ds-accent)' }
+            : { color: 'var(--ds-text-secondary)' }
+          }
         >
           <ListMusic size={18} className="inline mr-1.5 -mt-0.5" />
           Queue

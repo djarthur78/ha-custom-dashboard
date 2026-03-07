@@ -55,7 +55,7 @@ export function SceneButtons() {
 
   return (
     <div
-      className="bg-white rounded-lg border border-[#e0e0e0] h-full p-4 flex flex-col gap-2"
+      className="ds-card h-full flex flex-col gap-2"
     >
       {/* 2x2 Grid for first 4 scenes */}
       <div className="grid grid-cols-2 gap-2 flex-1">

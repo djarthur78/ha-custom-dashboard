@@ -69,9 +69,9 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
     <div
       onClick={() => onSelect(speaker.entityId)}
       className={`
-        rounded-lg p-4 cursor-pointer transition-all
-        border border-[#e0e0e0]
-        ${isSelected ? 'ring-2 ring-[var(--color-primary)]' : 'hover:border-[#bbb]'}
+        rounded-2xl p-4 cursor-pointer transition-all
+        border border-[var(--ds-border)]
+        ${isSelected ? 'ring-2 ring-[var(--ds-accent)]' : 'hover:border-[#bbb]'}
       `}
       style={{
         backgroundColor: groupBgColor,

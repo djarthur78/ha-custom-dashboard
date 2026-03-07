@@ -57,7 +57,7 @@ export function SpeakerPanel({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-[#e0e0e0] h-full flex flex-col overflow-hidden">
+    <div className="ds-card h-full flex flex-col overflow-hidden" style={{ padding: 0 }}>
 
       {/* Header */}
       <div className="px-3 py-2.5 border-b border-[var(--color-border)] flex-shrink-0">

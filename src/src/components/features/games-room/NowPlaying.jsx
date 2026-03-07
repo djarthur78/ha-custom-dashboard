@@ -109,7 +109,7 @@ export function NowPlaying() {
 
     return (
       <div
-        className="bg-white rounded-lg border border-[#e0e0e0] h-full p-6 flex gap-6"
+        className="ds-card h-full p-6 flex gap-6"
       >
         {/* Album Art / Movie Poster */}
         <div className="flex-shrink-0 w-[35%] max-w-[300px]">
@@ -137,7 +137,7 @@ export function NowPlaying() {
               <h2 className="text-3xl font-bold text-[var(--color-text)] truncate">
                 {mediaTitle || 'Unknown Title'}
               </h2>
-              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium whitespace-nowrap">
+              <div className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap" style={{ backgroundColor: 'rgba(159,86,68,0.1)', color: 'var(--ds-accent)' }}>
                 <SourceIcon size={14} />
                 <span>{activePlayer.label}</span>
               </div>
@@ -165,7 +165,7 @@ export function NowPlaying() {
               <button
                 onClick={handlePlayPause}
                 disabled={loading}
-                className="p-4 rounded-full bg-[var(--color-primary)] text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="p-4 rounded-full bg-[var(--ds-accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {isPlaying ? (
                   <Pause size={32} fill="currentColor" />
@@ -211,7 +211,7 @@ export function NowPlaying() {
                 className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
                          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4
                          [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full
-                         [&::-webkit-slider-thumb]:bg-[var(--color-primary)]"
+                         [&::-webkit-slider-thumb]:bg-[var(--ds-accent)]"
               />
               <span className="text-sm font-medium text-[var(--color-text)] min-w-[3ch]">
                 {Math.round(localVolume * 100)}%
@@ -226,7 +226,7 @@ export function NowPlaying() {
   // Mode 2: Nothing playing (idle)
   return (
     <div
-      className="bg-white rounded-lg border border-[#e0e0e0] h-full flex flex-col items-center justify-center text-center"
+      className="ds-card h-full flex flex-col items-center justify-center text-center"
     >
       <Gamepad2 size={80} className="text-gray-300 mb-4" />
       <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Nothing Playing</h2>

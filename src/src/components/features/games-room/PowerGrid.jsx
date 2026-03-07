@@ -17,7 +17,7 @@ export function PowerGrid() {
 
   return (
     <div
-      className="bg-white rounded-lg border border-[#e0e0e0] h-full p-4 flex flex-col"
+      className="ds-card h-full flex flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">

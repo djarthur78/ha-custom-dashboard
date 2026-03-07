@@ -1,6 +1,6 @@
 /**
  * HomePage Component
- * Dashboard overview with clean cards and live data previews
+ * Dashboard overview with warm earthy cards and live data previews
  */
 
 import { Link } from 'react-router-dom';
@@ -8,23 +8,31 @@ import { Calendar, Utensils, Gamepad2, Camera, Music, Users, Heart } from 'lucid
 import { PageContainer } from '../components/layout/PageContainer';
 import { useEntity } from '../hooks/useEntity';
 
-function HomeCard({ to, icon: Icon, title, accent, children }) {
+const TINTS = {
+  calendar: 'var(--ds-tint-calendar)',
+  meals: 'var(--ds-tint-meals)',
+  games: 'var(--ds-tint-games)',
+  music: 'var(--ds-tint-music)',
+  people: 'var(--ds-tint-people)',
+  health: 'var(--ds-tint-health)',
+  cameras: 'var(--ds-tint-cameras)',
+};
+
+function HomeCard({ to, icon: Icon, title, tint, children }) {
   return (
     <Link
       to={to}
-      className="block bg-white rounded-lg border border-[#e0e0e0] overflow-hidden hover:border-[#bbb] transition-colors"
+      className="ds-card block hover:shadow-md transition-all"
+      style={{ backgroundColor: tint }}
     >
-      <div className="flex">
-        <div className="w-1 shrink-0" style={{ backgroundColor: accent }} />
-        <div className="flex-1 p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <Icon size={22} style={{ color: accent }} />
-            <h3 className="text-base font-semibold text-[var(--color-text)]">{title}</h3>
-          </div>
-          <div className="text-sm text-[#666]">
-            {children}
-          </div>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="p-2 rounded-xl" style={{ backgroundColor: 'rgba(159, 86, 68, 0.1)' }}>
+          <Icon size={22} style={{ color: 'var(--ds-accent)' }} />
         </div>
+        <h3 className="text-base font-semibold" style={{ color: 'var(--ds-text)' }}>{title}</h3>
+      </div>
+      <div className="text-sm" style={{ color: 'var(--ds-text-secondary)' }}>
+        {children}
       </div>
     </Link>
   );
@@ -58,37 +66,37 @@ export function HomePage() {
   return (
     <PageContainer>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <HomeCard to="/calendar" icon={Calendar} title="Family Calendar" accent="#1a73e8">
+        <HomeCard to="/calendar" icon={Calendar} title="Family Calendar" tint={TINTS.calendar}>
           View all family calendars in one place
         </HomeCard>
 
-        <HomeCard to="/meals" icon={Utensils} title="Meal Planner" accent="#16a34a">
+        <HomeCard to="/meals" icon={Utensils} title="Meal Planner" tint={TINTS.meals}>
           Plan meals for this week and next
         </HomeCard>
 
-        <HomeCard to="/games-room" icon={Gamepad2} title="Games Room" accent="#9333ea">
+        <HomeCard to="/games-room" icon={Gamepad2} title="Games Room" tint={TINTS.games}>
           <GamesRoomPreview />
         </HomeCard>
 
-        <HomeCard to="/music" icon={Music} title="Music" accent="#db2777">
+        <HomeCard to="/music" icon={Music} title="Music" tint={TINTS.music}>
           <MusicPreview />
         </HomeCard>
 
-        <HomeCard to="/people" icon={Users} title="People & Location" accent="#4f46e5">
+        <HomeCard to="/people" icon={Users} title="People & Location" tint={TINTS.people}>
           Track family members
         </HomeCard>
 
-        <HomeCard to="/health" icon={Heart} title="Health & Wellness" accent="#e11d48">
+        <HomeCard to="/health" icon={Heart} title="Health & Wellness" tint={TINTS.health}>
           <HealthPreview />
         </HomeCard>
 
-        <HomeCard to="/cameras" icon={Camera} title="Camera Feeds" accent="#dc2626">
+        <HomeCard to="/cameras" icon={Camera} title="Camera Feeds" tint={TINTS.cameras}>
           8 camera feeds
         </HomeCard>
       </div>
 
-      <div className="text-center text-sm text-[#999]">
-        Family Dashboard <span className="font-semibold text-[#666]">v2.3.0</span>
+      <div className="text-center text-sm" style={{ color: 'var(--ds-text-secondary)' }}>
+        Family Dashboard <span className="font-semibold" style={{ color: 'var(--ds-text)' }}>v2.4.0</span>
       </div>
     </PageContainer>
   );

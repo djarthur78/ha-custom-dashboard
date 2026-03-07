@@ -78,7 +78,7 @@ export function NowPlayingPanel({ speaker, controls }) {
   // ─── Nothing Playing State ───
   if (!speaker || !hasMedia) {
     return (
-      <div className="bg-white rounded-lg border border-[#e0e0e0] h-full flex flex-col items-center justify-center text-center">
+      <div className="ds-card h-full flex flex-col items-center justify-center text-center">
         <Music size={80} className="text-gray-300 mb-4" />
         <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Nothing Playing</h2>
         <p className="text-[var(--color-text-secondary)]">
@@ -93,13 +93,13 @@ export function NowPlayingPanel({ speaker, controls }) {
 
   // ─── Active Playback State ───
   return (
-    <div className="bg-white rounded-lg border border-[#e0e0e0] h-full p-5 flex flex-col overflow-hidden">
+    <div className="ds-card h-full p-5 flex flex-col overflow-hidden">
 
       {/* Group Header */}
       <div className="flex-shrink-0 mb-3 pb-3 border-b border-[var(--color-border)]">
         {isGrouped ? (
           <div className="flex items-start gap-2">
-            <Link2 size={18} className="text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
+            <Link2 size={18} className="text-[var(--ds-accent)] flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <div className="text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-1">
                 Now Playing on Group
@@ -188,7 +188,7 @@ export function NowPlayingPanel({ speaker, controls }) {
               onClick={() => controls.setShuffle(speaker.entityId, !speaker.shuffle)}
               className={`p-2 rounded-full transition-colors ${
                 speaker.shuffle
-                  ? 'text-[var(--color-primary)] bg-blue-50'
+                  ? 'text-[var(--ds-accent)] bg-[rgba(159,86,68,0.08)]'
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -210,7 +210,7 @@ export function NowPlayingPanel({ speaker, controls }) {
           {(supports(SUPPORT_PLAY) || supports(SUPPORT_PAUSE)) && (
             <button
               onClick={() => controls.playPause(speaker.entityId)}
-              className="p-4 rounded-full bg-[var(--color-primary)] text-white hover:opacity-90 transition-opacity"
+              className="p-4 rounded-full bg-[var(--ds-accent)] text-white hover:opacity-90 transition-opacity"
             >
               {isPlaying ? (
                 <Pause size={28} fill="currentColor" />
@@ -240,7 +240,7 @@ export function NowPlayingPanel({ speaker, controls }) {
               }}
               className={`p-2 rounded-full transition-colors ${
                 speaker.repeat !== 'off'
-                  ? 'text-[var(--color-primary)] bg-blue-50'
+                  ? 'text-[var(--ds-accent)] bg-[rgba(159,86,68,0.08)]'
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -254,8 +254,8 @@ export function NowPlayingPanel({ speaker, controls }) {
           <div className="space-y-2">
             {/* Group volume slider (if grouped) */}
             {isGrouped && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5">
-                <div className="text-xs font-medium text-blue-700 mb-2 flex items-center gap-1.5">
+              <div className="rounded-lg p-2.5" style={{ backgroundColor: 'rgba(159,86,68,0.06)', border: '1px solid rgba(159,86,68,0.15)' }}>
+                <div className="text-xs font-medium mb-2 flex items-center gap-1.5" style={{ color: 'var(--ds-accent)' }}>
                   <Link2 size={12} />
                   Group Volume
                 </div>
@@ -263,12 +263,12 @@ export function NowPlayingPanel({ speaker, controls }) {
                   {supports(SUPPORT_VOLUME_MUTE) && (
                     <button
                       onClick={() => controls.toggleMute(speaker.entityId, speaker.isVolumeMuted)}
-                      className="p-2 rounded-full hover:bg-blue-100 transition-colors flex-shrink-0"
+                      className="p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
                     >
                       {speaker.isVolumeMuted ? (
-                        <VolumeX size={18} className="text-blue-600" />
+                        <VolumeX size={18} style={{ color: 'var(--ds-accent)' }} />
                       ) : (
-                        <Volume2 size={18} className="text-blue-600" />
+                        <Volume2 size={18} style={{ color: 'var(--ds-accent)' }} />
                       )}
                     </button>
                   )}
@@ -284,12 +284,12 @@ export function NowPlayingPanel({ speaker, controls }) {
                         groupVolumeControls.setGroupVolume(groupMembers, newVolume);
                       }, VOLUME_DEBOUNCE_MS);
                     }}
-                    className="flex-1 h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer
+                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
                                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4
                                [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full
-                               [&::-webkit-slider-thumb]:bg-blue-600"
+                               [&::-webkit-slider-thumb]:bg-[var(--ds-accent)]"
                   />
-                  <span className="text-sm font-medium text-blue-700 min-w-[3ch]">
+                  <span className="text-sm font-medium min-w-[3ch]" style={{ color: 'var(--ds-accent)' }}>
                     {Math.round(localVolume * 100)}%
                   </span>
                 </div>
@@ -321,7 +321,7 @@ export function NowPlayingPanel({ speaker, controls }) {
                 className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
                            [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4
                            [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full
-                           [&::-webkit-slider-thumb]:bg-[var(--color-primary)]"
+                           [&::-webkit-slider-thumb]:bg-[var(--ds-accent)]"
               />
               <span className="text-sm font-medium text-[var(--color-text)] min-w-[3ch]">
                 {Math.round(localVolume * 100)}%

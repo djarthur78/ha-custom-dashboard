@@ -82,21 +82,20 @@ export function MealGrid({ meals, loading, selectedWeek = 'w1', onMealUpdate, on
   }
 
   return (
-    <div className="overflow-x-auto" style={{ borderRadius: '12px' }}>
+    <div className="overflow-x-auto" style={{ borderRadius: '16px' }}>
       <table className="w-full" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
         <thead>
           <tr>
             <th
               style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: '#2c2e2e',
                 color: 'white',
                 padding: '16px',
                 textAlign: 'left',
                 fontWeight: '700',
                 fontSize: '16px',
-                borderTopLeftRadius: '12px',
+                borderTopLeftRadius: '16px',
                 minWidth: '160px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
               }}
             >
               Day
@@ -115,7 +114,6 @@ export function MealGrid({ meals, loading, selectedWeek = 'w1', onMealUpdate, on
                     fontWeight: '700',
                     fontSize: '16px',
                     minWidth: '180px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -127,15 +125,14 @@ export function MealGrid({ meals, loading, selectedWeek = 'w1', onMealUpdate, on
             })}
             <th
               style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: '#2c2e2e',
                 color: 'white',
                 padding: '16px',
                 textAlign: 'center',
                 fontWeight: '700',
                 fontSize: '16px',
-                borderTopRightRadius: '12px',
+                borderTopRightRadius: '16px',
                 width: '100px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
               }}
             >
               Clear
@@ -151,8 +148,8 @@ export function MealGrid({ meals, loading, selectedWeek = 'w1', onMealUpdate, on
               <tr
                 key={day}
                 style={{
-                  backgroundColor: isCurrentDay ? '#FFF3CC' : 'transparent',
-                  outline: isCurrentDay ? '3px solid #FFA500' : 'none',
+                  backgroundColor: isCurrentDay ? 'rgba(159,86,68,0.04)' : 'transparent',
+                  outline: isCurrentDay ? '3px solid var(--ds-accent)' : 'none',
                   outlineOffset: '-1px',
                   position: isCurrentDay ? 'relative' : 'static',
                   zIndex: isCurrentDay ? 1 : 'auto',
@@ -161,14 +158,14 @@ export function MealGrid({ meals, loading, selectedWeek = 'w1', onMealUpdate, on
                 <td
                   style={{
                     background: isCurrentDay
-                      ? 'linear-gradient(135deg, #FFD93D 0%, #FFA500 100%)'
-                      : 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-                    color: isCurrentDay ? 'white' : '#2c3e50',
+                      ? 'linear-gradient(135deg, #9f5644 0%, #b08a62 100%)'
+                      : '#f8f8fa',
+                    color: isCurrentDay ? 'white' : '#2c2e2e',
                     padding: '20px 16px',
                     fontWeight: '700',
                     borderTop: '2px solid white',
-                    boxShadow: isCurrentDay ? '0 2px 8px rgba(255, 215, 0, 0.3)' : '0 1px 3px rgba(0,0,0,0.05)',
-                    ...(index === DAYS.length - 1 && { borderBottomLeftRadius: '12px' }),
+                    boxShadow: isCurrentDay ? '0 2px 8px rgba(159,86,68,0.2)' : 'none',
+                    ...(index === DAYS.length - 1 && { borderBottomLeftRadius: '16px' }),
                   }}
                 >
                   <div style={{ fontSize: '15px', marginBottom: '4px' }}>
@@ -213,7 +210,7 @@ export function MealGrid({ meals, loading, selectedWeek = 'w1', onMealUpdate, on
                     textAlign: 'center',
                     borderTop: '2px solid white',
                     borderLeft: '2px solid white',
-                    ...(index === DAYS.length - 1 && { borderBottomRightRadius: '12px' }),
+                    ...(index === DAYS.length - 1 && { borderBottomRightRadius: '16px' }),
                   }}
                 >
                   <button

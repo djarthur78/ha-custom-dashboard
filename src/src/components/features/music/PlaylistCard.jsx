@@ -29,8 +29,9 @@ export function PlaylistCard({ item, onPlay, onBrowse }) {
 
   return (
     <div
-      className="bg-white rounded-lg border border-[#e0e0e0] overflow-hidden cursor-pointer
-                 hover:border-[#bbb] active:scale-[0.98] transition-all group"
+      className="ds-card overflow-hidden cursor-pointer
+                 hover:shadow-md active:scale-[0.98] transition-all group"
+      style={{ padding: 0 }}
       onClick={handleClick}
     >
       {/* Thumbnail */}

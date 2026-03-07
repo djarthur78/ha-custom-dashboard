@@ -646,9 +646,10 @@ export function HealthDashboard() {
       minHeight: 0,
     }}>
       {/* === ROW 1: SCORE RINGS === */}
-      <div className="rounded-xl flex items-center justify-between px-6 py-3" style={{
-        backgroundColor: 'var(--color-surface)',
-        border: '1px solid rgba(0,0,0,0.06)',
+      <div className="rounded-2xl flex items-center justify-between px-6 py-3" style={{
+        backgroundColor: 'var(--ds-card)',
+        border: '1px solid var(--ds-border)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}>
         <div className="flex items-center gap-10">
           <ScoreRing entityId={OURA_SCORES.sleep} label="Sleep" size={88} strokeWidth={8} />
@@ -684,9 +685,10 @@ export function HealthDashboard() {
         overflow: 'hidden',
       }}>
         {/* SLEEP COLUMN */}
-        <div className="rounded-xl p-4 flex flex-col gap-3" style={{
-          backgroundColor: 'var(--color-surface)',
-          border: '1px solid rgba(0,0,0,0.06)',
+        <div className="rounded-2xl p-4 flex flex-col gap-3" style={{
+          backgroundColor: 'var(--ds-card)',
+          border: '1px solid var(--ds-border)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           minHeight: 0,
           overflow: 'hidden',
         }}>
@@ -720,9 +722,10 @@ export function HealthDashboard() {
         </div>
 
         {/* HEART & BODY COLUMN */}
-        <div className="rounded-xl p-4 flex flex-col gap-3" style={{
-          backgroundColor: 'var(--color-surface)',
-          border: '1px solid rgba(0,0,0,0.06)',
+        <div className="rounded-2xl p-4 flex flex-col gap-3" style={{
+          backgroundColor: 'var(--ds-card)',
+          border: '1px solid var(--ds-border)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           minHeight: 0,
           overflow: 'hidden',
         }}>
@@ -749,9 +752,10 @@ export function HealthDashboard() {
         </div>
 
         {/* ACTIVITY COLUMN */}
-        <div className="rounded-xl p-4 flex flex-col gap-3" style={{
-          backgroundColor: 'var(--color-surface)',
-          border: '1px solid rgba(0,0,0,0.06)',
+        <div className="rounded-2xl p-4 flex flex-col gap-3" style={{
+          backgroundColor: 'var(--ds-card)',
+          border: '1px solid var(--ds-border)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           minHeight: 0,
           overflow: 'hidden',
         }}>
@@ -782,9 +786,10 @@ export function HealthDashboard() {
         minHeight: 0,
       }}>
         {/* STRESS & RECOVERY */}
-        <div className="rounded-xl p-3 flex flex-col" style={{
-          backgroundColor: 'var(--color-surface)',
-          border: '1px solid rgba(0,0,0,0.06)',
+        <div className="rounded-2xl p-3 flex flex-col" style={{
+          backgroundColor: 'var(--ds-card)',
+          border: '1px solid var(--ds-border)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         }}>
           <SectionLabel icon={Shield}>Stress & Recovery</SectionLabel>
           <div className="flex-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', alignContent: 'stretch' }}>
@@ -804,9 +809,10 @@ export function HealthDashboard() {
         </div>
 
         {/* COLD PLUNGE */}
-        <div className="rounded-xl p-3" style={{
-          backgroundColor: 'var(--color-surface)',
-          border: '1px solid rgba(0,0,0,0.06)',
+        <div className="rounded-2xl p-3" style={{
+          backgroundColor: 'var(--ds-card)',
+          border: '1px solid var(--ds-border)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         }}>
           <ColdPlungeControls />
         </div>

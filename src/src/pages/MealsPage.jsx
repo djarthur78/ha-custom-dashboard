@@ -108,7 +108,7 @@ export function MealsPage() {
         </div>
 
         {/* Meal Grid */}
-        <div className="bg-white rounded-lg border border-[#e0e0e0] overflow-hidden">
+        <div className="ds-card overflow-hidden" style={{ padding: 0 }}>
           <MealGrid
             meals={meals}
             loading={loading}
@@ -119,7 +119,7 @@ export function MealsPage() {
         </div>
 
         {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-sm">
+        <div className="ds-card text-sm" style={{ backgroundColor: 'var(--ds-tint-meals)', color: 'var(--ds-text)' }}>
           <strong>Tip:</strong> Tap any cell to edit. Press Enter to save, or Escape to cancel. Changes save automatically when you tap outside the cell.
         </div>
       </div>

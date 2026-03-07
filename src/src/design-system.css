@@ -1,0 +1,86 @@
+/*
+ * Design System: "Warm Earthy Dashboard"
+ * Inspired by Khoa JAK "Teaching LMS - Classroom Management Dashboard"
+ * Warm, earthy, soft, approachable. Perfect for a kitchen wall panel.
+ *
+ * Usage: Import in index.css. Use .ds-card, .ds-btn, .ds-btn-secondary classes
+ * and var(--ds-*) tokens throughout the app.
+ */
+
+:root {
+  /* Core palette */
+  --ds-bg: #ededf1;
+  --ds-card: #ffffff;
+  --ds-sidebar: #2c2e2e;
+  --ds-accent: #9f5644;
+  --ds-accent-hover: #8a4839;
+  --ds-accent-secondary: #b08a62;
+  --ds-text: #2c2e2e;
+  --ds-text-secondary: #9aa1a8;
+  --ds-text-on-dark: #ffffff;
+  --ds-border: #e2e2e6;
+
+  /* Feature tints — very light background washes */
+  --ds-tint-calendar: #eef4ff;
+  --ds-tint-meals: #eef7ee;
+  --ds-tint-games: #f3eeff;
+  --ds-tint-music: #feeef4;
+  --ds-tint-people: #eeeeff;
+  --ds-tint-health: #fef0f0;
+  --ds-tint-cameras: #fef2f0;
+}
+
+/* ─── Card ─── */
+.ds-card {
+  background: var(--ds-card);
+  border-radius: 16px;
+  border: 1px solid var(--ds-border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  padding: 20px;
+}
+
+/* ─── Buttons ─── */
+.ds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
+  background: var(--ds-accent);
+  color: var(--ds-text-on-dark);
+}
+
+.ds-btn:hover {
+  background: var(--ds-accent-hover);
+}
+
+.ds-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ds-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ds-accent);
+  border: 1px solid var(--ds-accent);
+}
+
+.ds-btn-secondary:hover {
+  background: rgba(159, 86, 68, 0.06);
+}

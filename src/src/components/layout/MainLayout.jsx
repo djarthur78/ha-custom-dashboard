@@ -41,12 +41,12 @@ export function MainLayout() {
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
-      {/* Compact Blue Header */}
+      {/* Dark Charcoal Header */}
       <header
         className="sticky top-0 z-50"
         style={{
-          backgroundColor: 'var(--color-primary)',
-          borderBottom: '1px solid rgba(0,0,0,0.1)'
+          backgroundColor: '#2c2e2e',
+          borderBottom: '1px solid rgba(255,255,255,0.06)'
         }}
       >
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
@@ -59,21 +59,20 @@ export function MainLayout() {
                 to={to}
                 title={label}
                 className={({ isActive }) =>
-                  `flex items-center justify-center p-3 rounded-lg transition-colors ${
+                  `flex items-center justify-center px-3 py-2 rounded-full transition-colors ${
                     isActive
-                      ? 'bg-white/20'
-                      : 'hover:bg-white/10'
+                      ? 'bg-[#9f5644] text-white'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white'
                   }`
                 }
-                style={{ color: 'white' }}
               >
-                <Icon size={28} />
+                <Icon size={24} />
               </NavLink>
             ))}
           </nav>
 
           {/* Center-Left: Compact Date, Time, Weather */}
-          <div className="flex items-center gap-3 text-white text-xl">
+          <div className="flex items-center gap-3 text-white/90 text-xl">
             <span className="font-medium">
               Arthur Family
             </span>
@@ -89,7 +88,7 @@ export function MainLayout() {
           </div>
 
           {/* Right: Connected Status */}
-          <div className="flex items-center gap-2 text-white text-sm font-medium">
+          <div className="flex items-center gap-2 text-white/70 text-sm font-medium">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
             <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
           </div>
@@ -100,7 +99,7 @@ export function MainLayout() {
       <main className={isFullViewport ? '' : 'mx-auto px-4 py-6'}>
         <Suspense fallback={
           <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 56px)' }}>
-            <div className="w-8 h-8 border-3 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-3 rounded-full animate-spin" style={{ borderColor: '#e2e2e6', borderTopColor: '#9f5644' }} />
           </div>
         }>
           <Outlet context={{ alertMode, dismissAlert }} />
@@ -109,8 +108,8 @@ export function MainLayout() {
 
       {/* Footer - hide on full viewport pages */}
       {!isFullViewport && (
-        <footer className="bg-[var(--color-surface)] border-t border-[var(--color-border)] mt-12">
-          <div className="container mx-auto px-4 py-4 text-center text-sm text-[var(--color-text-secondary)]">
+        <footer className="mt-12" style={{ borderTop: '1px solid var(--ds-border)' }}>
+          <div className="container mx-auto px-4 py-4 text-center text-sm" style={{ color: 'var(--ds-text-secondary)' }}>
             Family Dashboard - Built with React + Home Assistant
           </div>
         </footer>

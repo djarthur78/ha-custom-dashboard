@@ -1,18 +1,19 @@
 @import "tailwindcss";
+@import "./design-system.css";
 
 /* Light theme variables matching Home Assistant */
 @theme {
-  --color-background: #fafafa;
+  --color-background: #ededf1;
   --color-surface: #ffffff;
   --color-surface-variant: #f5f5f5;
-  --color-primary: #03a9f4;
-  --color-primary-dark: #0288d1;
-  --color-text: #111111;
-  --color-text-secondary: #666666;
+  --color-primary: #9f5644;
+  --color-primary-dark: #8a4839;
+  --color-text: #2c2e2e;
+  --color-text-secondary: #9aa1a8;
   --color-error: #f44336;
   --color-warning: #ff9800;
   --color-success: #4caf50;
-  --color-border: #e0e0e0;
+  --color-border: #e2e2e6;
 }
 
 /* Base styles */
