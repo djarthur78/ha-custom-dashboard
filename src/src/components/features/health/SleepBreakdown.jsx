@@ -6,10 +6,10 @@
 import { useEntity } from '../../../hooks/useEntity';
 
 const STAGES = [
-  { key: 'deep', label: 'Deep', color: '#7b6b8a', gradient: 'linear-gradient(135deg, #7b6b8a, #6b5b7a)' },
-  { key: 'light', label: 'Light', color: '#8a8380', gradient: 'linear-gradient(135deg, #8a8380, #7a7370)' },
-  { key: 'rem', label: 'REM', color: '#6b8a9a', gradient: 'linear-gradient(135deg, #6b8a9a, #5b7a8a)' },
-  { key: 'awake', label: 'Awake', color: '#b08a62', gradient: 'linear-gradient(135deg, #b08a62, #9a7a52)' },
+  { key: 'deep', label: 'Deep', color: '#7a5aaa', gradient: 'linear-gradient(135deg, #7a5aaa, #6a4a9a)' },
+  { key: 'light', label: 'Light', color: '#8a9a8a', gradient: 'linear-gradient(135deg, #8a9a8a, #7a8a7a)' },
+  { key: 'rem', label: 'REM', color: '#5a8fb8', gradient: 'linear-gradient(135deg, #5a8fb8, #4a7fa8)' },
+  { key: 'awake', label: 'Awake', color: '#d4944c', gradient: 'linear-gradient(135deg, #d4944c, #c4843c)' },
 ];
 
 function formatHours(val) {

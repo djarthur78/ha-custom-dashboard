@@ -7,9 +7,9 @@ import { useEntity } from '../../../hooks/useEntity';
 import { getScoreColor } from './healthConfig';
 
 const RING_GRADIENTS = {
-  high: { start: '#6b8a6b', end: '#5a7a5a' },
-  medium: { start: '#b08a62', end: '#9a7a52' },
-  low: { start: '#9a6b6b', end: '#8a5b5b' },
+  high: { start: '#4a9a4a', end: '#3a8a3a' },
+  medium: { start: '#d4944c', end: '#c4843c' },
+  low: { start: '#c4636a', end: '#b4535a' },
   unknown: { start: '#9ca3af', end: '#6b7280' },
 };
 

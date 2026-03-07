@@ -92,9 +92,9 @@ export const ALL_OURA_ENTITIES = [
 ];
 
 export const SCORE_COLORS = {
-  high: '#6b8a6b',    // sage - 80+
-  medium: '#b08a62',  // bronze - 60-79
-  low: '#9a6b6b',     // muted rose - below 60
+  high: '#4a9a4a',    // brighter green - 80+
+  medium: '#d4944c',  // brighter amber - 60-79
+  low: '#c4636a',     // brighter coral - below 60
 };
 
 export function getScoreColor(score) {

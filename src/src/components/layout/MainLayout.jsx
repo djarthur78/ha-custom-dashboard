@@ -5,7 +5,7 @@
 
 import { Suspense } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { Calendar, Utensils, Gamepad2, Camera, Home, Music, Users, Heart } from 'lucide-react';
+import { Calendar, Utensils, Gamepad2, Camera, Home, Music, Users, Heart, Snowflake } from 'lucide-react';
 import { useWeather } from '../../hooks/useWeather';
 import { useHAConnection } from '../../hooks/useHAConnection';
 import { getWeatherIcon } from '../../utils/weather';
@@ -24,6 +24,7 @@ const navItems = [
   { to: '/people', icon: Users, label: 'People' },
   { to: '/health', icon: Heart, label: 'Health' },
   { to: '/cameras', icon: Camera, label: 'Cameras' },
+  { to: '/cold-plunge', icon: Snowflake, label: 'Cold Plunge' },
 ];
 
 export function MainLayout() {
@@ -37,7 +38,7 @@ export function MainLayout() {
   useInactivityTimer(300000, '/calendar');
 
   // Camera, Games Room, Music, and People pages need full viewport - no padding/footer
-  const isFullViewport = ['/cameras', '/games-room', '/music', '/people'].includes(location.pathname);
+  const isFullViewport = ['/cameras', '/games-room', '/music', '/people', '/cold-plunge', '/health'].includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
@@ -59,7 +60,7 @@ export function MainLayout() {
                 to={to}
                 title={label}
                 className={({ isActive }) =>
-                  `flex flex-col items-center justify-center gap-1 px-3 py-1.5 rounded-full transition-colors ${
+                  `flex flex-col items-center justify-center gap-1 px-2.5 py-1.5 rounded-full transition-colors ${
                     isActive
                       ? 'bg-[#9f5644] text-white'
                       : 'text-white/70 hover:bg-white/10 hover:text-white'

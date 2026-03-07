@@ -99,30 +99,33 @@ export function SpeakerPanel({
       </div>
 
       {/* Preset Groups */}
-      <div className="p-3 border-t border-[var(--color-border)] flex-shrink-0 space-y-3">
+      <div className="p-3 border-t border-[var(--color-border)] flex-shrink-0 space-y-2">
         <div className="text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
           Quick Groups
         </div>
-        {PRESET_GROUPS.map((preset) => (
-          <button
-            key={preset.id}
-            onClick={() => groupControls.groupSpeakers(preset.members[0], preset.members)}
-            disabled={groupControls.groupLoading}
-            className="w-full flex flex-col items-center justify-center gap-1.5 py-3.5 px-4 text-sm font-semibold
-                       text-white rounded-2xl disabled:opacity-40 disabled:cursor-not-allowed
-                       transition-all"
-            style={{
-              backgroundColor: '#9f5644',
-            }}
-          >
-            <span>{preset.label}</span>
-            <span className="text-xs font-normal opacity-90">{preset.description}</span>
-          </button>
-        ))}
+        {PRESET_GROUPS.map((preset, idx) => {
+          const presetColors = ['#7ba89e', '#9b86a8'];
+          const bgColor = presetColors[idx] || '#9f5644';
+          const borderColor = idx === 0 ? '#5f8f85' : idx === 1 ? '#7d6a8c' : '#8a4839';
+          return (
+            <button
+              key={preset.id}
+              onClick={() => groupControls.groupSpeakers(preset.members[0], preset.members)}
+              disabled={groupControls.groupLoading}
+              className="w-full flex flex-col items-center justify-center gap-1.5 py-3 px-4 text-sm font-semibold
+                         text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed
+                         transition-all"
+              style={{
+                backgroundColor: bgColor,
+                border: `2px solid ${borderColor}`,
+              }}
+            >
+              <span>{preset.label}</span>
+              <span className="text-xs font-normal opacity-90">{preset.description}</span>
+            </button>
+          );
+        })}
       </div>
-
-      {/* Divider */}
-      <div className="border-t border-[var(--color-border)]" />
 
       {/* Manual Grouping Controls */}
       <div className="p-3 border-t border-[var(--color-border)] flex-shrink-0 space-y-2">
@@ -131,10 +134,10 @@ export function SpeakerPanel({
           onClick={handleGroupSelected}
           disabled={checkedSpeakers.size < 2 || groupControls.groupLoading}
           className="w-full flex items-center justify-center gap-2 py-2.5 px-3 text-sm font-medium
-                     text-white rounded-2xl
+                     text-white rounded-xl
                      disabled:opacity-40 disabled:cursor-not-allowed
                      hover:opacity-90 transition-opacity"
-          style={{ backgroundColor: '#9f5644' }}
+          style={{ backgroundColor: '#9f5644', border: '1px solid #8a4839' }}
         >
           <Link2 size={14} />
           Group Selected ({checkedSpeakers.size})
@@ -146,10 +149,10 @@ export function SpeakerPanel({
             onClick={handlePlayEverywhere}
             disabled={!activeSpeakerId || groupControls.groupLoading}
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs font-medium
-                       text-white rounded-2xl
+                       text-white rounded-xl
                        disabled:opacity-40 disabled:cursor-not-allowed
                        hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: '#b08a62' }}
+            style={{ backgroundColor: '#7ba89e', border: '1px solid #5f8f85' }}
           >
             <PlayCircle size={14} />
             Everywhere
@@ -158,10 +161,10 @@ export function SpeakerPanel({
             onClick={() => groupControls.ungroupAll(speakers)}
             disabled={groupControls.groupLoading}
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs font-medium
-                       text-white rounded-2xl
+                       text-white rounded-xl
                        disabled:opacity-40 disabled:cursor-not-allowed
                        hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: '#2c2e2e' }}
+            style={{ backgroundColor: '#6b7280', border: '1px solid #565c66' }}
           >
             <Unlink size={14} />
             Ungroup All

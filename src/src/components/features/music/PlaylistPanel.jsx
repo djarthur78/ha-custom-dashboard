@@ -8,8 +8,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Music, ChevronLeft, ListMusic, Library, RefreshCw, SkipForward } from 'lucide-react';
-import { PlaylistCard } from './PlaylistCard';
+import { Music, ChevronLeft, ListMusic, Library, RefreshCw, SkipForward, Play, FolderOpen } from 'lucide-react';
 import { useBrowseMedia } from './hooks/useBrowseMedia';
 import { SPOTIFY_ACCOUNTS } from './musicConfig';
 import haWebSocket from '../../../services/ha-websocket';
@@ -182,10 +181,10 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                   </button>
                 </div>
 
-                {/* Playlist grid */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* Playlist list */}
+                <div className="flex flex-col gap-2">
                   {items.map((item, idx) => (
-                    <PlaylistCard
+                    <PlaylistListItem
                       key={item.media_content_id || idx}
                       item={item}
                       onPlay={handlePlayPlaylist}
@@ -214,6 +213,60 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * PlaylistListItem - horizontal row format for playlist items
+ */
+function PlaylistListItem({ item, onPlay, onBrowse }) {
+  const [imageError, setImageError] = useState(false);
+
+  const handleClick = () => {
+    if (item.can_play) {
+      onPlay(item.media_content_id, item.media_content_type);
+    } else if (onBrowse) {
+      onBrowse(item);
+    }
+  };
+
+  return (
+    <div
+      className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+      onClick={handleClick}
+    >
+      {/* Thumbnail */}
+      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+        {item.thumbnail && !imageError ? (
+          <img
+            src={item.thumbnail}
+            alt={item.title}
+            className="w-full h-full object-cover"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            {item.can_play ? (
+              <Music size={18} className="text-gray-400" />
+            ) : (
+              <FolderOpen size={18} className="text-gray-400" />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Title */}
+      <span className="text-sm font-medium text-[var(--color-text)] flex-1 truncate">
+        {item.title}
+      </span>
+
+      {/* Play button */}
+      {item.can_play && (
+        <div className="p-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'rgba(159,86,68,0.1)' }}>
+          <Play size={14} fill="var(--ds-accent)" style={{ color: 'var(--ds-accent)' }} />
+        </div>
+      )}
     </div>
   );
 }

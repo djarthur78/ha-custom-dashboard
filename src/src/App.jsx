@@ -16,6 +16,7 @@ const CamerasPage = lazy(() => import('./pages/CamerasPage'));
 const MusicPage = lazy(() => import('./pages/MusicPage'));
 const PeoplePage = lazy(() => import('./pages/PeoplePage'));
 const HealthPage = lazy(() => import('./pages/HealthPage'));
+const ColdPlungePage = lazy(() => import('./pages/ColdPlungePage'));
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="cameras" element={<CamerasPage />} />
         <Route path="music" element={<MusicPage />} />
         <Route path="health" element={<HealthPage />} />
+        <Route path="cold-plunge" element={<ColdPlungePage />} />
       </Route>
     </Routes>
   );

@@ -82,26 +82,54 @@ function MapBoundsUpdater({ people, selectedPersonId }) {
       }
     }
 
-    // Otherwise, fit all markers
-    const bounds = [];
-
-    // Add people positions
+    // Otherwise, fit all markers with smart centering
+    const peopleBounds = [];
     people.forEach(person => {
       if (person.latitude && person.longitude) {
-        bounds.push([person.latitude, person.longitude]);
+        peopleBounds.push([person.latitude, person.longitude]);
       }
     });
 
-    // Add zone centers
-    ZONES.forEach(zone => {
-      bounds.push([zone.latitude, zone.longitude]);
-    });
+    if (peopleBounds.length === 0) {
+      // No people with coords - just show zones
+      const zoneBounds = ZONES.map(z => [z.latitude, z.longitude]);
+      if (zoneBounds.length > 0) {
+        map.fitBounds(zoneBounds, { padding: MAP_FIT_PADDING, maxZoom: 16 });
+      }
+      return;
+    }
 
-    if (bounds.length > 0) {
-      map.fitBounds(bounds, {
-        padding: MAP_FIT_PADDING,
-        maxZoom: 16
-      });
+    // Calculate spread in km
+    let maxSpreadKm = 0;
+    if (peopleBounds.length > 1) {
+      for (let i = 0; i < peopleBounds.length; i++) {
+        for (let j = i + 1; j < peopleBounds.length; j++) {
+          const R = 6371; // Earth radius in km
+          const dLat = (peopleBounds[j][0] - peopleBounds[i][0]) * Math.PI / 180;
+          const dLon = (peopleBounds[j][1] - peopleBounds[i][1]) * Math.PI / 180;
+          const a = Math.sin(dLat/2) ** 2 + Math.cos(peopleBounds[i][0] * Math.PI / 180)
+            * Math.cos(peopleBounds[j][0] * Math.PI / 180) * Math.sin(dLon/2) ** 2;
+          const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          if (dist > maxSpreadKm) maxSpreadKm = dist;
+        }
+      }
+    }
+
+    // Calculate centroid
+    const centroid = peopleBounds.reduce(
+      (acc, [lat, lon]) => [acc[0] + lat / peopleBounds.length, acc[1] + lon / peopleBounds.length],
+      [0, 0]
+    );
+
+    if (peopleBounds.length === 1 || maxSpreadKm < 1) {
+      // All people within 1km: center on midpoint, zoom 15
+      map.setView(centroid, 15, { animate: true, duration: 0.5 });
+    } else if (maxSpreadKm > 50) {
+      // Very spread: fitBounds with generous padding
+      map.fitBounds(peopleBounds, { padding: [80, 80], maxZoom: 16 });
+    } else {
+      // Moderate spread: fitBounds with padding
+      map.fitBounds(peopleBounds, { padding: [60, 60], maxZoom: 16 });
     }
   }, [people, selectedPersonId, map]);
 

@@ -1,4 +1,4 @@
-import { Footprints, Wifi, Moon, MapPin, Signal, Car, User, Zap, Timer } from 'lucide-react';
+import { Footprints, Wifi, Moon, MapPin, Signal, Car, User, Zap, Timer, Home as HomeIcon } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { AvatarPhoto } from './AvatarPhoto';
 import { ZoneBadge } from './ZoneBadge';
@@ -107,11 +107,12 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
 
   return (
     <div
-      className={`bg-[var(--color-surface)] rounded-lg p-3 cursor-pointer transition-all relative ${
-        isSelected ? 'ring-2 ring-[var(--color-primary)]' : 'hover:bg-[var(--color-surface)]/80'
+      className={`ds-card cursor-pointer transition-all relative ${
+        isSelected ? 'ring-2 ring-[var(--color-primary)]' : ''
       } ${isLowBattery ? 'ring-2 ring-red-500' : ''}`}
       style={{
-        borderLeft: `4px solid ${person.color}`
+        borderLeft: `4px solid ${person.color}`,
+        padding: '12px',
       }}
       onClick={handleClick}
     >
@@ -125,14 +126,14 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
         </div>
       )}
 
-      {/* Header: Avatar + Name + Zone */}
-      <div className="flex items-center gap-2 mb-2">
+      {/* Header: Avatar + Name + Location */}
+      <div className="flex items-center gap-3 mb-2">
         <div className="relative">
           <AvatarPhoto
             entityPicture={person.entityPicture}
             fallbackInitial={person.avatarFallback}
             color={person.color}
-            size={48}
+            size={56}
           />
           {isCharging && (
             <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5">
@@ -141,19 +142,31 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-semibold text-[var(--color-text)] mb-0.5">{person.label}</h3>
-          <ZoneBadge zone={person.state} />
+          <h3 className="text-lg font-semibold text-[var(--color-text)] mb-0.5">{person.label}</h3>
+          {/* Location - prominent display */}
+          {person.state === 'home' ? (
+            <div className="flex items-center gap-1.5 text-green-600">
+              <HomeIcon size={16} />
+              <span className="text-base font-medium">Home</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
+              <MapPin size={16} />
+              <span className="text-base font-medium truncate">
+                {person.geocodedLocation || person.state || 'Away'}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Battery */}
+      {/* Battery - compact */}
       <div className="mb-2">
         <BatteryIndicator level={person.batteryLevel} state={person.batteryState} />
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-1.5 text-xs text-[var(--color-text-secondary)] mb-2">
-        {/* Steps */}
+      <div className="grid grid-cols-2 gap-2 text-xs text-[var(--color-text-secondary)]">
         {person.steps !== null && person.steps !== undefined && (
           <div className="flex items-center gap-1">
             <Footprints size={12} />
@@ -161,15 +174,13 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
           </div>
         )}
 
-        {/* Distance traveled */}
-        {person.distance && (
-          <div className="flex items-center gap-1">
+        {distanceFromHome && (
+          <div className="flex items-center gap-1 text-amber-500">
             <MapPin size={12} />
-            <span>{person.distance}</span>
+            <span>{distanceFromHome}</span>
           </div>
         )}
 
-        {/* Activity status */}
         {person.activity && (
           <div className="flex items-center gap-1">
             {person.activity.toLowerCase() === 'automotive' ? <Car size={12} /> : <User size={12} />}
@@ -177,31 +188,13 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
           </div>
         )}
 
-        {/* Connection type */}
-        {person.connectionType && (
-          <div className="flex items-center gap-1">
-            <Signal size={12} />
-            <span>{person.connectionType}</span>
-          </div>
-        )}
-
-        {/* Home WiFi indicator */}
         {isHomeWifi && (
-          <div className="flex items-center gap-1 text-green-400">
+          <div className="flex items-center gap-1 text-green-500">
             <Wifi size={12} />
             <span>Home WiFi</span>
           </div>
         )}
 
-        {/* Focus mode */}
-        {person.focus && (
-          <div className="flex items-center gap-1 text-purple-400">
-            <Moon size={12} />
-            <span>Focus</span>
-          </div>
-        )}
-
-        {/* Time at location */}
         {timeAtLocation && (
           <div className="flex items-center gap-1">
             <Timer size={12} />
@@ -209,25 +202,17 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
           </div>
         )}
 
-        {/* Distance from home */}
-        {distanceFromHome && (
-          <div className="flex items-center gap-1 text-amber-400">
-            <MapPin size={12} />
-            <span>{distanceFromHome}</span>
+        {person.focus && (
+          <div className="flex items-center gap-1 text-purple-500">
+            <Moon size={12} />
+            <span>Focus</span>
           </div>
         )}
       </div>
 
-      {/* Geocoded Location (when away) */}
-      {showGeocodedLocation && (
-        <div className="text-xs text-[var(--color-text-secondary)] mb-1 truncate">
-          📍 {person.geocodedLocation}
-        </div>
-      )}
-
       {/* Last Changed */}
       {lastChangedText && (
-        <div className="text-xs text-[var(--color-text-secondary)] opacity-70">
+        <div className="text-xs text-[var(--color-text-secondary)] opacity-70 mt-1.5">
           Updated {lastChangedText}
         </div>
       )}

@@ -186,13 +186,13 @@ export function NowPlayingPanel({ speaker, controls }) {
           {supports(SUPPORT_SHUFFLE_SET) && (
             <button
               onClick={() => controls.setShuffle(speaker.entityId, !speaker.shuffle)}
-              className={`p-2 rounded-full transition-colors ${
+              className={`p-3 rounded-full transition-colors ${
                 speaker.shuffle
                   ? 'text-[var(--ds-accent)] bg-[rgba(159,86,68,0.08)]'
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <Shuffle size={18} />
+              <Shuffle size={22} />
             </button>
           )}
 
@@ -200,9 +200,9 @@ export function NowPlayingPanel({ speaker, controls }) {
           {supports(SUPPORT_PREVIOUS_TRACK) && (
             <button
               onClick={() => controls.previous(speaker.entityId)}
-              className="p-3 rounded-full hover:bg-gray-100 transition-colors"
+              className="p-4 rounded-full hover:bg-gray-100 transition-colors"
             >
-              <SkipBack size={24} className="text-[var(--color-text)]" />
+              <SkipBack size={28} className="text-[var(--color-text)]" />
             </button>
           )}
 
@@ -210,12 +210,12 @@ export function NowPlayingPanel({ speaker, controls }) {
           {(supports(SUPPORT_PLAY) || supports(SUPPORT_PAUSE)) && (
             <button
               onClick={() => controls.playPause(speaker.entityId)}
-              className="p-4 rounded-full bg-[var(--ds-accent)] text-white hover:opacity-90 transition-opacity"
+              className="p-5 rounded-full bg-[var(--ds-accent)] text-white hover:opacity-90 transition-opacity"
             >
               {isPlaying ? (
-                <Pause size={28} fill="currentColor" />
+                <Pause size={36} fill="currentColor" />
               ) : (
-                <Play size={28} fill="currentColor" />
+                <Play size={36} fill="currentColor" />
               )}
             </button>
           )}
@@ -224,9 +224,9 @@ export function NowPlayingPanel({ speaker, controls }) {
           {supports(SUPPORT_NEXT_TRACK) && (
             <button
               onClick={() => controls.next(speaker.entityId)}
-              className="p-3 rounded-full hover:bg-gray-100 transition-colors"
+              className="p-4 rounded-full hover:bg-gray-100 transition-colors"
             >
-              <SkipForward size={24} className="text-[var(--color-text)]" />
+              <SkipForward size={28} className="text-[var(--color-text)]" />
             </button>
           )}
 
@@ -238,13 +238,13 @@ export function NowPlayingPanel({ speaker, controls }) {
                   : speaker.repeat === 'all' ? 'one' : 'off';
                 controls.setRepeat(speaker.entityId, nextRepeat);
               }}
-              className={`p-2 rounded-full transition-colors ${
+              className={`p-3 rounded-full transition-colors ${
                 speaker.repeat !== 'off'
                   ? 'text-[var(--ds-accent)] bg-[rgba(159,86,68,0.08)]'
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
               }`}
             >
-              {speaker.repeat === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
+              {speaker.repeat === 'one' ? <Repeat1 size={22} /> : <Repeat size={22} />}
             </button>
           )}
         </div>
@@ -285,8 +285,8 @@ export function NowPlayingPanel({ speaker, controls }) {
                       }, VOLUME_DEBOUNCE_MS);
                     }}
                     className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
-                               [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4
-                               [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full
+                               [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5
+                               [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full
                                [&::-webkit-slider-thumb]:bg-[var(--ds-accent)]"
                   />
                   <span className="text-sm font-medium min-w-[3ch]" style={{ color: 'var(--ds-accent)' }}>

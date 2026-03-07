@@ -12,16 +12,16 @@ import { PowerGrid } from './PowerGrid';
 export function GamesRoomDashboard() {
   return (
     <div
-      className="flex flex-col gap-3 p-3"
+      className="flex gap-3 p-3"
       style={{ height: 'calc(100vh - 72px)' }}
     >
-      {/* Now Playing — hero, top 55% */}
-      <div className="flex-[55] min-h-0">
+      {/* Left: Now Playing — full height, 60% */}
+      <div className="flex-[60] min-h-0">
         <NowPlaying />
       </div>
 
-      {/* Controls — bottom 45%, 3 columns */}
-      <div className="flex-[45] min-h-0 grid grid-cols-[30fr_30fr_40fr] gap-3">
+      {/* Right: Controls stacked — 40% */}
+      <div className="flex-[40] flex flex-col gap-3 min-h-0">
         <SceneButtons />
         <ClimateCard />
         <PowerGrid />

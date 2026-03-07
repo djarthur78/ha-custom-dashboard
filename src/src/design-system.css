@@ -35,12 +35,12 @@
   --ds-warm-inactive-bg: #e8e4e1;
   --ds-warm-inactive-text: #8a8380;
 
-  /* Health muted palette */
-  --ds-health-good: #6b8a6b;
-  --ds-health-warn: #b08a62;
-  --ds-health-bad: #9a6b6b;
-  --ds-health-info: #6b8a9a;
-  --ds-health-accent: #7b6b8a;
+  /* Health brighter palette */
+  --ds-health-good: #4a9a4a;
+  --ds-health-warn: #d4944c;
+  --ds-health-bad: #c4636a;
+  --ds-health-info: #5a8fb8;
+  --ds-health-accent: #7a5aaa;
 
   /* Meal muted palette */
   --ds-meal-breakfast: #c4956b;

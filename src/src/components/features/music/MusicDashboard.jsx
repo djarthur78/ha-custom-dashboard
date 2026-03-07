@@ -28,13 +28,13 @@ export function MusicDashboard() {
 
   return (
     <div className="flex gap-3 p-3" style={{ height: 'calc(100vh - 72px)' }}>
-      {/* Left: Now Playing (40%) */}
-      <div className="flex-[40] min-h-0 min-w-0">
+      {/* Left: Now Playing (42%) */}
+      <div className="flex-[42] min-h-0 min-w-0">
         <NowPlayingPanel speaker={activeSpeaker} controls={controls} />
       </div>
 
-      {/* Center: Playlists / Queue (30%) */}
-      <div className="flex-[30] min-h-0 min-w-0">
+      {/* Center: Playlists / Queue (23%) */}
+      <div className="flex-[23] min-h-0 min-w-0">
         <PlaylistPanel
           activeSpeaker={activeSpeaker}
           onPlayMedia={controls.playMedia}
@@ -42,8 +42,8 @@ export function MusicDashboard() {
         />
       </div>
 
-      {/* Right: Speakers (30%) */}
-      <div className="flex-[30] min-h-0 min-w-0">
+      {/* Right: Speakers (35%) */}
+      <div className="flex-[35] min-h-0 min-w-0">
         <SpeakerPanel
           speakers={speakers}
           activeSpeakerId={activeSpeaker?.entityId}
