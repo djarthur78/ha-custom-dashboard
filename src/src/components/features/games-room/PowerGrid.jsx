@@ -35,13 +35,14 @@ export function PowerGrid() {
               key={device.id}
               onClick={() => handleToggle(device)}
               disabled={device.loading}
-              className={`flex flex-col items-center justify-center gap-2 rounded-lg p-2
+              className={`flex flex-col items-center justify-center gap-2 rounded-xl p-2
                         transition-all cursor-pointer border min-h-[80px]
-                        ${isOn
-                          ? 'bg-green-50 border-green-200 text-green-700'
-                          : 'bg-gray-50 border-gray-200 text-gray-400'
-                        }
                         hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{
+                backgroundColor: isOn ? '#9f5644' : '#e8e4e1',
+                color: isOn ? 'white' : '#8a8380',
+                borderColor: isOn ? '#9f5644' : '#d5d0cd',
+              }}
             >
               {/* Icon */}
               {Icon && <Icon size={24} />}
@@ -53,9 +54,8 @@ export function PowerGrid() {
 
               {/* Status indicator */}
               <div
-                className={`w-3 h-3 rounded-full ${
-                  isOn ? 'bg-green-500' : 'bg-gray-300'
-                }`}
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: isOn ? 'white' : '#b5b0ad' }}
               />
             </button>
           );

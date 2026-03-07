@@ -19,8 +19,8 @@ export function CameraGrid({ alertMode = false, onDismissAlert }) {
         style={{
           display: 'grid',
           gap: '4px',
-          height: 'calc(100vh - 56px)',
-          maxHeight: 'calc(100vh - 56px)',
+          height: 'calc(100vh - 72px)',
+          maxHeight: 'calc(100vh - 72px)',
           minHeight: 0, // Critical: allows grid to shrink below content size
           overflow: 'hidden',
           // Front door left 50%, Front R+L stacked right 50%, Back 5 bottom

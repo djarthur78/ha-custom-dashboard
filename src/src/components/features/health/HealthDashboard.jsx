@@ -65,7 +65,7 @@ function SectionLabel({ icon: Icon, children }) {
 /**
  * MiniGauge - small circular progress indicator
  */
-function MiniGauge({ value, max = 100, size = 44, color = '#3b82f6', label }) {
+function MiniGauge({ value, max = 100, size = 44, color = '#6b8a9a', label }) {
   const pct = Math.min((value / max) * 100, 100);
   const radius = (size - 6) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -105,27 +105,27 @@ function SleepTimeline() {
   const efficiency = bedHrs > 0 ? Math.round((sleepHrs / bedHrs) * 100) : 0;
 
   return (
-    <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(99, 102, 241, 0.04)', border: '1px solid rgba(99, 102, 241, 0.1)' }}>
+    <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(123, 107, 138, 0.04)', border: '1px solid rgba(123, 107, 138, 0.1)' }}>
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1">
-          <BedDouble size={10} className="text-indigo-400" />
+          <BedDouble size={10} style={{ color: '#7b6b8a' }} />
           <span className="text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase">Sleep Window</span>
         </div>
-        <span className="text-[10px] font-bold text-indigo-500">{efficiency}% efficient</span>
+        <span className="text-[10px] font-bold" style={{ color: '#7b6b8a' }}>{efficiency}% efficient</span>
       </div>
-      <div className="relative rounded-full overflow-hidden" style={{ height: 18, backgroundColor: 'rgba(99, 102, 241, 0.08)' }}>
+      <div className="relative rounded-full overflow-hidden" style={{ height: 18, backgroundColor: 'rgba(123, 107, 138, 0.08)' }}>
         <div className="absolute inset-y-0 left-0 rounded-full flex items-center justify-center"
           style={{
             width: bedHrs > 0 ? `${(sleepHrs / bedHrs) * 100}%` : '0%',
-            background: 'linear-gradient(90deg, #6366f1, #818cf8)',
+            background: 'linear-gradient(90deg, #7b6b8a, #8a7b9a)',
           }}>
           <span className="text-[9px] font-bold text-white">{formatHours(totalSleep.state)}</span>
         </div>
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[10px] font-bold text-indigo-500"><Moon size={9} className="inline mr-0.5" />{bedStr}</span>
+        <span className="text-[10px] font-bold" style={{ color: '#7b6b8a' }}><Moon size={9} className="inline mr-0.5" />{bedStr}</span>
         <span className="text-[10px] text-[var(--color-text-secondary)]">In bed: {formatHours(timeInBed.state)}</span>
-        <span className="text-[10px] font-bold text-amber-500"><AlarmClock size={9} className="inline mr-0.5" />{wakeStr}</span>
+        <span className="text-[10px] font-bold" style={{ color: '#b08a62' }}><AlarmClock size={9} className="inline mr-0.5" />{wakeStr}</span>
       </div>
     </div>
   );
@@ -141,10 +141,10 @@ function ReadinessFactors() {
   const recovery = useEntity(OURA_SLEEP.recovery_score);
 
   const factors = [
-    { label: 'Restfulness', value: parseInt(restfulness.state) || 0, color: '#6366f1' },
-    { label: 'RHR Score', value: parseInt(rhrScore.state) || 0, color: '#ef4444' },
-    { label: 'HRV Balance', value: parseInt(hrvBalance.state) || 0, color: '#8b5cf6' },
-    { label: 'Recovery', value: parseInt(recovery.state) || 0, color: '#22c55e' },
+    { label: 'Restfulness', value: parseInt(restfulness.state) || 0, color: '#7b6b8a' },
+    { label: 'RHR Score', value: parseInt(rhrScore.state) || 0, color: '#9a6b6b' },
+    { label: 'HRV Balance', value: parseInt(hrvBalance.state) || 0, color: '#6b8a9a' },
+    { label: 'Recovery', value: parseInt(recovery.state) || 0, color: '#6b8a6b' },
   ];
 
   return (
@@ -178,9 +178,9 @@ function SleepScores() {
   const restfulness = useEntity(OURA_SLEEP.restfulness);
 
   const items = [
-    { label: 'Regularity', value: parseInt(regularity.state) || 0, color: '#6366f1' },
-    { label: 'Timing', value: parseInt(timing.state) || 0, color: '#818cf8' },
-    { label: 'Restfulness', value: parseInt(restfulness.state) || 0, color: '#a5b4fc' },
+    { label: 'Regularity', value: parseInt(regularity.state) || 0, color: '#7b6b8a' },
+    { label: 'Timing', value: parseInt(timing.state) || 0, color: '#6b8a9a' },
+    { label: 'Restfulness', value: parseInt(restfulness.state) || 0, color: '#b08a62' },
   ];
 
   return (
@@ -211,29 +211,29 @@ function HeartRateRange() {
 
   return (
     <div className="rounded-lg p-3" style={{
-      backgroundColor: 'rgba(239, 68, 68, 0.04)',
-      border: '1px solid rgba(239, 68, 68, 0.1)',
+      backgroundColor: 'rgba(154, 107, 107, 0.04)',
+      border: '1px solid rgba(154, 107, 107, 0.1)',
     }}>
       <div className="text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-1.5">
         Today's HR Range
       </div>
-      <div className="relative rounded-full" style={{ height: 6, backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+      <div className="relative rounded-full" style={{ height: 6, backgroundColor: 'rgba(154, 107, 107, 0.1)' }}>
         <div className="absolute rounded-full"
-          style={{ height: 6, left: 0, right: 0, background: 'linear-gradient(90deg, #93c5fd, #ef4444, #dc2626)' }} />
+          style={{ height: 6, left: 0, right: 0, background: 'linear-gradient(90deg, #6b8a9a, #9a6b6b, #8a5b5b)' }} />
         <div className="absolute top-1/2 -translate-y-1/2"
           style={{
             left: `${curPct}%`, width: 12, height: 12, borderRadius: '50%',
-            backgroundColor: '#ef4444', border: '2px solid white',
-            boxShadow: '0 1px 4px rgba(239,68,68,0.4)',
+            backgroundColor: '#9a6b6b', border: '2px solid white',
+            boxShadow: '0 1px 4px rgba(154,107,107,0.4)',
             transform: 'translate(-50%, -50%)', marginTop: 3,
           }} />
       </div>
       <div className="flex justify-between mt-1.5">
-        <span className="text-[10px] font-bold" style={{ color: '#93c5fd' }}>
+        <span className="text-[10px] font-bold" style={{ color: '#6b8a9a' }}>
           <TrendingDown size={9} className="inline mr-0.5" />{minVal}
         </span>
-        <span className="text-[10px] font-bold" style={{ color: '#ef4444' }}>{curVal} bpm</span>
-        <span className="text-[10px] font-bold" style={{ color: '#dc2626' }}>
+        <span className="text-[10px] font-bold" style={{ color: '#9a6b6b' }}>{curVal} bpm</span>
+        <span className="text-[10px] font-bold" style={{ color: '#8a5b5b' }}>
           {maxVal}<TrendingUp size={9} className="inline ml-0.5" />
         </span>
       </div>
@@ -248,7 +248,7 @@ function SpO2Display() {
   const { state } = useEntity(OURA_BODY.spo2);
   const val = parseFloat(state);
   const isValid = !isNaN(val);
-  const color = isValid ? (val >= 95 ? '#22c55e' : val >= 90 ? '#f59e0b' : '#ef4444') : '#9ca3af';
+  const color = isValid ? (val >= 95 ? '#6b8a6b' : val >= 90 ? '#b08a62' : '#9a6b6b') : '#9ca3af';
 
   return (
     <div className="rounded-lg p-3" style={{ backgroundColor: `${color}08`, border: `1px solid ${color}15` }}>
@@ -277,7 +277,7 @@ function TempDeviation() {
   const isValid = !isNaN(val) && state !== 'unavailable';
   const isPositive = isValid && val > 0;
   const color = isValid
-    ? (Math.abs(val) <= 0.5 ? '#22c55e' : Math.abs(val) <= 1 ? '#f59e0b' : '#ef4444')
+    ? (Math.abs(val) <= 0.5 ? '#6b8a6b' : Math.abs(val) <= 1 ? '#b08a62' : '#9a6b6b')
     : '#9ca3af';
 
   const scalePct = isValid ? Math.max(0, Math.min(100, ((val + 1) / 2) * 100)) : 50;
@@ -324,7 +324,7 @@ function BreathingIndex() {
   const val = parseFloat(state);
   const isValid = !isNaN(val) && state !== 'unavailable';
   // Lower is better: 0-5 normal, 5-15 mild, 15-30 moderate, 30+ severe
-  const color = isValid ? (val <= 5 ? '#22c55e' : val <= 15 ? '#f59e0b' : '#ef4444') : '#9ca3af';
+  const color = isValid ? (val <= 5 ? '#6b8a6b' : val <= 15 ? '#b08a62' : '#9a6b6b') : '#9ca3af';
   const label = isValid ? (val <= 5 ? 'Normal' : val <= 15 ? 'Mild' : val <= 30 ? 'Moderate' : 'Elevated') : '--';
 
   return (
@@ -350,10 +350,10 @@ function HeartRateZones() {
   const current = useEntity(OURA_HEART.current);
 
   const zones = [
-    { label: 'Lowest', value: parseInt(lowest.state) || 0, color: '#22c55e' },
-    { label: 'Sleep Avg', value: parseInt(sleepHR.state) || 0, color: '#3b82f6' },
-    { label: 'Resting', value: parseInt(resting.state) || 0, color: '#f59e0b' },
-    { label: 'Current', value: parseInt(current.state) || 0, color: '#ef4444' },
+    { label: 'Lowest', value: parseInt(lowest.state) || 0, color: '#6b8a6b' },
+    { label: 'Sleep Avg', value: parseInt(sleepHR.state) || 0, color: '#6b8a9a' },
+    { label: 'Resting', value: parseInt(resting.state) || 0, color: '#b08a62' },
+    { label: 'Current', value: parseInt(current.state) || 0, color: '#9a6b6b' },
   ];
 
   const maxHR = Math.max(...zones.map(z => z.value), 1);
@@ -392,9 +392,9 @@ function ActivityBreakdown() {
   const low = useEntity(OURA_ACTIVITY.low_activity);
 
   const levels = [
-    { label: 'High', value: parseFloat(high.state) || 0, color: '#ef4444', icon: Zap },
-    { label: 'Med', value: parseFloat(medium.state) || 0, color: '#f59e0b', icon: Activity },
-    { label: 'Low', value: parseFloat(low.state) || 0, color: '#22c55e', icon: Footprints },
+    { label: 'High', value: parseFloat(high.state) || 0, color: '#9a6b6b', icon: Zap },
+    { label: 'Med', value: parseFloat(medium.state) || 0, color: '#b08a62', icon: Activity },
+    { label: 'Low', value: parseFloat(low.state) || 0, color: '#6b8a6b', icon: Footprints },
   ];
 
   const maxVal = Math.max(...levels.map(l => l.value), 1);
@@ -457,15 +457,15 @@ function CalorieBudget() {
   return (
     <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)' }}>
       <div className="flex items-center gap-1 mb-1.5">
-        <Flame size={10} className="text-orange-500" />
+        <Flame size={10} style={{ color: '#b08a62' }} />
         <span className="text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase">Calorie Budget</span>
       </div>
       <div className="flex items-center gap-3">
-        <MiniGauge value={activeVal} max={targetVal} size={58} color="#f59e0b" label="Goal" />
+        <MiniGauge value={activeVal} max={targetVal} size={58} color="#b08a62" label="Goal" />
         <div className="flex-1 space-y-1">
           <div className="flex justify-between">
             <span className="text-[9px] text-[var(--color-text-secondary)]">Active</span>
-            <span className="text-[10px] font-bold text-amber-500">{Math.round(activeVal)} kcal</span>
+            <span className="text-[10px] font-bold" style={{ color: '#b08a62' }}>{Math.round(activeVal)} kcal</span>
           </div>
           <div className="flex justify-between">
             <span className="text-[9px] text-[var(--color-text-secondary)]">Resting</span>
@@ -495,13 +495,13 @@ function StepGoalVisual() {
   const radius = (size - 8) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (pct / 100) * circumference;
-  const color = pct >= 100 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
+  const color = pct >= 100 ? '#6b8a6b' : pct >= 60 ? '#b08a62' : '#9a6b6b';
 
   return (
-    <div className="rounded-lg p-3 flex items-center gap-3" style={{ backgroundColor: 'rgba(34, 197, 94, 0.04)', border: '1px solid rgba(34, 197, 94, 0.1)' }}>
+    <div className="rounded-lg p-3 flex items-center gap-3" style={{ backgroundColor: 'rgba(107, 138, 107, 0.04)', border: '1px solid rgba(107, 138, 107, 0.1)' }}>
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="transform -rotate-90">
-          <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(34,197,94,0.1)" strokeWidth={6} />
+          <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(107,138,107,0.1)" strokeWidth={6} />
           <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth={6}
             strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
             className="transition-all duration-700" />
@@ -531,13 +531,13 @@ function StressBadge({ entityId, label }) {
   const val = state && state !== 'unavailable' && state !== 'unknown' ? state : null;
 
   const badgeColors = {
-    restored: { bg: '#22c55e20', text: '#16a34a', border: '#22c55e30' },
-    normal: { bg: '#3b82f620', text: '#2563eb', border: '#3b82f630' },
-    strained: { bg: '#f59e0b20', text: '#d97706', border: '#f59e0b30' },
-    stressed: { bg: '#ef444420', text: '#dc2626', border: '#ef444430' },
-    strong: { bg: '#22c55e20', text: '#16a34a', border: '#22c55e30' },
-    adequate: { bg: '#3b82f620', text: '#2563eb', border: '#3b82f630' },
-    limited: { bg: '#f59e0b20', text: '#d97706', border: '#f59e0b30' },
+    restored: { bg: '#6b8a6b20', text: '#5a7a5a', border: '#6b8a6b30' },
+    normal: { bg: '#6b8a9a20', text: '#5a7a8a', border: '#6b8a9a30' },
+    strained: { bg: '#b08a6220', text: '#9a7a52', border: '#b08a6230' },
+    stressed: { bg: '#9a6b6b20', text: '#8a5b5b', border: '#9a6b6b30' },
+    strong: { bg: '#6b8a6b20', text: '#5a7a5a', border: '#6b8a6b30' },
+    adequate: { bg: '#6b8a9a20', text: '#5a7a8a', border: '#6b8a9a30' },
+    limited: { bg: '#b08a6220', text: '#9a7a52', border: '#b08a6230' },
   };
 
   const colors = val ? (badgeColors[val.toLowerCase()] || badgeColors.normal) : { bg: '#9ca3af15', text: '#6b7280', border: '#9ca3af20' };
@@ -572,22 +572,22 @@ function StressRecoveryBar() {
       <div className="flex rounded-lg overflow-hidden" style={{ height: 20 }}>
         <div className="flex items-center justify-center" style={{
           width: `${(stressMin / total) * 100}%`,
-          backgroundColor: '#ef4444',
+          backgroundColor: '#9a6b6b',
           minWidth: stressMin > 0 ? 30 : 0,
         }}>
           {stressMin > 0 && <span className="text-[9px] font-bold text-white">{Math.round(stressMin)}m</span>}
         </div>
         <div className="flex items-center justify-center" style={{
           width: `${(recoveryMin / total) * 100}%`,
-          backgroundColor: '#22c55e',
+          backgroundColor: '#6b8a6b',
           minWidth: recoveryMin > 0 ? 30 : 0,
         }}>
           {recoveryMin > 0 && <span className="text-[9px] font-bold text-white">{Math.round(recoveryMin)}m</span>}
         </div>
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[9px] font-medium" style={{ color: '#ef4444' }}>Stress {Math.round(stressMin)}m</span>
-        <span className="text-[9px] font-medium" style={{ color: '#22c55e' }}>Recovery {Math.round(recoveryMin)}m</span>
+        <span className="text-[9px] font-medium" style={{ color: '#9a6b6b' }}>Stress {Math.round(stressMin)}m</span>
+        <span className="text-[9px] font-medium" style={{ color: '#6b8a6b' }}>Recovery {Math.round(recoveryMin)}m</span>
       </div>
     </div>
   );
@@ -599,7 +599,7 @@ function StressRecoveryBar() {
 function CaloriesWithYesterday() {
   const yesterday = useYesterdayValue(OURA_ACTIVITY.active_calories);
   return (
-    <ProgressMetric entityId={OURA_ACTIVITY.active_calories} label="Active Cal" goal={500} unit="kcal" color="#f59e0b"
+    <ProgressMetric entityId={OURA_ACTIVITY.active_calories} label="Active Cal" goal={500} unit="kcal" color="#b08a62"
       yesterday={yesterday ? formatNumber(yesterday) : null} />
   );
 }
@@ -731,8 +731,8 @@ export function HealthDashboard() {
         }}>
           <SectionLabel icon={Heart}>Heart & Body</SectionLabel>
           <div className="grid grid-cols-2 gap-2">
-            <HeroMetric entityId={OURA_HEART.current} label="Current" unit="bpm" color="#ef4444" icon={<Heart size={16} />} />
-            <HeroMetric entityId={OURA_HEART.avg_sleep_hrv} label="Sleep HRV" unit="ms" color="#8b5cf6" icon={<Activity size={16} />} />
+            <HeroMetric entityId={OURA_HEART.current} label="Current" unit="bpm" color="#9a6b6b" icon={<Heart size={16} />} />
+            <HeroMetric entityId={OURA_HEART.avg_sleep_hrv} label="Sleep HRV" unit="ms" color="#7b6b8a" icon={<Activity size={16} />} />
           </div>
           <HeartRateRange />
           <HeartRateZones />

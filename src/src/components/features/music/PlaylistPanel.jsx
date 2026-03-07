@@ -314,8 +314,8 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, onNextTrack }) {
       </h3>
 
       {/* Current track */}
-      <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg mb-3">
-        <div className="text-xs font-medium text-blue-700 uppercase tracking-wider mb-1">
+      <div className="p-3 rounded-lg mb-3" style={{ backgroundColor: 'rgba(159,86,68,0.06)', borderLeft: '4px solid #9f5644' }}>
+        <div className="text-xs font-medium uppercase tracking-wider mb-1" style={{ color: '#9f5644' }}>
           Now Playing
         </div>
         <div className="text-base font-semibold text-[var(--color-text)] mb-1">
@@ -404,8 +404,8 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, onNextTrack }) {
           {/* Progress bar */}
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              className="bg-blue-500 h-2 rounded-full transition-all"
-              style={{ width: `${progress}%` }}
+              className="h-2 rounded-full transition-all"
+              style={{ backgroundColor: '#9f5644', width: `${progress}%` }}
             />
           </div>
         </div>

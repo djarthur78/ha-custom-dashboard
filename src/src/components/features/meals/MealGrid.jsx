@@ -25,26 +25,26 @@ const MEAL_CONFIG = {
   breakfast: {
     label: 'Breakfast',
     icon: Coffee,
-    color: '#FF6B35',
-    bgColor: '#FFF5F2'
+    color: '#c4956b',
+    bgColor: '#fdf5ef'
   },
   lunch: {
     label: 'Lunch',
     icon: UtensilsCrossed,
-    color: '#4ECDC4',
-    bgColor: '#F0FFFE'
+    color: '#7ba89e',
+    bgColor: '#f0f5f4'
   },
   dinner: {
     label: 'Dinner',
     icon: Pizza,
-    color: '#9B59B6',
-    bgColor: '#F9F3FF'
+    color: '#9b86a8',
+    bgColor: '#f5f2f7'
   },
   cakes: {
     label: 'Cakes',
     icon: Cake,
-    color: '#E91E63',
-    bgColor: '#FFF0F5'
+    color: '#b8798e',
+    bgColor: '#f7f0f3'
   },
 };
 

@@ -39,7 +39,7 @@ export function PeopleDashboard() {
   }
 
   return (
-    <div className="flex gap-3 p-3" style={{ height: 'calc(100vh - 56px)' }}>
+    <div className="flex gap-3 p-3" style={{ height: 'calc(100vh - 72px)' }}>
       {/* Left Panel: Person Cards (25%) */}
       <div className="flex-[25] flex flex-col gap-2 overflow-hidden">
         {/* Summary Header */}
@@ -68,13 +68,13 @@ export function PeopleDashboard() {
           </div>
           <div className="flex items-center gap-3 mt-1.5 text-xs">
             <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#9f5644' }}></div>
               <span className="text-[var(--color-text-secondary)]">
                 {peopleAtHome} home
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#9a6b6b' }}></div>
               <span className="text-[var(--color-text-secondary)]">
                 {peopleAway} away
               </span>

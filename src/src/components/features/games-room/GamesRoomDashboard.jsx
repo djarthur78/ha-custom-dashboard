@@ -13,7 +13,7 @@ export function GamesRoomDashboard() {
   return (
     <div
       className="flex flex-col gap-3 p-3"
-      style={{ height: 'calc(100vh - 56px)' }}
+      style={{ height: 'calc(100vh - 72px)' }}
     >
       {/* Now Playing — hero, top 55% */}
       <div className="flex-[55] min-h-0">

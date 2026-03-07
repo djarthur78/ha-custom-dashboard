@@ -94,7 +94,7 @@ export function ProgressMetric({ entityId, label, goal, unit = '', color = '#3b8
 /**
  * HeroMetric - large featured metric display
  */
-export function HeroMetric({ entityId, label, unit = '', color = '#ef4444', icon = null, format = null }) {
+export function HeroMetric({ entityId, label, unit = '', color = '#9f5644', icon = null, format = null }) {
   const { state, loading } = useEntity(entityId);
   const displayValue = loading ? '--' : format ? format(state) : (state ?? '--');
 

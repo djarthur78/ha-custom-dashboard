@@ -73,7 +73,7 @@ export function ClimateCard() {
       {/* Current Temperature Display */}
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-1">
-          <ThermometerSun size={28} className="text-orange-500" />
+          <ThermometerSun size={28} style={{ color: '#9f5644' }} />
           <div className="text-5xl font-bold text-[var(--color-text)]">
             {currentTemp?.toFixed(1) || '--'}°C
           </div>
@@ -90,22 +90,22 @@ export function ClimateCard() {
         <button
           onClick={handleOn}
           disabled={loading || isOn}
-          className={`py-3 rounded-lg font-bold text-sm transition-all ${
-            isOn
-              ? 'bg-green-500 text-white shadow-lg'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          } disabled:opacity-50`}
+          className="py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
+          style={{
+            backgroundColor: isOn ? '#9f5644' : '#e8e4e1',
+            color: isOn ? 'white' : '#8a8380',
+          }}
         >
           ON
         </button>
         <button
           onClick={handleOff}
           disabled={loading || !isOn}
-          className={`py-3 rounded-lg font-bold text-sm transition-all ${
-            !isOn
-              ? 'bg-gray-400 text-white shadow-lg'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          } disabled:opacity-50`}
+          className="py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
+          style={{
+            backgroundColor: !isOn ? '#2c2e2e' : '#e8e4e1',
+            color: !isOn ? 'white' : '#8a8380',
+          }}
         >
           OFF
         </button>
@@ -118,11 +118,11 @@ export function ClimateCard() {
             <button
               onClick={() => handleModeChange('heat')}
               disabled={loading}
-              className={`py-3 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 ${
-                state === 'heat'
-                  ? 'bg-orange-500 text-white shadow-lg'
-                  : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
-              }`}
+              className="py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+              style={{
+                backgroundColor: state === 'heat' ? '#9f5644' : '#e8e4e1',
+                color: state === 'heat' ? 'white' : '#8a8380',
+              }}
             >
               <Flame size={18} />
               Heat
@@ -130,11 +130,11 @@ export function ClimateCard() {
             <button
               onClick={() => handleModeChange('cool')}
               disabled={loading}
-              className={`py-3 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 ${
-                state === 'cool'
-                  ? 'bg-blue-500 text-white shadow-lg'
-                  : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-              }`}
+              className="py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+              style={{
+                backgroundColor: state === 'cool' ? '#9f5644' : '#e8e4e1',
+                color: state === 'cool' ? 'white' : '#8a8380',
+              }}
             >
               <Snowflake size={18} />
               Cool
@@ -146,9 +146,10 @@ export function ClimateCard() {
             <button
               onClick={() => handleTempChange(-tempStep)}
               disabled={loading || targetTemp <= minTemp}
-              className="w-16 h-16 rounded-xl bg-blue-100 text-blue-600 font-bold text-3xl
-                       hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed
+              className="w-16 h-16 rounded-xl font-bold text-3xl
+                       disabled:opacity-50 disabled:cursor-not-allowed
                        transition-colors"
+              style={{ backgroundColor: 'rgba(159,86,68,0.1)', color: '#9f5644' }}
             >
               −
             </button>
@@ -161,9 +162,10 @@ export function ClimateCard() {
             <button
               onClick={() => handleTempChange(tempStep)}
               disabled={loading || targetTemp >= maxTemp}
-              className="w-16 h-16 rounded-xl bg-red-100 text-red-600 font-bold text-3xl
-                       hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed
+              className="w-16 h-16 rounded-xl font-bold text-3xl
+                       disabled:opacity-50 disabled:cursor-not-allowed
                        transition-colors"
+              style={{ backgroundColor: 'rgba(159,86,68,0.1)', color: '#9f5644' }}
             >
               +
             </button>
@@ -178,11 +180,11 @@ export function ClimateCard() {
                   key={speed}
                   onClick={() => handleFanChange(speed)}
                   disabled={loading}
-                  className={`py-2 rounded-lg text-xs font-bold transition-all capitalize ${
-                    fanMode === speed
-                      ? 'bg-purple-500 text-white shadow-lg'
-                      : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
-                  }`}
+                  className="py-2 rounded-xl text-xs font-bold transition-all capitalize"
+                  style={{
+                    backgroundColor: fanMode === speed ? '#9f5644' : '#e8e4e1',
+                    color: fanMode === speed ? 'white' : '#8a8380',
+                  }}
                 >
                   {speed}
                 </button>

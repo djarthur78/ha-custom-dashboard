@@ -109,10 +109,10 @@ export function SpeakerPanel({
             onClick={() => groupControls.groupSpeakers(preset.members[0], preset.members)}
             disabled={groupControls.groupLoading}
             className="w-full flex flex-col items-center justify-center gap-1.5 py-3.5 px-4 text-sm font-semibold
-                       text-white rounded-lg disabled:opacity-40 disabled:cursor-not-allowed
-                       transition-all shadow-md hover:shadow-lg"
+                       text-white rounded-2xl disabled:opacity-40 disabled:cursor-not-allowed
+                       transition-all"
             style={{
-              background: `linear-gradient(to right, ${preset.color.from}, ${preset.color.to})`,
+              backgroundColor: '#9f5644',
             }}
           >
             <span>{preset.label}</span>
@@ -131,9 +131,10 @@ export function SpeakerPanel({
           onClick={handleGroupSelected}
           disabled={checkedSpeakers.size < 2 || groupControls.groupLoading}
           className="w-full flex items-center justify-center gap-2 py-2.5 px-3 text-sm font-medium
-                     bg-[var(--color-primary)] text-white rounded-lg
+                     text-white rounded-2xl
                      disabled:opacity-40 disabled:cursor-not-allowed
                      hover:opacity-90 transition-opacity"
+          style={{ backgroundColor: '#9f5644' }}
         >
           <Link2 size={14} />
           Group Selected ({checkedSpeakers.size})
@@ -145,9 +146,10 @@ export function SpeakerPanel({
             onClick={handlePlayEverywhere}
             disabled={!activeSpeakerId || groupControls.groupLoading}
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs font-medium
-                       bg-green-600 text-white rounded-lg
+                       text-white rounded-2xl
                        disabled:opacity-40 disabled:cursor-not-allowed
                        hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: '#b08a62' }}
           >
             <PlayCircle size={14} />
             Everywhere
@@ -156,9 +158,10 @@ export function SpeakerPanel({
             onClick={() => groupControls.ungroupAll(speakers)}
             disabled={groupControls.groupLoading}
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs font-medium
-                       bg-gray-500 text-white rounded-lg
+                       text-white rounded-2xl
                        disabled:opacity-40 disabled:cursor-not-allowed
                        hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: '#2c2e2e' }}
           >
             <Unlink size={14} />
             Ungroup All

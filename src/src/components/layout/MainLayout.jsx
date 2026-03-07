@@ -59,14 +59,15 @@ export function MainLayout() {
                 to={to}
                 title={label}
                 className={({ isActive }) =>
-                  `flex items-center justify-center px-3 py-2 rounded-full transition-colors ${
+                  `flex flex-col items-center justify-center gap-1 px-3 py-1.5 rounded-full transition-colors ${
                     isActive
                       ? 'bg-[#9f5644] text-white'
                       : 'text-white/70 hover:bg-white/10 hover:text-white'
                   }`
                 }
               >
-                <Icon size={24} />
+                <Icon size={20} />
+                <span className="text-[10px] leading-none font-medium">{label}</span>
               </NavLink>
             ))}
           </nav>
@@ -98,7 +99,7 @@ export function MainLayout() {
       {/* Main Content */}
       <main className={isFullViewport ? '' : 'mx-auto px-4 py-6'}>
         <Suspense fallback={
-          <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 56px)' }}>
+          <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 72px)' }}>
             <div className="w-8 h-8 border-3 rounded-full animate-spin" style={{ borderColor: '#e2e2e6', borderTopColor: '#9f5644' }} />
           </div>
         }>

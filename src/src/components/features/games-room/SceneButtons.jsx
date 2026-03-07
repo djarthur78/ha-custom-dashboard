@@ -31,19 +31,18 @@ export function SceneButtons() {
       <button
         onClick={() => handleSceneClick(scene)}
         disabled={loading}
-        className={`flex flex-col items-center justify-center gap-2 rounded-lg p-4
+        className={`flex flex-col items-center justify-center gap-2 rounded-xl p-4
                    font-bold transition-all min-h-[80px] ${fullWidth ? 'w-full' : ''}
                    hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
         style={
           active
             ? {
-                backgroundColor: scene.color,
+                backgroundColor: '#9f5644',
                 color: 'white',
-                boxShadow: `0 0 20px ${scene.color}40`,
               }
             : {
-                backgroundColor: scene.bgColor,
-                color: scene.color,
+                backgroundColor: '#e8e4e1',
+                color: '#8a8380',
               }
         }
       >

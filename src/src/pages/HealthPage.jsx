@@ -8,8 +8,8 @@ import { HealthDashboard } from '../components/features/health/HealthDashboard';
 export function HealthPage() {
   return (
     <div style={{
-      height: 'calc(100vh - 56px)',
-      maxHeight: 'calc(100vh - 56px)',
+      height: 'calc(100vh - 72px)',
+      maxHeight: 'calc(100vh - 72px)',
       overflow: 'hidden',
       padding: '12px',
     }}>

@@ -28,6 +28,25 @@
   --ds-tint-people: #eeeeff;
   --ds-tint-health: #fef0f0;
   --ds-tint-cameras: #fef2f0;
+
+  /* Warm interactive states */
+  --ds-warm-active: #9f5644;
+  --ds-warm-active-hover: #8a4a3b;
+  --ds-warm-inactive-bg: #e8e4e1;
+  --ds-warm-inactive-text: #8a8380;
+
+  /* Health muted palette */
+  --ds-health-good: #6b8a6b;
+  --ds-health-warn: #b08a62;
+  --ds-health-bad: #9a6b6b;
+  --ds-health-info: #6b8a9a;
+  --ds-health-accent: #7b6b8a;
+
+  /* Meal muted palette */
+  --ds-meal-breakfast: #c4956b;
+  --ds-meal-lunch: #7ba89e;
+  --ds-meal-dinner: #9b86a8;
+  --ds-meal-cakes: #b8798e;
 }
 
 /* ─── Card ─── */

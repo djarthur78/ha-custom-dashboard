@@ -137,7 +137,7 @@ export function NowPlayingPanel({ speaker, controls }) {
                 onError={() => setImageError(true)}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-100 to-blue-100">
+              <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(159,86,68,0.15), rgba(176,138,98,0.15))' }}>
                 <Music size={80} className="text-gray-400" />
               </div>
             )}

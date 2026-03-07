@@ -10,10 +10,10 @@ import haWebSocket from '../../../services/ha-websocket';
 import { COLD_PLUNGE, COLD_PLUNGE_POWER } from './healthConfig';
 
 const DEVICES = [
-  { key: 'chiller', label: 'Chiller', icon: Snowflake, color: '#3b82f6' },
-  { key: 'pump', label: 'Pump', icon: Waves, color: '#06b6d4' },
-  { key: 'fan', label: 'Fan', icon: Wind, color: '#8b5cf6' },
-  { key: 'ozone', label: 'Ozone', icon: Sparkles, color: '#f59e0b' },
+  { key: 'chiller', label: 'Chiller', icon: Snowflake, color: '#6b8a9a' },
+  { key: 'pump', label: 'Pump', icon: Waves, color: '#7b6b8a' },
+  { key: 'fan', label: 'Fan', icon: Wind, color: '#b08a62' },
+  { key: 'ozone', label: 'Ozone', icon: Sparkles, color: '#9f5644' },
 ];
 
 function DeviceStatus({ entityId, powerEntityId, label, icon: Icon, color }) {
@@ -89,7 +89,7 @@ export function ColdPlungeControls() {
   return (
     <div className="h-full flex flex-col">
       <div className="text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-        <Snowflake size={12} className="text-blue-500" />
+        <Snowflake size={12} style={{ color: '#6b8a9a' }} />
         Cold Plunge
       </div>
 
@@ -100,12 +100,9 @@ export function ColdPlungeControls() {
           disabled={loading || coreOn}
           className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all"
           style={{
-            background: coreOn
-              ? 'linear-gradient(135deg, #3b82f6, #2563eb)'
-              : 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-            color: coreOn ? 'white' : '#3b82f6',
+            backgroundColor: coreOn ? '#9f5644' : '#e8e4e1',
+            color: coreOn ? 'white' : '#8a8380',
             opacity: loading ? 0.6 : 1,
-            boxShadow: coreOn ? '0 2px 8px rgba(59, 130, 246, 0.4)' : 'none',
           }}
         >
           <Power size={14} />
@@ -116,10 +113,8 @@ export function ColdPlungeControls() {
           disabled={loading || !anyOn}
           className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all"
           style={{
-            background: !anyOn
-              ? 'linear-gradient(135deg, #374151, #1f2937)'
-              : 'linear-gradient(135deg, #fee2e2, #fecaca)',
-            color: !anyOn ? '#6b7280' : '#ef4444',
+            backgroundColor: !anyOn ? '#2c2e2e' : '#e8e4e1',
+            color: !anyOn ? '#6b7280' : '#8a8380',
             opacity: loading ? 0.6 : 1,
           }}
         >

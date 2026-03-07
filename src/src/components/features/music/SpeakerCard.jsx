@@ -45,10 +45,10 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
   };
 
   // Status indicator color and tooltip
-  const statusColor =
-    speaker.state === 'playing' ? 'bg-green-500' :
-    speaker.state === 'paused'  ? 'bg-yellow-500' :
-    'bg-gray-300';
+  const statusColorStyle =
+    speaker.state === 'playing' ? '#9f5644' :
+    speaker.state === 'paused'  ? '#b08a62' :
+    '#e8e4e1';
 
   const statusTooltip =
     speaker.state === 'playing' ? 'Playing' :
@@ -98,21 +98,23 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
 
         {/* Status dot */}
         <div
-          className={`w-3 h-3 rounded-full ${statusColor} flex-shrink-0`}
+          className="w-3 h-3 rounded-full flex-shrink-0"
+          style={{ backgroundColor: statusColorStyle }}
           title={statusTooltip}
         />
 
         {/* Group indicator */}
         {isGrouped && (
           <div
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 border border-blue-300"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: 'rgba(159,86,68,0.1)', border: '1px solid rgba(159,86,68,0.3)' }}
             title={`Grouped with: ${speaker.groupMembers.filter(id => id !== speaker.entityId).map(id => {
               const s = speakers?.find(sp => sp.entityId === id);
               return s?.label || id;
             }).join(', ')}`}
           >
-            <Link2 size={12} className="text-blue-600" />
-            <span className="text-xs font-medium text-blue-700">
+            <Link2 size={12} style={{ color: '#9f5644' }} />
+            <span className="text-xs font-medium" style={{ color: '#9f5644' }}>
               {speaker.groupMembers.length}
             </span>
           </div>
