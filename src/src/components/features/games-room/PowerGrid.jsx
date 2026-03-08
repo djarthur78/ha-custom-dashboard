@@ -39,9 +39,9 @@ export function PowerGrid() {
                         transition-all cursor-pointer border min-h-[60px]
                         hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{
-                backgroundColor: isOn ? 'var(--ds-accent)' : 'var(--ds-warm-inactive-bg)',
+                backgroundColor: isOn ? 'var(--ds-state-on)' : 'var(--ds-warm-inactive-bg)',
                 color: isOn ? 'white' : 'var(--ds-warm-inactive-text)',
-                borderColor: isOn ? 'var(--ds-accent)' : '#d5d0cd',
+                borderColor: isOn ? 'var(--ds-state-on)' : '#d5d0cd',
               }}
             >
               {/* Icon */}

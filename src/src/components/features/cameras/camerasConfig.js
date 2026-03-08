@@ -5,13 +5,14 @@ export const CAMERAS = [
   { id: 'camera.front_left_high_resolution_channel', label: 'Front Left', zone: 'front', priority: 3, interval: 2000 },
 
   // Outside cameras — snapshot polling at 10s
-  { id: 'camera.back_shed_high_resolution_channel', label: 'Back Shed', zone: 'outside', priority: 4, interval: 10000 },
-  { id: 'camera.side_gate_high_resolution_channel', label: 'Side Gate', zone: 'outside', priority: 5, interval: 10000 },
-  { id: 'camera.outdoor_kitchen_high_resolution_channel', label: 'Outdoor Kitchen', zone: 'outside', priority: 6, interval: 10000 },
+  { id: 'camera.outdoor_kitchen_high_resolution_channel', label: 'Outdoor Kitchen', zone: 'outside', priority: 4, interval: 10000 },
+  { id: 'camera.back_gym_high_resolution_channel', label: 'Back Gym', zone: 'outside', priority: 5, interval: 10000 },
+  { id: 'camera.back_shed_high_resolution_channel', label: 'Back Shed', zone: 'outside', priority: 6, interval: 10000 },
+  { id: 'camera.side_gate_high_resolution_channel', label: 'Side Gate', zone: 'outside', priority: 7, interval: 10000 },
 
   // Outbuildings cameras — snapshot polling at 10s
-  { id: 'camera.g6_turret_high_resolution_channel', label: 'Gym', zone: 'outbuildings', priority: 7, interval: 10000 },
-  { id: 'camera.g6_turret_high_resolution_channel_2', label: 'Games Room', zone: 'outbuildings', priority: 8, interval: 10000 },
+  { id: 'camera.g6_turret_high_resolution_channel', label: 'Gym', zone: 'outbuildings', priority: 8, interval: 10000 },
+  { id: 'camera.g6_turret_high_resolution_channel_2', label: 'Games Room', zone: 'outbuildings', priority: 9, interval: 10000 },
 ];
 
 export const DOORBELL_ENTITY = 'event.front_door_doorbell';

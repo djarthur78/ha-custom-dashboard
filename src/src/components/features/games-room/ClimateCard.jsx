@@ -93,7 +93,7 @@ export function ClimateCard() {
           disabled={loading || isOn}
           className="py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
           style={{
-            backgroundColor: isOn ? 'var(--ds-accent)' : 'var(--ds-warm-inactive-bg)',
+            backgroundColor: isOn ? 'var(--ds-state-on)' : 'var(--ds-warm-inactive-bg)',
             color: isOn ? 'white' : 'var(--ds-warm-inactive-text)',
           }}
         >
@@ -104,7 +104,7 @@ export function ClimateCard() {
           disabled={loading || !isOn}
           className="py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
           style={{
-            backgroundColor: !isOn ? 'var(--ds-accent)' : 'var(--ds-warm-inactive-bg)',
+            backgroundColor: !isOn ? 'var(--ds-state-off)' : 'var(--ds-warm-inactive-bg)',
             color: !isOn ? 'white' : 'var(--ds-warm-inactive-text)',
           }}
         >

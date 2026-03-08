@@ -55,8 +55,8 @@ function DeviceToggleCard({ deviceKey, label, icon: Icon, color }) {
       className="ds-card flex flex-col items-center justify-center gap-2 transition-all hover:shadow-md disabled:opacity-60"
       style={{
         padding: '16px',
-        backgroundColor: isOn ? `${color}15` : 'var(--ds-card)',
-        border: isOn ? `2px solid ${color}` : '1px solid var(--ds-border)',
+        backgroundColor: isOn ? 'var(--ds-state-on-bg)' : 'var(--ds-card)',
+        border: isOn ? '2px solid var(--ds-state-on)' : '1px solid var(--ds-border)',
       }}
     >
       <Icon size={28} style={{ color: isOn ? color : '#9ca3af' }} />
@@ -65,10 +65,10 @@ function DeviceToggleCard({ deviceKey, label, icon: Icon, color }) {
         <div className="rounded-full" style={{
           width: 8,
           height: 8,
-          backgroundColor: isOn ? color : '#d1d5db',
-          boxShadow: isOn ? `0 0 8px ${color}60` : 'none',
+          backgroundColor: isOn ? 'var(--ds-state-on)' : 'var(--ds-state-off)',
+          boxShadow: isOn ? '0 0 8px rgba(74,154,74,0.4)' : 'none',
         }} />
-        <span className="text-xs font-medium" style={{ color: isOn ? color : 'var(--color-text-secondary)' }}>
+        <span className="text-xs font-medium" style={{ color: isOn ? 'var(--ds-state-on)' : 'var(--ds-state-off)' }}>
           {isOn ? 'ON' : 'OFF'}
         </span>
       </div>
@@ -164,8 +164,8 @@ export function ColdPlungeDashboard() {
                 className="flex-1 flex items-center justify-center gap-2 py-4 text-lg font-bold rounded-xl
                            disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 style={{
-                  backgroundColor: coreOn ? '#9f5644' : '#e8e4e1',
-                  color: coreOn ? 'white' : '#8a8380',
+                  backgroundColor: coreOn ? 'var(--ds-state-on)' : 'var(--ds-warm-inactive-bg)',
+                  color: coreOn ? 'white' : 'var(--ds-warm-inactive-text)',
                 }}
               >
                 <Power size={20} />
@@ -177,8 +177,8 @@ export function ColdPlungeDashboard() {
                 className="flex-1 flex items-center justify-center gap-2 py-4 text-lg font-bold rounded-xl
                            disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 style={{
-                  backgroundColor: !anyOn ? '#2c2e2e' : '#e8e4e1',
-                  color: !anyOn ? '#6b7280' : '#8a8380',
+                  backgroundColor: !anyOn ? 'var(--ds-state-off)' : 'var(--ds-warm-inactive-bg)',
+                  color: !anyOn ? 'white' : 'var(--ds-warm-inactive-text)',
                 }}
               >
                 <Power size={20} />

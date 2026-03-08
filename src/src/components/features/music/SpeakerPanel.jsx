@@ -1,13 +1,52 @@
 /**
  * SpeakerPanel Component
  * Right panel — speaker grid with volume, grouping controls.
- * Styled to match Games Room warm earthy design.
+ * Preset groups color their member speaker cards. Only one preset active at a time.
  */
 
 import { useState } from 'react';
 import { Link2, Unlink, PlayCircle } from 'lucide-react';
 import { SpeakerCard } from './SpeakerCard';
 import { ZONES, PRESET_GROUPS } from './musicConfig';
+
+/**
+ * Detect which preset group (if any) is currently active.
+ * A preset is "active" if ALL its members share the same groupMembers array
+ * (i.e. they are all grouped together via Sonos).
+ */
+function detectActivePreset(speakers) {
+  for (const preset of PRESET_GROUPS) {
+    const presetSpeakers = preset.members.map(id =>
+      speakers.find(s => s.entityId === id)
+    ).filter(Boolean);
+
+    if (presetSpeakers.length !== preset.members.length) continue;
+
+    // Check if all preset members are grouped together
+    const firstMembers = presetSpeakers[0]?.groupMembers || [];
+    if (firstMembers.length < 2) continue;
+
+    const allGrouped = presetSpeakers.every(s => {
+      const members = s.groupMembers || [];
+      return members.length === firstMembers.length &&
+        preset.members.every(id => members.includes(id));
+    });
+
+    if (allGrouped) return preset;
+  }
+  return null;
+}
+
+/**
+ * Get the group color for a speaker based on the active preset.
+ */
+function getGroupColor(speaker, activePreset) {
+  if (!activePreset) return null;
+  if (activePreset.members.includes(speaker.entityId)) {
+    return activePreset.color.from;
+  }
+  return null;
+}
 
 export function SpeakerPanel({
   speakers,
@@ -18,6 +57,8 @@ export function SpeakerPanel({
 }) {
   // Track which speakers are checked for grouping
   const [checkedSpeakers, setCheckedSpeakers] = useState(new Set());
+
+  const activePreset = detectActivePreset(speakers);
 
   const toggleCheck = (entityId) => {
     setCheckedSpeakers((prev) => {
@@ -34,19 +75,26 @@ export function SpeakerPanel({
   const handleGroupSelected = () => {
     if (checkedSpeakers.size < 2) return;
     const memberIds = [...checkedSpeakers];
-    // Use the active speaker as coordinator if it's checked, otherwise first checked
     const coordinatorId = memberIds.includes(activeSpeakerId)
       ? activeSpeakerId
       : memberIds[0];
     groupControls.groupSpeakers(coordinatorId, memberIds);
-    setCheckedSpeakers(new Set()); // Clear selection after grouping
+    setCheckedSpeakers(new Set());
   };
 
   const handlePlayEverywhere = () => {
-    // Group ALL speakers under the active speaker
     if (!activeSpeakerId) return;
     const allIds = speakers.map((s) => s.entityId);
     groupControls.groupSpeakers(activeSpeakerId, allIds);
+  };
+
+  const handlePresetClick = (preset) => {
+    // If this preset is already active, ungroup it
+    if (activePreset?.id === preset.id) {
+      groupControls.ungroupAll(speakers.filter(s => preset.members.includes(s.entityId)));
+    } else {
+      groupControls.groupSpeakers(preset.members[0], preset.members);
+    }
   };
 
   // Group speakers by zone for visual organization
@@ -66,11 +114,11 @@ export function SpeakerPanel({
       </div>
 
       {/* Speaker List (scrollable) */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 space-y-4">
         {Object.entries(speakersByZone).map(([zone, zoneSpeakers]) => (
           <div key={zone}>
             {/* Zone label */}
-            <div className="flex items-center gap-2 mb-2 px-1">
+            <div className="flex items-center gap-2 mb-2.5 px-1">
               <div
                 className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: ZONES[zone]?.color || '#9ca3af' }}
@@ -80,8 +128,8 @@ export function SpeakerPanel({
               </span>
             </div>
 
-            {/* Speaker cards */}
-            <div className="space-y-2">
+            {/* Speaker cards — more spacing */}
+            <div className="space-y-2.5">
               {zoneSpeakers.map((speaker) => (
                 <SpeakerCard
                   key={speaker.entityId}
@@ -92,6 +140,7 @@ export function SpeakerPanel({
                   onSelect={onSelectSpeaker}
                   onCheck={toggleCheck}
                   onVolumeChange={onVolumeChange}
+                  groupColor={getGroupColor(speaker, activePreset)}
                 />
               ))}
             </div>
@@ -100,30 +149,42 @@ export function SpeakerPanel({
       </div>
 
       {/* Preset Groups */}
-      <div className="p-3 border-t border-[var(--ds-border)] flex-shrink-0 space-y-2">
-        <div className="text-xs font-medium uppercase tracking-wider mb-2 px-1" style={{ color: 'var(--ds-text-secondary)' }}>
+      <div className="p-3 border-t border-[var(--ds-border)] flex-shrink-0">
+        <div className="text-xs font-medium uppercase tracking-wider mb-2.5 px-1" style={{ color: 'var(--ds-text-secondary)' }}>
           Quick Groups
         </div>
-        {PRESET_GROUPS.map((preset) => {
-          return (
-            <button
-              key={preset.id}
-              onClick={() => groupControls.groupSpeakers(preset.members[0], preset.members)}
-              disabled={groupControls.groupLoading}
-              className="w-full flex flex-col items-center justify-center gap-1 py-2.5 px-4 text-sm font-semibold
-                         rounded-xl disabled:opacity-40 disabled:cursor-not-allowed
-                         transition-all hover:shadow-md"
-              style={{
-                backgroundColor: 'var(--ds-warm-inactive-bg)',
-                color: 'var(--ds-text)',
-                border: '1px solid var(--ds-border)',
-              }}
-            >
-              <span>{preset.label}</span>
-              <span className="text-xs font-normal" style={{ color: 'var(--ds-text-secondary)' }}>{preset.description}</span>
-            </button>
-          );
-        })}
+        <div className="flex gap-2.5">
+          {PRESET_GROUPS.map((preset) => {
+            const isActive = activePreset?.id === preset.id;
+            return (
+              <button
+                key={preset.id}
+                onClick={() => handlePresetClick(preset)}
+                disabled={groupControls.groupLoading}
+                className="flex-1 flex flex-col items-center justify-center gap-1 py-3 px-3 text-sm font-semibold
+                           rounded-xl disabled:opacity-40 disabled:cursor-not-allowed
+                           transition-all hover:shadow-md"
+                style={isActive
+                  ? {
+                      background: `linear-gradient(135deg, ${preset.color.from}, ${preset.color.to})`,
+                      color: 'white',
+                      border: '1px solid transparent',
+                    }
+                  : {
+                      backgroundColor: 'var(--ds-warm-inactive-bg)',
+                      color: 'var(--ds-text)',
+                      border: '1px solid var(--ds-border)',
+                    }
+                }
+              >
+                <span>{preset.label}</span>
+                <span className="text-xs font-normal" style={{ color: isActive ? 'rgba(255,255,255,0.8)' : 'var(--ds-text-secondary)' }}>
+                  {preset.description}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Manual Grouping Controls */}

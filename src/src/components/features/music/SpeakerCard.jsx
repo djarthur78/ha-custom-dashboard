@@ -1,23 +1,14 @@
 /**
  * SpeakerCard Component
  * Displays a single Sonos speaker with status, volume slider, and selection state.
- * Styled to match Games Room warm earthy design.
+ * Full-color highlight when selected. Group preset color tints member cards.
  */
 
 import { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Link2 } from 'lucide-react';
 import { VOLUME_DEBOUNCE_MS } from './musicConfig';
 
-// Simple hash function for consistent group colors
-function hashCode(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return Math.abs(hash);
-}
-
-export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect, onCheck, onVolumeChange }) {
+export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect, onCheck, onVolumeChange, groupColor }) {
   const [localVolume, setLocalVolume] = useState(speaker.volumeLevel || 0);
   const volumeTimeoutRef = useRef(null);
 
@@ -37,27 +28,48 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
     }, VOLUME_DEBOUNCE_MS);
   };
 
-  // Status indicator color
-  const statusColorStyle =
-    speaker.state === 'playing' ? 'var(--ds-accent)' :
-    speaker.state === 'paused'  ? 'var(--ds-accent-secondary)' :
-    'var(--ds-warm-inactive-bg)';
-
-  const statusTooltip =
-    speaker.state === 'playing' ? 'Playing' :
-    speaker.state === 'paused'  ? 'Paused' :
-    'Idle';
-
+  const isPlaying = speaker.state === 'playing';
+  const isPaused = speaker.state === 'paused';
   const isGrouped = speaker.groupMembers.length > 1;
+
+  // Determine card styling
+  let cardStyle = { padding: '12px' };
+  let textColor = 'var(--ds-text)';
+  let secondaryColor = 'var(--ds-text-secondary)';
+  let sliderThumbColor = 'var(--ds-accent)';
+  let volumeIconColor = 'var(--ds-text-secondary)';
+
+  if (isSelected) {
+    // Full color highlight for selected speaker
+    cardStyle = {
+      ...cardStyle,
+      backgroundColor: 'var(--ds-accent)',
+      border: '1px solid var(--ds-accent)',
+      color: 'white',
+    };
+    textColor = 'white';
+    secondaryColor = 'rgba(255,255,255,0.75)';
+    sliderThumbColor = 'white';
+    volumeIconColor = 'rgba(255,255,255,0.75)';
+  } else if (groupColor) {
+    // Tinted card for group members
+    cardStyle = {
+      ...cardStyle,
+      backgroundColor: `${groupColor}15`,
+      border: `2px solid ${groupColor}`,
+    };
+    sliderThumbColor = groupColor;
+  }
+
+  // Status dot color
+  const statusDotColor = isPlaying ? 'var(--ds-state-on)' : isPaused ? 'var(--ds-accent-secondary)' : 'var(--ds-warm-inactive-bg)';
+  const statusTooltip = isPlaying ? 'Playing' : isPaused ? 'Paused' : 'Idle';
 
   return (
     <div
       onClick={() => onSelect(speaker.entityId)}
       className="ds-card cursor-pointer transition-all hover:shadow-md"
-      style={{
-        padding: '12px',
-        ...(isSelected ? { boxShadow: '0 0 0 2px var(--ds-accent)' } : {}),
-      }}
+      style={cardStyle}
     >
       {/* Top row: checkbox, name, status dot */}
       <div className="flex items-center gap-2.5 mb-2">
@@ -71,17 +83,17 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
           }}
           onClick={(e) => e.stopPropagation()}
           className="w-4 h-4 rounded border-gray-300 cursor-pointer"
-          style={{ accentColor: 'var(--ds-accent)' }}
+          style={{ accentColor: isSelected ? 'white' : 'var(--ds-accent)' }}
         />
 
-        <span className="font-medium text-sm truncate flex-1" style={{ color: 'var(--ds-text)' }}>
+        <span className="font-medium text-sm truncate flex-1" style={{ color: textColor }}>
           {speaker.label}
         </span>
 
         {/* Status dot */}
         <div
           className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-          style={{ backgroundColor: statusColorStyle }}
+          style={{ backgroundColor: isSelected ? 'rgba(255,255,255,0.8)' : statusDotColor }}
           title={statusTooltip}
         />
 
@@ -89,14 +101,17 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
         {isGrouped && (
           <div
             className="flex items-center gap-1 px-1.5 py-0.5 rounded-full"
-            style={{ backgroundColor: 'rgba(181,69,58,0.1)', border: '1px solid rgba(181,69,58,0.3)' }}
+            style={isSelected
+              ? { backgroundColor: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)' }
+              : { backgroundColor: 'rgba(181,69,58,0.1)', border: '1px solid rgba(181,69,58,0.3)' }
+            }
             title={`Grouped with: ${speaker.groupMembers.filter(id => id !== speaker.entityId).map(id => {
               const s = speakers?.find(sp => sp.entityId === id);
               return s?.label || id;
             }).join(', ')}`}
           >
-            <Link2 size={11} style={{ color: 'var(--ds-accent)' }} />
-            <span className="text-xs font-medium" style={{ color: 'var(--ds-accent)' }}>
+            <Link2 size={11} style={{ color: isSelected ? 'white' : 'var(--ds-accent)' }} />
+            <span className="text-xs font-medium" style={{ color: isSelected ? 'white' : 'var(--ds-accent)' }}>
               {speaker.groupMembers.length}
             </span>
           </div>
@@ -105,7 +120,7 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
 
       {/* Currently playing track (if any) */}
       {speaker.mediaTitle && (
-        <div className="text-xs truncate mb-2" style={{ color: 'var(--ds-text-secondary)' }}>
+        <div className="text-xs truncate mb-2" style={{ color: secondaryColor }}>
           {speaker.mediaTitle}
         </div>
       )}
@@ -113,9 +128,9 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
       {/* Volume slider */}
       <div className="flex items-center gap-2">
         {speaker.isVolumeMuted ? (
-          <VolumeX size={14} className="flex-shrink-0" style={{ color: 'var(--ds-text-secondary)' }} />
+          <VolumeX size={14} className="flex-shrink-0" style={{ color: volumeIconColor }} />
         ) : (
-          <Volume2 size={14} className="flex-shrink-0" style={{ color: 'var(--ds-text-secondary)' }} />
+          <Volume2 size={14} className="flex-shrink-0" style={{ color: volumeIconColor }} />
         )}
         <input
           type="range"
@@ -125,12 +140,15 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
           value={localVolume}
           onChange={handleVolumeChange}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer
+          className="flex-1 h-1.5 rounded-lg appearance-none cursor-pointer
                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3
-                     [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full
-                     [&::-webkit-slider-thumb]:bg-[var(--ds-accent)]"
+                     [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full"
+          style={{
+            background: isSelected ? 'rgba(255,255,255,0.3)' : '#e5e7eb',
+            // Tailwind v4 can't do dynamic thumb colors, so we use a CSS variable trick
+          }}
         />
-        <span className="text-xs font-medium min-w-[36px] text-right flex-shrink-0" style={{ color: 'var(--ds-text)' }}>
+        <span className="text-xs font-medium min-w-[36px] text-right flex-shrink-0" style={{ color: textColor }}>
           {Math.round(localVolume * 100)}%
         </span>
       </div>

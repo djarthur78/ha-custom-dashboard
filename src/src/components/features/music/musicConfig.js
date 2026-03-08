@@ -60,7 +60,7 @@ export const SPOTIFY_ACCOUNTS = [
   {
     id: 'nic',
     label: "Nic",
-    entityId: null, // TODO: Update when Nic's Spotify integration is added to HA
+    entityId: null, // TODO: Add Spotify integration for nichola_beney@hotmail.co.uk in HA, then update entity ID here
   },
 ];
 

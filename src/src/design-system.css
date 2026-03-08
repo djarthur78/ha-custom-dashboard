@@ -35,6 +35,14 @@
   --ds-warm-inactive-bg: #e8e4e1;
   --ds-warm-inactive-text: #8a8380;
 
+  /* Consistent ON/OFF state colors — use across all pages except Calendar */
+  --ds-state-on: #4a9a4a;
+  --ds-state-on-hover: #3d8340;
+  --ds-state-on-bg: rgba(74, 154, 74, 0.12);
+  --ds-state-off: #b5453a;
+  --ds-state-off-hover: #9c3a30;
+  --ds-state-off-bg: rgba(181, 69, 58, 0.12);
+
   /* Health brighter palette */
   --ds-health-good: #4a9a4a;
   --ds-health-warn: #d4944c;

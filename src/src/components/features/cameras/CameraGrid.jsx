@@ -86,7 +86,7 @@ export function CameraGrid({ alertMode = false, onDismissAlert }) {
         </div>
       )}
 
-      {/* Outside Tab — 3 cameras in single row */}
+      {/* Outside Tab — 4 cameras in 2x2 grid */}
       {activeTab === 'outside' && (
         <div
           className="camera-grid"
@@ -97,8 +97,8 @@ export function CameraGrid({ alertMode = false, onDismissAlert }) {
             maxHeight: `calc(100vh - 72px - ${tabBarHeight}px)`,
             minHeight: 0,
             overflow: 'hidden',
-            gridTemplateColumns: '1fr 1fr 1fr',
-            gridTemplateRows: '1fr',
+            gridTemplateColumns: '1fr 1fr',
+            gridTemplateRows: '1fr 1fr',
           }}
         >
           {outsideCameras.map((camera) => (
@@ -114,7 +114,7 @@ export function CameraGrid({ alertMode = false, onDismissAlert }) {
         </div>
       )}
 
-      {/* Outbuildings Tab — 2 cameras side by side */}
+      {/* Outbuildings Tab — 2 cameras stacked vertically */}
       {activeTab === 'outbuildings' && (
         <div
           className="camera-grid"
@@ -125,8 +125,8 @@ export function CameraGrid({ alertMode = false, onDismissAlert }) {
             maxHeight: `calc(100vh - 72px - ${tabBarHeight}px)`,
             minHeight: 0,
             overflow: 'hidden',
-            gridTemplateColumns: '1fr 1fr',
-            gridTemplateRows: '1fr',
+            gridTemplateColumns: '1fr',
+            gridTemplateRows: '1fr 1fr',
           }}
         >
           {outbuildingsCameras.map((camera) => (
