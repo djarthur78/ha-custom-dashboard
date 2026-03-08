@@ -45,6 +45,8 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
 
   // Track the last played playlist so Queue view can show upcoming tracks
   const [lastPlayedPlaylist, setLastPlayedPlaylist] = useState(null);
+  // Pre-fetched track list for the queue (fetched at play time, not in QueueView)
+  const [lastPlayedTracks, setLastPlayedTracks] = useState([]);
 
   // Play history for sorting playlists by last played
   const [playHistory, setPlayHistory] = useState(loadPlayHistory);
@@ -70,7 +72,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     reset();
   }, [activeTab, reset]);
 
-  const handlePlayPlaylist = (mediaContentId, mediaContentType) => {
+  const handlePlayPlaylist = async (mediaContentId, mediaContentType) => {
     if (activeSpeaker) {
       // Remember which playlist was played so queue can fetch its tracks
       setLastPlayedPlaylist({ id: mediaContentId, type: mediaContentType });
@@ -79,6 +81,20 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
       setPlayHistory(updated);
       savePlayHistory(updated);
       onPlayMedia(activeSpeaker.entityId, mediaContentId, mediaContentType);
+
+      // Pre-fetch the playlist's track list for the Queue view
+      try {
+        const result = await haWebSocket.send({
+          type: 'media_player/browse_media',
+          entity_id: activeSpeaker.entityId,
+          media_content_type: mediaContentType,
+          media_content_id: mediaContentId,
+        });
+        setLastPlayedTracks(result.children || []);
+      } catch (err) {
+        console.warn('[PlaylistPanel] Could not pre-fetch tracks:', err);
+        setLastPlayedTracks([]);
+      }
     }
   };
 
@@ -132,6 +148,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
           <QueueView
             activeSpeaker={activeSpeaker}
             lastPlayedPlaylist={lastPlayedPlaylist}
+            prefetchedTracks={lastPlayedTracks}
             onNextTrack={onNextTrack}
           />
         )}
@@ -305,59 +322,15 @@ function PlaylistListItem({ item, onPlay, onBrowse }) {
  * Queue View - shows currently playing track, upcoming tracks, and queue position.
  * Fetches the playlist track list via browse_media to show what's coming next.
  */
-function QueueView({ activeSpeaker, lastPlayedPlaylist, onNextTrack }) {
-  const [tracks, setTracks] = useState([]);
-  const [tracksLoading, setTracksLoading] = useState(false);
+function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], onNextTrack }) {
   const [skipping, setSkipping] = useState(false);
-  const lastFetchedRef = useRef(null);
 
   const isActive =
     activeSpeaker &&
     (activeSpeaker.state === 'playing' || activeSpeaker.state === 'paused');
 
-  // Determine which playlist to fetch tracks from:
-  // 1. Use lastPlayedPlaylist if set (played from dashboard UI)
-  // 2. Fall back to the speaker's media_content_id ONLY if it looks like a playlist/album
-  //    (Sonos track URIs like "x-sonos-spotify:..." can't be browsed)
-  const speakerContentId = activeSpeaker?.mediaContentId;
-  const isPlaylistUri = speakerContentId &&
-    (speakerContentId.startsWith('spotify:playlist:') ||
-     speakerContentId.startsWith('spotify:album:') ||
-     speakerContentId.includes('current_user_playlists'));
-
-  const playlistSource = lastPlayedPlaylist
-    ? { id: lastPlayedPlaylist.id, type: lastPlayedPlaylist.type }
-    : isPlaylistUri
-      ? { id: speakerContentId, type: activeSpeaker.mediaContentType }
-      : null;
-
-  // Fetch track list when a playlist is playing
-  useEffect(() => {
-    if (!playlistSource || !activeSpeaker?.entityId || !isActive) return;
-
-    // Don't re-fetch if we already have tracks for this source
-    if (lastFetchedRef.current === playlistSource.id) return;
-    lastFetchedRef.current = playlistSource.id;
-
-    async function fetchTracks() {
-      setTracksLoading(true);
-      try {
-        const result = await haWebSocket.send({
-          type: 'media_player/browse_media',
-          entity_id: activeSpeaker.entityId,
-          media_content_type: playlistSource.type,
-          media_content_id: playlistSource.id,
-        });
-        setTracks(result.children || []);
-      } catch (err) {
-        console.error('[QueueView] Failed to fetch playlist tracks:', err);
-        setTracks([]);
-      }
-      setTracksLoading(false);
-    }
-
-    fetchTracks();
-  }, [playlistSource?.id, activeSpeaker?.entityId, isActive]);
+  // Use pre-fetched tracks from when the playlist was played
+  const tracks = prefetchedTracks;
 
   // Skip forward N tracks by calling next_track repeatedly
   const handleSkipTo = useCallback(
@@ -448,14 +421,6 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, onNextTrack }) {
         )}
       </div>
 
-      {/* Loading tracks indicator */}
-      {tracksLoading && (
-        <div className="flex items-center gap-2 mb-3 p-3 bg-gray-50 rounded-lg">
-          <div className="w-4 h-4 border-2 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-[var(--color-text-secondary)]">Loading track list...</span>
-        </div>
-      )}
-
       {/* Shuffle notice */}
       {isShuffled && (
         <div className="mb-3 p-2.5 bg-gray-50 rounded-lg text-xs text-[var(--color-text-secondary)]">
@@ -505,7 +470,7 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, onNextTrack }) {
       )}
 
       {/* No track list available hint */}
-      {!tracksLoading && upcomingTracks.length === 0 && isActive && !isShuffled && (
+      {upcomingTracks.length === 0 && isActive && !isShuffled && (
         <div className="text-center py-6 text-sm text-[var(--color-text-secondary)]">
           <p>Play a playlist from the Daz or Nic tab to see upcoming tracks</p>
         </div>
