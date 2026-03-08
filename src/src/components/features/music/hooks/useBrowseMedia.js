@@ -74,14 +74,15 @@ export function useBrowseMedia() {
   }, [rawBrowse]);
 
   /**
-   * Auto-navigate to Spotify playlists through the Sonos speaker browse tree.
-   * Chain: Speaker root → Spotify library → Playlists category → Playlist items
+   * Auto-navigate to a Spotify category through the Sonos speaker browse tree.
+   * Chain: Speaker root → Spotify library → Target category → Items
    * Sets up history so user can navigate back to library categories.
    *
    * @param {string} speakerEntityId - The Sonos speaker to browse through
    * @param {string} [spotifyEntityId] - Optional Spotify entity ID to match the correct account
+   * @param {string} [targetCategory='Playlists'] - Category name to auto-navigate to
    */
-  const browseToPlaylists = useCallback(async (speakerEntityId, spotifyEntityId) => {
+  const browseToPlaylists = useCallback(async (speakerEntityId, spotifyEntityId, targetCategory = 'Playlists') => {
     if (!speakerEntityId) return;
 
     setLoading(true);
@@ -110,8 +111,6 @@ export function useBrowseMedia() {
 
         // Match by entity ID if provided (e.g. media_content_id contains the entity name)
         if (spotifyEntityId && spotifyEntries.length > 1) {
-          // The media_content_id typically contains the spotify entity name
-          // e.g. "spotify://media_player.spotify_nic" or the title contains the account name
           const entityName = spotifyEntityId.split('.').pop(); // e.g. "spotify_nic"
           spotifyEntry = spotifyEntries.find(
             (c) => c.media_content_id?.includes(entityName) ||
@@ -132,13 +131,13 @@ export function useBrowseMedia() {
       );
       libraryCategories = library?.children || [];
 
-      // Step 3: Find "Playlists" and browse into it
-      const playlistsEntry = libraryCategories.find(
-        (c) => c.title === 'Playlists' || c.media_content_type?.includes('current_user_playlists')
+      // Step 3: Find target category and browse into it
+      const targetEntry = libraryCategories.find(
+        (c) => c.title === targetCategory
       );
 
-      if (!playlistsEntry) {
-        // No playlists category found, show library categories instead
+      if (!targetEntry) {
+        // Target category not found, show library categories instead
         setHistory([]);
         setTitle(library.title || 'Spotify Library');
         setItems(libraryCategories);
@@ -146,10 +145,10 @@ export function useBrowseMedia() {
         return;
       }
 
-      const playlists = await rawBrowse(
+      const result = await rawBrowse(
         speakerEntityId,
-        playlistsEntry.media_content_type,
-        playlistsEntry.media_content_id
+        targetEntry.media_content_type,
+        targetEntry.media_content_id
       );
 
       // Set up history so "Back" shows library categories
@@ -162,12 +161,18 @@ export function useBrowseMedia() {
         },
       ]);
 
-      setTitle(playlists.title || 'Playlists');
-      setItems(playlists.children || []);
-      setCurrentItem(null);
+      setTitle(result.title || targetCategory);
+      setItems(result.children || []);
+      // Store currentItem so "Replace Playlist" works for non-playlist categories
+      setCurrentItem(result.can_play ? {
+        media_content_id: result.media_content_id,
+        media_content_type: result.media_content_type,
+        can_play: result.can_play,
+        title: result.title,
+      } : null);
       setLoading(false);
     } catch (err) {
-      console.error('[useBrowseMedia] Failed to load playlists:', err);
+      console.error('[useBrowseMedia] Failed to load category:', err);
       setError(err.message);
       setItems([]);
       setLoading(false);

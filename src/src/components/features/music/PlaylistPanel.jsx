@@ -63,7 +63,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
 
     hasLoadedRef.current = true;
     lastSpeakerRef.current = activeSpeaker.entityId;
-    browseToPlaylists(activeSpeaker.entityId, activeAccount?.entityId);
+    browseToPlaylists(activeSpeaker.entityId, activeAccount?.entityId, activeAccount?.defaultCategory);
   }, [activeTab, activeSpeaker?.entityId, activeAccount, browseToPlaylists]);
 
   // Reset when switching tabs
@@ -192,7 +192,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                 </p>
                 <p className="text-base text-[var(--color-text-secondary)] mt-1 mb-4">{error}</p>
                 <button
-                  onClick={() => browseToPlaylists(activeSpeaker?.entityId)}
+                  onClick={() => browseToPlaylists(activeSpeaker?.entityId, activeAccount?.entityId, activeAccount?.defaultCategory)}
                   className="mt-3 px-5 py-2.5 text-base font-medium bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition-opacity"
                 >
                   Retry
@@ -219,11 +219,16 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                     {title && (
                       <h3 className="text-base font-semibold text-[var(--color-text)]">
                         {title}
+                        {items.length > 0 && (
+                          <span className="text-xs font-normal text-[var(--color-text-secondary)] ml-1.5">
+                            ({items.length})
+                          </span>
+                        )}
                       </h3>
                     )}
                   </div>
                   <button
-                    onClick={() => browseToPlaylists(activeSpeaker?.entityId)}
+                    onClick={() => browseToPlaylists(activeSpeaker?.entityId, activeAccount?.entityId, activeAccount?.defaultCategory)}
                     className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text)]
                                hover:bg-gray-100 rounded-lg transition-colors"
                     title="Refresh playlists"
@@ -268,7 +273,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                       No playlists found
                     </p>
                     <button
-                      onClick={() => browseToPlaylists(activeSpeaker?.entityId)}
+                      onClick={() => browseToPlaylists(activeSpeaker?.entityId, activeAccount?.entityId, activeAccount?.defaultCategory)}
                       className="mt-4 px-4 py-2 text-base font-medium bg-[var(--color-primary)]
                                  text-white rounded-lg hover:opacity-90 transition-opacity"
                     >

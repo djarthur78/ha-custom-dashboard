@@ -56,11 +56,13 @@ export const SPOTIFY_ACCOUNTS = [
     id: 'daz',
     label: "Daz",
     entityId: 'media_player.spotify_djarthur78',
+    defaultCategory: 'Playlists', // Auto-navigate to Playlists
   },
   {
     id: 'nic',
     label: "Nic",
     entityId: 'media_player.spotify_nic',
+    defaultCategory: 'Liked songs', // Auto-navigate to Liked Songs
   },
 ];
 
