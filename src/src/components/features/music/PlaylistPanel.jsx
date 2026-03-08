@@ -245,9 +245,18 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                 </div>
 
                 {/* Replace Playlist button for non-playlist browse views */}
+                {/* When items are loaded (track listing), play first track instead of container
+                    because Sonos silently rejects some container types (e.g. Liked Songs) */}
                 {currentItem && currentItem.can_play && title !== 'Playlists' && (
                   <button
-                    onClick={() => handlePlayPlaylist(currentItem.media_content_id, currentItem.media_content_type)}
+                    onClick={() => {
+                      const firstTrack = items.length > 0 && items[0].can_play ? items[0] : null;
+                      if (firstTrack) {
+                        handlePlayPlaylist(firstTrack.media_content_id, firstTrack.media_content_type);
+                      } else {
+                        handlePlayPlaylist(currentItem.media_content_id, currentItem.media_content_type);
+                      }
+                    }}
                     disabled={playLoading}
                     className="w-full mb-3 flex items-center justify-center gap-2 py-3 px-4 rounded-lg
                                text-base font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]
