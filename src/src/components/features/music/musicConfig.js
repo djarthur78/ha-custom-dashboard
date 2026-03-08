@@ -113,12 +113,12 @@ export const SUPPORT_VOLUME_SET     = 4;
 export const SUPPORT_VOLUME_MUTE    = 8;
 export const SUPPORT_PREVIOUS_TRACK = 16;
 export const SUPPORT_NEXT_TRACK     = 32;
-export const SUPPORT_SHUFFLE_SET    = 256;
-export const SUPPORT_REPEAT_SET     = 512;
-export const SUPPORT_BROWSE_MEDIA   = 2048;
-export const SUPPORT_STOP           = 4096;
+export const SUPPORT_PLAY_MEDIA     = 512;
+export const SUPPORT_STOP           = 8192;
 export const SUPPORT_PLAY           = 16384;
-export const SUPPORT_PLAY_MEDIA     = 131072;
+export const SUPPORT_SHUFFLE_SET    = 32768;
+export const SUPPORT_BROWSE_MEDIA   = 131072;
+export const SUPPORT_REPEAT_SET     = 262144;
 export const SUPPORT_GROUPING       = 524288;
 
 // ─── ZONE DEFINITIONS ────────────────────────────────────────────────────────
