@@ -31,22 +31,22 @@ export function SceneButtons() {
       <button
         onClick={() => handleSceneClick(scene)}
         disabled={loading}
-        className={`flex flex-col items-center justify-center gap-2 rounded-xl p-4
-                   font-bold transition-all min-h-[80px] ${fullWidth ? 'w-full' : ''}
+        className={`flex flex-col items-center justify-center gap-1.5 rounded-xl p-3
+                   font-bold transition-all min-h-[60px] ${fullWidth ? 'w-full' : ''}
                    hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
         style={
           active
             ? {
-                backgroundColor: '#9f5644',
+                backgroundColor: 'var(--ds-accent)',
                 color: 'white',
               }
             : {
-                backgroundColor: '#e8e4e1',
-                color: '#8a8380',
+                backgroundColor: 'var(--ds-warm-inactive-bg)',
+                color: 'var(--ds-warm-inactive-text)',
               }
         }
       >
-        {Icon && <Icon size={28} />}
+        {Icon && <Icon size={24} />}
         <span className="text-sm">{scene.label}</span>
       </button>
     );

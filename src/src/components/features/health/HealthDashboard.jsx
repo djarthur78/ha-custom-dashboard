@@ -1,31 +1,27 @@
 /**
  * HealthDashboard Component
  * Full-screen health dashboard - fills 1920x1080 wall panel
- * CSS Grid layout: score rings top | 2-col main content
- * v2.6.0: Simplified to 2 columns, brighter colors, cold plunge removed
+ * v2.7.0: Simplified — sleep, HRV trend, activity, training readiness
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
-  Heart, Activity, RefreshCw, Footprints, Flame, Zap,
-  TrendingDown, TrendingUp, Clock, Timer, Moon, Bed,
-  Wind, Droplets, Shield, BarChart3, Target, Gauge,
-  BedDouble, AlarmClock,
+  Heart, Activity, RefreshCw, Footprints, Zap,
+  TrendingDown, TrendingUp, Moon, Bed,
+  Shield, BarChart3,
+  BedDouble, AlarmClock, CheckCircle, AlertTriangle, XCircle,
 } from 'lucide-react';
 import { ScoreRing } from './ScoreRing';
-import { MetricCard, HeroMetric, ProgressMetric } from './MetricCard';
+import { MetricCard, HeroMetric } from './MetricCard';
 import { SleepBreakdown } from './SleepBreakdown';
+import { HrvChart } from './HrvChart';
 import { useEntity } from '../../../hooks/useEntity';
-import { useYesterdayValue } from '../../../hooks/useYesterdayValue';
 import haWebSocket from '../../../services/ha-websocket';
 import {
   OURA_SCORES,
   OURA_SLEEP,
   OURA_HEART,
   OURA_ACTIVITY,
-  OURA_BODY,
-  OURA_STRESS,
-  getScoreColor,
 } from './healthConfig';
 
 function formatHours(val) {
@@ -58,33 +54,6 @@ function SectionLabel({ icon: Icon, children }) {
       style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
       {Icon && <Icon size={14} />}
       {children}
-    </div>
-  );
-}
-
-/**
- * MiniGauge - small circular progress indicator
- */
-function MiniGauge({ value, max = 100, size = 44, color = '#5a8fb8', label }) {
-  const pct = Math.min((value / max) * 100, 100);
-  const radius = (size - 6) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (pct / 100) * circumference;
-
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="transform -rotate-90">
-          <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={4} />
-          <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth={4}
-            strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
-            className="transition-all duration-700" />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-[10px] font-black" style={{ color }}>{Math.round(pct)}%</span>
-        </div>
-      </div>
-      {label && <span className="text-[8px] font-semibold text-[var(--color-text-secondary)] uppercase mt-0.5">{label}</span>}
     </div>
   );
 }
@@ -219,81 +188,6 @@ function HeartRateRange() {
 }
 
 /**
- * SpO2Display - blood oxygen with visual gauge
- */
-function SpO2Display() {
-  const { state } = useEntity(OURA_BODY.spo2);
-  const val = parseFloat(state);
-  const isValid = !isNaN(val);
-  const color = isValid ? (val >= 95 ? '#4a9a4a' : val >= 90 ? '#d4944c' : '#c4636a') : '#9ca3af';
-
-  return (
-    <div className="rounded-lg p-3" style={{ backgroundColor: `${color}08`, border: `1px solid ${color}15` }}>
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-0.5">
-            <Droplets size={9} className="inline mr-0.5" />SpO2
-          </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-xl font-black" style={{ color }}>{isValid ? val.toFixed(1) : '--'}</span>
-            <span className="text-[10px] text-[var(--color-text-secondary)]">%</span>
-          </div>
-        </div>
-        {isValid && <MiniGauge value={Math.max(0, (val - 90))} max={10} size={38} color={color} />}
-      </div>
-    </div>
-  );
-}
-
-/**
- * TempDeviation
- */
-function TempDeviation() {
-  const { state } = useEntity(OURA_BODY.temp_deviation);
-  const val = parseFloat(state);
-  const isValid = !isNaN(val) && state !== 'unavailable';
-  const isPositive = isValid && val > 0;
-  const color = isValid
-    ? (Math.abs(val) <= 0.5 ? '#4a9a4a' : Math.abs(val) <= 1 ? '#d4944c' : '#c4636a')
-    : '#9ca3af';
-
-  const scalePct = isValid ? Math.max(0, Math.min(100, ((val + 1) / 2) * 100)) : 50;
-
-  return (
-    <div className="rounded-lg p-3" style={{ backgroundColor: `${color}08`, border: `1px solid ${color}15` }}>
-      <div className="text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-1">
-        Temp Deviation
-      </div>
-      <div className="flex items-center gap-2 mb-1.5">
-        {isValid && (isPositive
-          ? <TrendingUp size={14} style={{ color }} />
-          : <TrendingDown size={14} style={{ color }} />
-        )}
-        <span className="text-xl font-black" style={{ color, letterSpacing: '-0.5px' }}>
-          {isValid ? `${isPositive ? '+' : ''}${val.toFixed(2)}` : '--'}
-        </span>
-        <span className="text-[10px] text-[var(--color-text-secondary)]">&deg;C</span>
-      </div>
-      <div className="relative rounded-full" style={{ height: 4, backgroundColor: 'rgba(0,0,0,0.06)' }}>
-        <div className="absolute top-0 left-1/2 -translate-x-px" style={{ width: 1, height: 4, backgroundColor: 'rgba(0,0,0,0.15)' }} />
-        {isValid && (
-          <div className="absolute top-1/2 -translate-y-1/2"
-            style={{
-              left: `${scalePct}%`, width: 8, height: 8, borderRadius: '50%',
-              backgroundColor: color, transform: 'translate(-50%, -50%)', marginTop: 2,
-            }} />
-        )}
-      </div>
-      <div className="flex justify-between mt-0.5">
-        <span className="text-[8px] text-[var(--color-text-secondary)]">-1°C</span>
-        <span className="text-[8px] text-[var(--color-text-secondary)]">0</span>
-        <span className="text-[8px] text-[var(--color-text-secondary)]">+1°C</span>
-      </div>
-    </div>
-  );
-}
-
-/**
  * ActivityBreakdown - visual time bars + stacked bar
  */
 function ActivityBreakdown() {
@@ -359,7 +253,6 @@ function StepGoalVisual() {
   const val = parseFloat(steps.state) || 0;
   const goal = 10000;
   const pct = Math.min((val / goal) * 100, 100);
-  const yesterday = useYesterdayValue(OURA_ACTIVITY.steps);
 
   const size = 100;
   const radius = (size - 8) / 2;
@@ -385,92 +278,78 @@ function StepGoalVisual() {
         <div className="text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase mb-0.5">Steps Goal</div>
         <div className="text-xl font-black text-[var(--color-text)]">{Math.round(pct)}%</div>
         <div className="text-[9px] text-[var(--color-text-secondary)]">Target: 10,000</div>
-        {yesterday && (
-          <div className="text-[9px] text-[var(--color-text-secondary)]">Yesterday: {formatNumber(yesterday)}</div>
-        )}
       </div>
     </div>
   );
 }
 
 /**
- * StressBadge
+ * TrainingReadiness - big, clear, actionable training decision
  */
-function StressBadge({ entityId, label }) {
-  const { state } = useEntity(entityId);
-  const val = state && state !== 'unavailable' && state !== 'unknown' ? state : null;
+function TrainingReadiness() {
+  const readiness = useEntity(OURA_SCORES.readiness);
+  const hrv = useEntity(OURA_HEART.avg_sleep_hrv);
+  const rhr = useEntity(OURA_HEART.lowest_sleep);
 
-  const badgeColors = {
-    restored: { bg: '#4a9a4a20', text: '#3a8a3a', border: '#4a9a4a30' },
-    normal: { bg: '#5a8fb820', text: '#4a7fa8', border: '#5a8fb830' },
-    strained: { bg: '#d4944c20', text: '#c4843c', border: '#d4944c30' },
-    stressed: { bg: '#c4636a20', text: '#b4535a', border: '#c4636a30' },
-    strong: { bg: '#4a9a4a20', text: '#3a8a3a', border: '#4a9a4a30' },
-    adequate: { bg: '#5a8fb820', text: '#4a7fa8', border: '#5a8fb830' },
-    limited: { bg: '#d4944c20', text: '#c4843c', border: '#d4944c30' },
-  };
+  const score = parseInt(readiness.state, 10);
+  const hrvVal = parseFloat(hrv.state);
+  const rhrVal = parseFloat(rhr.state);
 
-  const colors = val ? (badgeColors[val.toLowerCase()] || badgeColors.normal) : { bg: '#9ca3af15', text: '#6b7280', border: '#9ca3af20' };
+  let decision, bgColor, textColor, borderColor, Icon, subtitle;
+  if (isNaN(score)) {
+    decision = 'Loading...';
+    bgColor = 'rgba(0,0,0,0.03)';
+    textColor = 'var(--ds-text-secondary)';
+    borderColor = 'rgba(0,0,0,0.06)';
+    Icon = AlertTriangle;
+    subtitle = 'Waiting for data';
+  } else if (score >= 85) {
+    decision = 'Train Hard';
+    bgColor = 'rgba(74, 154, 74, 0.08)';
+    textColor = '#3a8a3a';
+    borderColor = 'rgba(74, 154, 74, 0.2)';
+    Icon = CheckCircle;
+    subtitle = 'High intensity OK';
+  } else if (score >= 70) {
+    decision = 'Moderate';
+    bgColor = 'rgba(212, 148, 76, 0.08)';
+    textColor = '#c4843c';
+    borderColor = 'rgba(212, 148, 76, 0.2)';
+    Icon = AlertTriangle;
+    subtitle = '60-80% effort';
+  } else {
+    decision = 'Rest Day';
+    bgColor = 'rgba(196, 99, 106, 0.08)';
+    textColor = '#b4535a';
+    borderColor = 'rgba(196, 99, 106, 0.2)';
+    Icon = XCircle;
+    subtitle = 'Light activity or rest';
+  }
 
   return (
-    <div className="rounded-lg p-3" style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}>
-      <div className="text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-0.5">{label}</div>
-      <div className="text-sm font-black" style={{ color: colors.text }}>
-        {val ? val.charAt(0).toUpperCase() + val.slice(1) : '--'}
-      </div>
-    </div>
-  );
-}
-
-/**
- * StressRecoveryBar
- */
-function StressRecoveryBar() {
-  const stressHigh = useEntity(OURA_STRESS.stress_high);
-  const recoveryHigh = useEntity(OURA_STRESS.recovery_high);
-
-  const stressMin = parseFloat(stressHigh.state) || 0;
-  const recoveryMin = parseFloat(recoveryHigh.state) || 0;
-  const total = stressMin + recoveryMin || 1;
-
-  return (
-    <div className="rounded-lg p-3" style={{ backgroundColor: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)' }}>
-      <div className="flex items-center gap-1 mb-1.5">
-        <Gauge size={10} className="text-[var(--color-text-secondary)]" />
-        <span className="text-[10px] font-semibold text-[var(--color-text-secondary)] uppercase">Stress vs Recovery</span>
-      </div>
-      <div className="flex rounded-lg overflow-hidden" style={{ height: 20 }}>
-        <div className="flex items-center justify-center" style={{
-          width: `${(stressMin / total) * 100}%`,
-          backgroundColor: '#c4636a',
-          minWidth: stressMin > 0 ? 30 : 0,
-        }}>
-          {stressMin > 0 && <span className="text-[9px] font-bold text-white">{Math.round(stressMin)}m</span>}
-        </div>
-        <div className="flex items-center justify-center" style={{
-          width: `${(recoveryMin / total) * 100}%`,
-          backgroundColor: '#4a9a4a',
-          minWidth: recoveryMin > 0 ? 30 : 0,
-        }}>
-          {recoveryMin > 0 && <span className="text-[9px] font-bold text-white">{Math.round(recoveryMin)}m</span>}
+    <div className="rounded-xl p-4" style={{ backgroundColor: bgColor, border: `2px solid ${borderColor}` }}>
+      <div className="flex items-center gap-3 mb-2">
+        <Icon size={28} style={{ color: textColor }} />
+        <div>
+          <div className="text-2xl font-black" style={{ color: textColor }}>{decision}</div>
+          <div className="text-xs font-medium" style={{ color: textColor, opacity: 0.8 }}>{subtitle}</div>
         </div>
       </div>
-      <div className="flex justify-between mt-1">
-        <span className="text-[9px] font-medium" style={{ color: '#c4636a' }}>Stress {Math.round(stressMin)}m</span>
-        <span className="text-[9px] font-medium" style={{ color: '#4a9a4a' }}>Recovery {Math.round(recoveryMin)}m</span>
+      <div className="flex items-center gap-4 mt-2">
+        <div>
+          <div className="text-[9px] font-semibold text-[var(--color-text-secondary)] uppercase">Readiness</div>
+          <div className="text-lg font-black" style={{ color: textColor }}>{!isNaN(score) ? score : '--'}</div>
+        </div>
+        <div>
+          <div className="text-[9px] font-semibold text-[var(--color-text-secondary)] uppercase">HRV</div>
+          <div className="text-lg font-black" style={{ color: '#7a5aaa' }}>{!isNaN(hrvVal) ? Math.round(hrvVal) : '--'}ms</div>
+        </div>
+        <div>
+          <div className="text-[9px] font-semibold text-[var(--color-text-secondary)] uppercase">RHR</div>
+          <div className="text-lg font-black" style={{ color: '#c4636a' }}>{!isNaN(rhrVal) ? Math.round(rhrVal) : '--'}bpm</div>
+        </div>
       </div>
     </div>
-  );
-}
-
-/**
- * Yesterday comparison wrappers
- */
-function CaloriesWithYesterday() {
-  const yesterday = useYesterdayValue(OURA_ACTIVITY.active_calories);
-  return (
-    <ProgressMetric entityId={OURA_ACTIVITY.active_calories} label="Active Cal" goal={500} unit="kcal" color="#d4944c"
-      yesterday={yesterday ? formatNumber(yesterday) : null} />
   );
 }
 
@@ -569,6 +448,11 @@ export function HealthDashboard() {
             <MetricCard entityId={OURA_SLEEP.latency} label="Fell Asleep"
               format={(v) => v && v !== 'unavailable' ? `${Math.round(parseFloat(v))}m` : '--'} />
           </div>
+          {/* Elite benchmarks */}
+          <div className="flex gap-3 text-[9px]" style={{ color: 'var(--ds-text-secondary)' }}>
+            <span>Elite target: 8-10h</span>
+            <span>Elite efficiency: 85%+</span>
+          </div>
           <SleepBreakdown
             deepId={OURA_SLEEP.deep_duration}
             lightId={OURA_SLEEP.light_duration}
@@ -577,25 +461,16 @@ export function HealthDashboard() {
           />
           <SleepTimeline />
           <ReadinessFactors />
-          <div className="grid grid-cols-2 gap-2">
-            <HeroMetric entityId={OURA_HEART.avg_sleep_hrv} label="Sleep HRV" unit="ms" color="#7a5aaa" icon={<Activity size={16} />} />
+          {/* HRV 7-day chart */}
+          <HrvChart />
+          {/* Lowest HR with elite benchmark */}
+          <div>
             <HeroMetric entityId={OURA_HEART.lowest_sleep} label="Lowest HR" unit="bpm" color="#c4636a" icon={<Heart size={16} />} />
+            <div className="text-[9px] mt-0.5" style={{ color: 'var(--ds-text-secondary)' }}>Elite RHR: 35-50bpm</div>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <MetricCard entityId={OURA_SLEEP.recovery_score} label="Recovery" />
-            <MetricCard entityId={OURA_SLEEP.deep_pct} label="Deep %" unit="%" />
-            <MetricCard entityId={OURA_SLEEP.rem_pct} label="REM %" unit="%" />
-          </div>
-          {/* Stress & Recovery summary */}
-          <SectionLabel icon={Shield}>Stress & Recovery</SectionLabel>
-          <div className="grid grid-cols-2 gap-2">
-            <StressBadge entityId={OURA_STRESS.day_summary} label="Day Summary" />
-            <StressBadge entityId={OURA_STRESS.resilience} label="Resilience" />
-          </div>
-          <StressRecoveryBar />
         </div>
 
-        {/* RIGHT: ACTIVITY & BODY */}
+        {/* RIGHT: ACTIVITY & TRAINING */}
         <div className="rounded-2xl p-4 flex flex-col gap-3" style={{
           backgroundColor: 'var(--ds-card)',
           border: '1px solid var(--ds-border)',
@@ -603,23 +478,14 @@ export function HealthDashboard() {
           minHeight: 0,
           overflow: 'auto',
         }}>
-          <SectionLabel icon={Activity}>Activity & Body</SectionLabel>
+          <SectionLabel icon={Activity}>Activity & Training</SectionLabel>
+          {/* Training Readiness - THE reason to glance at the dashboard */}
+          <TrainingReadiness />
           <StepGoalVisual />
-          <CaloriesWithYesterday />
           <ActivityBreakdown />
           <HeartRateRange />
-          <div className="grid grid-cols-2 gap-2">
-            <HeroMetric entityId={OURA_HEART.current} label="Current HR" unit="bpm" color="#c4636a" icon={<Heart size={16} />} />
-            <HeroMetric entityId={OURA_HEART.average} label="Avg HR" unit="bpm" color="#d4944c" icon={<Heart size={16} />} />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <SpO2Display />
-            <TempDeviation />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <MetricCard entityId={OURA_STRESS.resilience_score} label="Resilience Score" />
-            <MetricCard entityId={OURA_HEART.cardio_age} label="Cardio Age" unit="yrs" />
-          </div>
+          <HeroMetric entityId={OURA_HEART.current} label="Current HR" unit="bpm" color="#c4636a" icon={<Heart size={16} />} />
+          <MetricCard entityId={OURA_HEART.cardio_age} label="Cardio Age" unit="yrs" />
         </div>
       </div>
     </div>

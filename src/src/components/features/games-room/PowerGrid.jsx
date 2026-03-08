@@ -20,12 +20,12 @@ export function PowerGrid() {
       className="ds-card h-full flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-[var(--color-text)]">Lights</h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-base font-bold text-[var(--color-text)]">Lights</h3>
       </div>
 
       {/* 2x2 Grid */}
-      <div className="flex-1 grid grid-cols-2 gap-3">
+      <div className="flex-1 grid grid-cols-2 gap-2">
         {devices.map((device) => {
           const Icon = LucideIcons[device.icon];
           const isOn = device.switchState === 'on';
@@ -35,17 +35,17 @@ export function PowerGrid() {
               key={device.id}
               onClick={() => handleToggle(device)}
               disabled={device.loading}
-              className={`flex flex-col items-center justify-center gap-2 rounded-xl p-2
-                        transition-all cursor-pointer border min-h-[80px]
+              className={`flex flex-col items-center justify-center gap-1.5 rounded-xl p-2
+                        transition-all cursor-pointer border min-h-[60px]
                         hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{
-                backgroundColor: isOn ? '#9f5644' : '#e8e4e1',
-                color: isOn ? 'white' : '#8a8380',
-                borderColor: isOn ? '#9f5644' : '#d5d0cd',
+                backgroundColor: isOn ? 'var(--ds-accent)' : 'var(--ds-warm-inactive-bg)',
+                color: isOn ? 'white' : 'var(--ds-warm-inactive-text)',
+                borderColor: isOn ? 'var(--ds-accent)' : '#d5d0cd',
               }}
             >
               {/* Icon */}
-              {Icon && <Icon size={24} />}
+              {Icon && <Icon size={22} />}
 
               {/* Label */}
               <div className="text-xs font-medium text-center leading-tight">
@@ -54,7 +54,7 @@ export function PowerGrid() {
 
               {/* Status indicator */}
               <div
-                className="w-3 h-3 rounded-full"
+                className="w-2.5 h-2.5 rounded-full"
                 style={{ backgroundColor: isOn ? 'white' : '#b5b0ad' }}
               />
             </button>

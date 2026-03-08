@@ -1,6 +1,7 @@
 /**
  * SpeakerPanel Component
- * Right panel (25%) — speaker grid with volume, grouping controls.
+ * Right panel — speaker grid with volume, grouping controls.
+ * Styled to match Games Room warm earthy design.
  */
 
 import { useState } from 'react';
@@ -60,8 +61,8 @@ export function SpeakerPanel({
     <div className="ds-card h-full flex flex-col overflow-hidden" style={{ padding: 0 }}>
 
       {/* Header */}
-      <div className="px-3 py-2.5 border-b border-[var(--color-border)] flex-shrink-0">
-        <h3 className="text-sm font-semibold text-[var(--color-text)]">Speakers</h3>
+      <div className="px-4 py-3 border-b border-[var(--ds-border)] flex-shrink-0">
+        <h3 className="text-base font-bold text-[var(--ds-text)]">Speakers</h3>
       </div>
 
       {/* Speaker List (scrollable) */}
@@ -69,18 +70,18 @@ export function SpeakerPanel({
         {Object.entries(speakersByZone).map(([zone, zoneSpeakers]) => (
           <div key={zone}>
             {/* Zone label */}
-            <div className="flex items-center gap-2 mb-1.5 px-1">
+            <div className="flex items-center gap-2 mb-2 px-1">
               <div
                 className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: ZONES[zone]?.color || '#9ca3af' }}
               />
-              <span className="text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
+              <span className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--ds-text-secondary)' }}>
                 {ZONES[zone]?.label || zone}
               </span>
             </div>
 
             {/* Speaker cards */}
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {zoneSpeakers.map((speaker) => (
                 <SpeakerCard
                   key={speaker.entityId}
@@ -99,45 +100,43 @@ export function SpeakerPanel({
       </div>
 
       {/* Preset Groups */}
-      <div className="p-3 border-t border-[var(--color-border)] flex-shrink-0 space-y-2">
-        <div className="text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
+      <div className="p-3 border-t border-[var(--ds-border)] flex-shrink-0 space-y-2">
+        <div className="text-xs font-medium uppercase tracking-wider mb-2 px-1" style={{ color: 'var(--ds-text-secondary)' }}>
           Quick Groups
         </div>
-        {PRESET_GROUPS.map((preset, idx) => {
-          const presetColors = ['#7ba89e', '#9b86a8'];
-          const bgColor = presetColors[idx] || '#9f5644';
-          const borderColor = idx === 0 ? '#5f8f85' : idx === 1 ? '#7d6a8c' : '#8a4839';
+        {PRESET_GROUPS.map((preset) => {
           return (
             <button
               key={preset.id}
               onClick={() => groupControls.groupSpeakers(preset.members[0], preset.members)}
               disabled={groupControls.groupLoading}
-              className="w-full flex flex-col items-center justify-center gap-1.5 py-3 px-4 text-sm font-semibold
-                         text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed
-                         transition-all"
+              className="w-full flex flex-col items-center justify-center gap-1 py-2.5 px-4 text-sm font-semibold
+                         rounded-xl disabled:opacity-40 disabled:cursor-not-allowed
+                         transition-all hover:shadow-md"
               style={{
-                backgroundColor: bgColor,
-                border: `2px solid ${borderColor}`,
+                backgroundColor: 'var(--ds-warm-inactive-bg)',
+                color: 'var(--ds-text)',
+                border: '1px solid var(--ds-border)',
               }}
             >
               <span>{preset.label}</span>
-              <span className="text-xs font-normal opacity-90">{preset.description}</span>
+              <span className="text-xs font-normal" style={{ color: 'var(--ds-text-secondary)' }}>{preset.description}</span>
             </button>
           );
         })}
       </div>
 
       {/* Manual Grouping Controls */}
-      <div className="p-3 border-t border-[var(--color-border)] flex-shrink-0 space-y-2">
+      <div className="p-3 border-t border-[var(--ds-border)] flex-shrink-0 space-y-2">
         {/* Group Selected */}
         <button
           onClick={handleGroupSelected}
           disabled={checkedSpeakers.size < 2 || groupControls.groupLoading}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-3 text-sm font-medium
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 text-sm font-medium
                      text-white rounded-xl
                      disabled:opacity-40 disabled:cursor-not-allowed
                      hover:opacity-90 transition-opacity"
-          style={{ backgroundColor: '#9f5644', border: '1px solid #8a4839' }}
+          style={{ backgroundColor: 'var(--ds-accent)', border: '1px solid var(--ds-accent-hover)' }}
         >
           <Link2 size={14} />
           Group Selected ({checkedSpeakers.size})
@@ -148,11 +147,15 @@ export function SpeakerPanel({
           <button
             onClick={handlePlayEverywhere}
             disabled={!activeSpeakerId || groupControls.groupLoading}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs font-medium
-                       text-white rounded-xl
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium
+                       rounded-xl
                        disabled:opacity-40 disabled:cursor-not-allowed
-                       hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: '#7ba89e', border: '1px solid #5f8f85' }}
+                       hover:shadow-md transition-all"
+            style={{
+              backgroundColor: 'var(--ds-warm-inactive-bg)',
+              color: 'var(--ds-text)',
+              border: '1px solid var(--ds-border)',
+            }}
           >
             <PlayCircle size={14} />
             Everywhere
@@ -160,11 +163,15 @@ export function SpeakerPanel({
           <button
             onClick={() => groupControls.ungroupAll(speakers)}
             disabled={groupControls.groupLoading}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs font-medium
-                       text-white rounded-xl
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium
+                       rounded-xl
                        disabled:opacity-40 disabled:cursor-not-allowed
-                       hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: '#6b7280', border: '1px solid #565c66' }}
+                       hover:shadow-md transition-all"
+            style={{
+              backgroundColor: 'var(--ds-warm-inactive-bg)',
+              color: 'var(--ds-text)',
+              border: '1px solid var(--ds-border)',
+            }}
           >
             <Unlink size={14} />
             Ungroup All

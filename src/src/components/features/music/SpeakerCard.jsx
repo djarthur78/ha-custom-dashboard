@@ -1,14 +1,7 @@
 /**
  * SpeakerCard Component
  * Displays a single Sonos speaker with status, volume slider, and selection state.
- *
- * Props:
- * - speaker: Object from useSonosSpeakers (entityId, label, state, volumeLevel, etc.)
- * - isSelected: Boolean, true if this is the active playback target
- * - isChecked: Boolean, true if checked for grouping
- * - onSelect: Function, called when user taps the card to select it
- * - onCheck: Function, called when user toggles the checkbox
- * - onVolumeChange: Function(entityId, volumeLevel), called on volume slider change
+ * Styled to match Games Room warm earthy design.
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -44,11 +37,11 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
     }, VOLUME_DEBOUNCE_MS);
   };
 
-  // Status indicator color and tooltip
+  // Status indicator color
   const statusColorStyle =
-    speaker.state === 'playing' ? '#9f5644' :
-    speaker.state === 'paused'  ? '#b08a62' :
-    '#e8e4e1';
+    speaker.state === 'playing' ? 'var(--ds-accent)' :
+    speaker.state === 'paused'  ? 'var(--ds-accent-secondary)' :
+    'var(--ds-warm-inactive-bg)';
 
   const statusTooltip =
     speaker.state === 'playing' ? 'Playing' :
@@ -56,30 +49,19 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
     'Idle';
 
   const isGrouped = speaker.groupMembers.length > 1;
-  const isCoordinator = speaker.groupMembers[0] === speaker.entityId;
-
-  // Generate consistent color for group (based on coordinator ID)
-  // Use HSL for easier manipulation of lightness/alpha
-  const groupHue = isGrouped ? hashCode(speaker.groupMembers[0]) % 360 : 0;
-  const groupBgColor = isGrouped
-    ? `hsla(${groupHue}, 60%, 85%, 0.25)` // Very light, semi-transparent
-    : 'var(--color-surface)';
 
   return (
     <div
       onClick={() => onSelect(speaker.entityId)}
-      className={`
-        rounded-2xl p-4 cursor-pointer transition-all
-        border border-[var(--ds-border)]
-        ${isSelected ? 'ring-2 ring-[var(--ds-accent)]' : 'hover:border-[#bbb]'}
-      `}
+      className="ds-card cursor-pointer transition-all hover:shadow-md"
       style={{
-        backgroundColor: groupBgColor,
+        padding: '12px',
+        ...(isSelected ? { boxShadow: '0 0 0 2px var(--ds-accent)' } : {}),
       }}
     >
       {/* Top row: checkbox, name, status dot */}
-      <div className="flex items-center gap-2.5 mb-2.5">
-        {/* Checkbox for grouping (stop propagation so it doesn't trigger card select) */}
+      <div className="flex items-center gap-2.5 mb-2">
+        {/* Checkbox for grouping */}
         <input
           type="checkbox"
           checked={isChecked}
@@ -88,17 +70,17 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
             onCheck(speaker.entityId);
           }}
           onClick={(e) => e.stopPropagation()}
-          className="w-4.5 h-4.5 rounded border-gray-300 text-[var(--color-primary)]
-                     focus:ring-[var(--color-primary)] cursor-pointer"
+          className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+          style={{ accentColor: 'var(--ds-accent)' }}
         />
 
-        <span className="font-medium text-base text-[var(--color-text)] truncate flex-1">
+        <span className="font-medium text-sm truncate flex-1" style={{ color: 'var(--ds-text)' }}>
           {speaker.label}
         </span>
 
         {/* Status dot */}
         <div
-          className="w-3 h-3 rounded-full flex-shrink-0"
+          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
           style={{ backgroundColor: statusColorStyle }}
           title={statusTooltip}
         />
@@ -106,15 +88,15 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
         {/* Group indicator */}
         {isGrouped && (
           <div
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: 'rgba(159,86,68,0.1)', border: '1px solid rgba(159,86,68,0.3)' }}
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded-full"
+            style={{ backgroundColor: 'rgba(181,69,58,0.1)', border: '1px solid rgba(181,69,58,0.3)' }}
             title={`Grouped with: ${speaker.groupMembers.filter(id => id !== speaker.entityId).map(id => {
               const s = speakers?.find(sp => sp.entityId === id);
               return s?.label || id;
             }).join(', ')}`}
           >
-            <Link2 size={12} style={{ color: '#9f5644' }} />
-            <span className="text-xs font-medium" style={{ color: '#9f5644' }}>
+            <Link2 size={11} style={{ color: 'var(--ds-accent)' }} />
+            <span className="text-xs font-medium" style={{ color: 'var(--ds-accent)' }}>
               {speaker.groupMembers.length}
             </span>
           </div>
@@ -123,17 +105,17 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
 
       {/* Currently playing track (if any) */}
       {speaker.mediaTitle && (
-        <div className="text-sm text-[var(--color-text-secondary)] truncate mb-2.5">
+        <div className="text-xs truncate mb-2" style={{ color: 'var(--ds-text-secondary)' }}>
           {speaker.mediaTitle}
         </div>
       )}
 
       {/* Volume slider */}
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2">
         {speaker.isVolumeMuted ? (
-          <VolumeX size={16} className="text-gray-400 flex-shrink-0" />
+          <VolumeX size={14} className="flex-shrink-0" style={{ color: 'var(--ds-text-secondary)' }} />
         ) : (
-          <Volume2 size={16} className="text-gray-400 flex-shrink-0" />
+          <Volume2 size={14} className="flex-shrink-0" style={{ color: 'var(--ds-text-secondary)' }} />
         )}
         <input
           type="range"
@@ -146,9 +128,9 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
           className="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer
                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3
                      [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full
-                     [&::-webkit-slider-thumb]:bg-[var(--color-primary)]"
+                     [&::-webkit-slider-thumb]:bg-[var(--ds-accent)]"
         />
-        <span className="text-sm font-medium text-[var(--color-text)] min-w-[50px] text-right flex-shrink-0">
+        <span className="text-xs font-medium min-w-[36px] text-right flex-shrink-0" style={{ color: 'var(--ds-text)' }}>
           {Math.round(localVolume * 100)}%
         </span>
       </div>

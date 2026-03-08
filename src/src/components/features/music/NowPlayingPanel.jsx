@@ -137,7 +137,7 @@ export function NowPlayingPanel({ speaker, controls }) {
                 onError={() => setImageError(true)}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(159,86,68,0.15), rgba(176,138,98,0.15))' }}>
+              <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(181,69,58,0.15), rgba(176,138,98,0.15))' }}>
                 <Music size={80} className="text-gray-400" />
               </div>
             )}
@@ -188,7 +188,7 @@ export function NowPlayingPanel({ speaker, controls }) {
               onClick={() => controls.setShuffle(speaker.entityId, !speaker.shuffle)}
               className={`p-3 rounded-full transition-colors ${
                 speaker.shuffle
-                  ? 'text-[var(--ds-accent)] bg-[rgba(159,86,68,0.08)]'
+                  ? 'text-[var(--ds-accent)] bg-[rgba(181,69,58,0.08)]'
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -240,7 +240,7 @@ export function NowPlayingPanel({ speaker, controls }) {
               }}
               className={`p-3 rounded-full transition-colors ${
                 speaker.repeat !== 'off'
-                  ? 'text-[var(--ds-accent)] bg-[rgba(159,86,68,0.08)]'
+                  ? 'text-[var(--ds-accent)] bg-[rgba(181,69,58,0.08)]'
                   : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -254,7 +254,7 @@ export function NowPlayingPanel({ speaker, controls }) {
           <div className="space-y-2">
             {/* Group volume slider (if grouped) */}
             {isGrouped && (
-              <div className="rounded-lg p-2.5" style={{ backgroundColor: 'rgba(159,86,68,0.06)', border: '1px solid rgba(159,86,68,0.15)' }}>
+              <div className="rounded-lg p-2.5" style={{ backgroundColor: 'rgba(181,69,58,0.06)', border: '1px solid rgba(181,69,58,0.15)' }}>
                 <div className="text-xs font-medium mb-2 flex items-center gap-1.5" style={{ color: 'var(--ds-accent)' }}>
                   <Link2 size={12} />
                   Group Volume

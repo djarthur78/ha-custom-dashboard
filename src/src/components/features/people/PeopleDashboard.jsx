@@ -68,7 +68,7 @@ export function PeopleDashboard() {
           </div>
           <div className="flex items-center gap-3 mt-1.5 text-xs">
             <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#9f5644' }}></div>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--ds-accent)' }}></div>
               <span className="text-[var(--color-text-secondary)]">
                 {peopleAtHome} home
               </span>

@@ -1,7 +1,6 @@
-import { Footprints, Wifi, Moon, MapPin, Signal, Car, User, Zap, Timer, Home as HomeIcon } from 'lucide-react';
+import { Footprints, Wifi, Moon, MapPin, Car, User, Zap, Timer, Home as HomeIcon } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { AvatarPhoto } from './AvatarPhoto';
-import { ZoneBadge } from './ZoneBadge';
 import { BatteryIndicator } from './BatteryIndicator';
 
 // Calculate distance between two coordinates (Haversine formula)
@@ -22,7 +21,7 @@ const HOME_LON = 0.520416;
 
 /**
  * Person Card Component
- * Shows person info with avatar, zone, battery, and optional stats
+ * Clean ds-card design with avatar ring color, Home/Away pill badge
  */
 export function PersonCard({ person, isSelected, onSelect, compact = false }) {
   const handleClick = () => {
@@ -32,17 +31,14 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
   };
 
   const isAway = person.state !== 'home';
-  const showGeocodedLocation = isAway && person.geocodedLocation;
 
   // Parse last changed
-  let lastChangedText = '';
   let timeAtLocation = '';
   if (person.lastChanged) {
     try {
-      lastChangedText = formatDistanceToNow(new Date(person.lastChanged), { addSuffix: true });
       timeAtLocation = formatDistanceToNow(new Date(person.lastChanged));
     } catch (e) {
-      lastChangedText = '';
+      timeAtLocation = '';
     }
   }
 
@@ -69,26 +65,22 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
   if (compact) {
     return (
       <div
-        className={`bg-[var(--color-surface)] rounded-lg p-2 cursor-pointer transition-all relative flex items-center gap-2 ${
-          isSelected ? 'ring-2 ring-[var(--color-primary)]' : 'hover:bg-[var(--color-surface)]/80'
-        } ${isLowBattery ? 'ring-2 ring-red-500' : ''}`}
+        className="ds-card cursor-pointer transition-all hover:shadow-md flex items-center gap-3"
         style={{
-          borderLeft: `4px solid ${person.color}`
+          padding: '10px 12px',
+          ...(isSelected ? { boxShadow: '0 0 0 2px var(--ds-accent)' } : {}),
         }}
         onClick={handleClick}
       >
-        {isMoving && (
-          <div className="absolute top-1 right-1">
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-          </div>
-        )}
         <div className="relative">
-          <AvatarPhoto
-            entityPicture={person.entityPicture}
-            fallbackInitial={person.avatarFallback}
-            color={person.color}
-            size={32}
-          />
+          <div style={{ border: `3px solid ${person.color}`, borderRadius: '50%', padding: '1px' }}>
+            <AvatarPhoto
+              entityPicture={person.entityPicture}
+              fallbackInitial={person.avatarFallback}
+              color={person.color}
+              size={32}
+            />
+          </div>
           {isCharging && (
             <div className="absolute -bottom-0.5 -right-0.5 bg-green-500 rounded-full p-0.5">
               <Zap size={8} className="text-white" />
@@ -96,10 +88,20 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-xs font-semibold text-[var(--color-text)]">{person.label}</div>
-          <div className="text-xs text-[var(--color-text-secondary)]">
-            {person.state === 'home' ? '🏠' : person.batteryLevel ? `${person.batteryLevel}%` : '--'}
-          </div>
+          <div className="text-xs font-semibold" style={{ color: 'var(--ds-text)' }}>{person.label}</div>
+        </div>
+        {/* Home/Away pill */}
+        <div
+          className="px-2 py-0.5 rounded-xl text-xs font-semibold"
+          style={!isAway ? {
+            backgroundColor: 'var(--ds-health-good)',
+            color: 'white',
+          } : {
+            backgroundColor: 'var(--ds-warm-inactive-bg)',
+            color: 'var(--ds-warm-inactive-text)',
+          }}
+        >
+          {isAway ? 'Away' : 'Home'}
         </div>
       </div>
     );
@@ -107,18 +109,15 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
 
   return (
     <div
-      className={`ds-card cursor-pointer transition-all relative ${
-        isSelected ? 'ring-2 ring-[var(--color-primary)]' : ''
-      } ${isLowBattery ? 'ring-2 ring-red-500' : ''}`}
+      className="ds-card cursor-pointer transition-all hover:shadow-md relative"
       style={{
-        borderLeft: `4px solid ${person.color}`,
-        padding: '12px',
+        ...(isSelected ? { boxShadow: '0 0 0 2px var(--ds-accent)' } : {}),
       }}
       onClick={handleClick}
     >
       {/* Movement pulse indicator */}
       {isMoving && (
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-3 right-3">
           <div className="relative">
             <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping absolute"></div>
             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -127,14 +126,16 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
       )}
 
       {/* Header: Avatar + Name + Location */}
-      <div className="flex items-center gap-3 mb-2">
+      <div className="flex items-center gap-3 mb-3">
         <div className="relative">
-          <AvatarPhoto
-            entityPicture={person.entityPicture}
-            fallbackInitial={person.avatarFallback}
-            color={person.color}
-            size={56}
-          />
+          <div style={{ border: `3px solid ${person.color}`, borderRadius: '50%', padding: '2px' }}>
+            <AvatarPhoto
+              entityPicture={person.entityPicture}
+              fallbackInitial={person.avatarFallback}
+              color={person.color}
+              size={56}
+            />
+          </div>
           {isCharging && (
             <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5">
               <Zap size={12} className="text-white" />
@@ -142,20 +143,24 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-[var(--color-text)] mb-0.5">{person.label}</h3>
-          {/* Location - prominent display */}
-          {person.state === 'home' ? (
-            <div className="flex items-center gap-1.5 text-green-600">
-              <HomeIcon size={16} />
-              <span className="text-base font-medium">Home</span>
-            </div>
+          <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--ds-text)' }}>{person.label}</h3>
+          {/* Home/Away pill badge */}
+          {!isAway ? (
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-sm font-semibold"
+              style={{ backgroundColor: 'var(--ds-health-good)', color: 'white' }}
+            >
+              <HomeIcon size={14} />
+              Home
+            </span>
           ) : (
-            <div className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
-              <MapPin size={16} />
-              <span className="text-base font-medium truncate">
-                {person.geocodedLocation || person.state || 'Away'}
-              </span>
-            </div>
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-sm font-semibold"
+              style={{ backgroundColor: 'var(--ds-warm-inactive-bg)', color: 'var(--ds-warm-inactive-text)' }}
+            >
+              <MapPin size={14} />
+              {person.geocodedLocation || person.state || 'Away'}
+            </span>
           )}
         </div>
       </div>
@@ -166,7 +171,7 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-2 text-xs text-[var(--color-text-secondary)]">
+      <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: 'var(--ds-text-secondary)' }}>
         {person.steps !== null && person.steps !== undefined && (
           <div className="flex items-center gap-1">
             <Footprints size={12} />
@@ -175,7 +180,7 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
         )}
 
         {distanceFromHome && (
-          <div className="flex items-center gap-1 text-amber-500">
+          <div className="flex items-center gap-1" style={{ color: 'var(--ds-health-warn)' }}>
             <MapPin size={12} />
             <span>{distanceFromHome}</span>
           </div>
@@ -189,7 +194,7 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
         )}
 
         {isHomeWifi && (
-          <div className="flex items-center gap-1 text-green-500">
+          <div className="flex items-center gap-1" style={{ color: 'var(--ds-health-good)' }}>
             <Wifi size={12} />
             <span>Home WiFi</span>
           </div>
@@ -203,17 +208,17 @@ export function PersonCard({ person, isSelected, onSelect, compact = false }) {
         )}
 
         {person.focus && (
-          <div className="flex items-center gap-1 text-purple-500">
+          <div className="flex items-center gap-1" style={{ color: 'var(--ds-health-accent)' }}>
             <Moon size={12} />
             <span>Focus</span>
           </div>
         )}
       </div>
 
-      {/* Last Changed */}
-      {lastChangedText && (
-        <div className="text-xs text-[var(--color-text-secondary)] opacity-70 mt-1.5">
-          Updated {lastChangedText}
+      {/* Low battery warning */}
+      {isLowBattery && (
+        <div className="mt-2 text-xs font-semibold" style={{ color: 'var(--ds-health-bad)' }}>
+          Low battery
         </div>
       )}
     </div>

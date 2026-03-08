@@ -1,15 +1,17 @@
 export const CAMERAS = [
-  // Front cameras (large, top row) — use MJPEG streams, priority loading
-  { id: 'camera.front_door_high_resolution_channel', label: 'Front Door', zone: 'front', priority: 1, interval: 3000 },
-  { id: 'camera.front_right_high_resolution_channel', label: 'Front Right', zone: 'front', priority: 2, interval: 3000 },
-  { id: 'camera.front_left_high_resolution_channel', label: 'Front Left', zone: 'front', priority: 3, interval: 3000 },
+  // Front cameras — snapshot polling at 2s for speed
+  { id: 'camera.front_door_high_resolution_channel', label: 'Front Door', zone: 'front', priority: 1, interval: 2000 },
+  { id: 'camera.front_right_high_resolution_channel', label: 'Front Right', zone: 'front', priority: 2, interval: 2000 },
+  { id: 'camera.front_left_high_resolution_channel', label: 'Front Left', zone: 'front', priority: 3, interval: 2000 },
 
-  // Back/side cameras (small, bottom row) — use snapshot refresh, lazy loaded
-  { id: 'camera.front_door_package_camera', label: 'Package Cam', zone: 'other', priority: 4, interval: 10000 },
-  { id: 'camera.back_shed_high_resolution_channel', label: 'Back Shed', zone: 'other', priority: 5, interval: 10000 },
-  { id: 'camera.back_gym_high_resolution_channel', label: 'Back Gym', zone: 'other', priority: 6, interval: 10000 },
-  { id: 'camera.side_gate_high_resolution_channel', label: 'Side Gate', zone: 'other', priority: 7, interval: 10000 },
-  { id: 'camera.outdoor_kitchen_high_resolution_channel', label: 'Outdoor Kitchen', zone: 'other', priority: 8, interval: 10000 },
+  // Outside cameras — snapshot polling at 10s
+  { id: 'camera.back_shed_high_resolution_channel', label: 'Back Shed', zone: 'outside', priority: 4, interval: 10000 },
+  { id: 'camera.side_gate_high_resolution_channel', label: 'Side Gate', zone: 'outside', priority: 5, interval: 10000 },
+  { id: 'camera.outdoor_kitchen_high_resolution_channel', label: 'Outdoor Kitchen', zone: 'outside', priority: 6, interval: 10000 },
+
+  // Outbuildings cameras — snapshot polling at 10s
+  { id: 'camera.g6_turret_high_resolution_channel', label: 'Gym', zone: 'outbuildings', priority: 7, interval: 10000 },
+  { id: 'camera.g6_turret_high_resolution_channel_2', label: 'Games Room', zone: 'outbuildings', priority: 8, interval: 10000 },
 ];
 
 export const DOORBELL_ENTITY = 'event.front_door_doorbell';

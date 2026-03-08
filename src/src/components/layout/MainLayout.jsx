@@ -62,7 +62,7 @@ export function MainLayout() {
                 className={({ isActive }) =>
                   `flex flex-col items-center justify-center gap-1 px-2.5 py-1.5 rounded-full transition-colors ${
                     isActive
-                      ? 'bg-[#9f5644] text-white'
+                      ? 'bg-[var(--ds-accent)] text-white'
                       : 'text-white/70 hover:bg-white/10 hover:text-white'
                   }`
                 }
@@ -101,7 +101,7 @@ export function MainLayout() {
       <main className={isFullViewport ? '' : 'mx-auto px-4 py-6'}>
         <Suspense fallback={
           <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 72px)' }}>
-            <div className="w-8 h-8 border-3 rounded-full animate-spin" style={{ borderColor: '#e2e2e6', borderTopColor: '#9f5644' }} />
+            <div className="w-8 h-8 border-3 rounded-full animate-spin" style={{ borderColor: '#e2e2e6', borderTopColor: 'var(--ds-accent)' }} />
           </div>
         }>
           <Outlet context={{ alertMode, dismissAlert }} />

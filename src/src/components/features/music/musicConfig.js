@@ -4,14 +4,11 @@
  */
 
 // ─── SONOS SPEAKERS ──────────────────────────────────────────────────────────
-// These are the 11 active Sonos media_player entities.
+// These are the 8 active Sonos media_player entities.
 // Each has supported_features: 4127295 (full control).
 // The `zone` field is used to visually group speakers in the UI.
 
 export const SONOS_SPEAKERS = [
-  { entityId: 'media_player.bedroom',            label: 'Bedroom',      zone: 'upstairs' },
-  { entityId: 'media_player.cerys_bedroom',      label: 'Cerys Room',   zone: 'upstairs' },
-  { entityId: 'media_player.dexter_bedroom',     label: 'Dexters Room', zone: 'upstairs' },
   { entityId: 'media_player.office',             label: 'Office',       zone: 'downstairs' },
   { entityId: 'media_player.kitchen',            label: 'Kitchen',      zone: 'downstairs' },
   { entityId: 'media_player.dining_room',        label: 'Dining Room',  zone: 'downstairs' },
@@ -128,7 +125,6 @@ export const SUPPORT_GROUPING       = 524288;
 // Used to group speakers visually in the SpeakerPanel.
 
 export const ZONES = {
-  upstairs:   { label: 'Upstairs',   color: '#7c3aed' },
   downstairs: { label: 'Downstairs', color: '#0ea5e9' },
   outside:    { label: 'Outside',    color: '#16a34a' },
 };

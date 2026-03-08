@@ -65,16 +65,17 @@ export function ClimateCard() {
 
   return (
     <div
-      className="ds-card h-full p-4 flex flex-col gap-3"
+      className="ds-card h-full flex flex-col gap-2"
+      style={{ padding: '12px' }}
     >
       {/* Header */}
-      <h3 className="text-lg font-bold text-[var(--color-text)]">Climate</h3>
+      <h3 className="text-base font-bold text-[var(--color-text)]">Climate</h3>
 
       {/* Current Temperature Display */}
       <div className="text-center">
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <ThermometerSun size={28} style={{ color: '#9f5644' }} />
-          <div className="text-5xl font-bold text-[var(--color-text)]">
+        <div className="flex items-center justify-center gap-2">
+          <ThermometerSun size={24} style={{ color: 'var(--ds-accent)' }} />
+          <div className="text-4xl font-bold text-[var(--color-text)]">
             {currentTemp?.toFixed(1) || '--'}°C
           </div>
         </div>
@@ -90,10 +91,10 @@ export function ClimateCard() {
         <button
           onClick={handleOn}
           disabled={loading || isOn}
-          className="py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
+          className="py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
           style={{
-            backgroundColor: isOn ? '#9f5644' : '#e8e4e1',
-            color: isOn ? 'white' : '#8a8380',
+            backgroundColor: isOn ? 'var(--ds-accent)' : 'var(--ds-warm-inactive-bg)',
+            color: isOn ? 'white' : 'var(--ds-warm-inactive-text)',
           }}
         >
           ON
@@ -101,10 +102,10 @@ export function ClimateCard() {
         <button
           onClick={handleOff}
           disabled={loading || !isOn}
-          className="py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
+          className="py-2 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
           style={{
-            backgroundColor: !isOn ? '#2c2e2e' : '#e8e4e1',
-            color: !isOn ? 'white' : '#8a8380',
+            backgroundColor: !isOn ? 'var(--ds-accent)' : 'var(--ds-warm-inactive-bg)',
+            color: !isOn ? 'white' : 'var(--ds-warm-inactive-text)',
           }}
         >
           OFF
@@ -118,25 +119,25 @@ export function ClimateCard() {
             <button
               onClick={() => handleModeChange('heat')}
               disabled={loading}
-              className="py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+              className="py-2 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
               style={{
-                backgroundColor: state === 'heat' ? '#9f5644' : '#e8e4e1',
-                color: state === 'heat' ? 'white' : '#8a8380',
+                backgroundColor: state === 'heat' ? 'var(--ds-accent)' : 'var(--ds-warm-inactive-bg)',
+                color: state === 'heat' ? 'white' : 'var(--ds-warm-inactive-text)',
               }}
             >
-              <Flame size={18} />
+              <Flame size={16} />
               Heat
             </button>
             <button
               onClick={() => handleModeChange('cool')}
               disabled={loading}
-              className="py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+              className="py-2 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
               style={{
-                backgroundColor: state === 'cool' ? '#9f5644' : '#e8e4e1',
-                color: state === 'cool' ? 'white' : '#8a8380',
+                backgroundColor: state === 'cool' ? 'var(--ds-accent)' : 'var(--ds-warm-inactive-bg)',
+                color: state === 'cool' ? 'white' : 'var(--ds-warm-inactive-text)',
               }}
             >
-              <Snowflake size={18} />
+              <Snowflake size={16} />
               Cool
             </button>
           </div>
@@ -146,50 +147,47 @@ export function ClimateCard() {
             <button
               onClick={() => handleTempChange(-tempStep)}
               disabled={loading || targetTemp <= minTemp}
-              className="w-16 h-16 rounded-xl font-bold text-3xl
+              className="w-12 h-12 rounded-xl font-bold text-2xl
                        disabled:opacity-50 disabled:cursor-not-allowed
                        transition-colors"
-              style={{ backgroundColor: 'rgba(159,86,68,0.1)', color: '#9f5644' }}
+              style={{ backgroundColor: 'rgba(181,69,58,0.1)', color: 'var(--ds-accent)' }}
             >
               −
             </button>
             <div className="text-center">
-              <div className="text-xs text-[var(--color-text-secondary)] mb-1">Target</div>
-              <div className="text-4xl font-bold text-[var(--color-text)]">
+              <div className="text-xs text-[var(--color-text-secondary)]">Target</div>
+              <div className="text-3xl font-bold text-[var(--color-text)]">
                 {targetTemp?.toFixed(0) || '--'}°
               </div>
             </div>
             <button
               onClick={() => handleTempChange(tempStep)}
               disabled={loading || targetTemp >= maxTemp}
-              className="w-16 h-16 rounded-xl font-bold text-3xl
+              className="w-12 h-12 rounded-xl font-bold text-2xl
                        disabled:opacity-50 disabled:cursor-not-allowed
                        transition-colors"
-              style={{ backgroundColor: 'rgba(159,86,68,0.1)', color: '#9f5644' }}
+              style={{ backgroundColor: 'rgba(181,69,58,0.1)', color: 'var(--ds-accent)' }}
             >
               +
             </button>
           </div>
 
-          {/* Fan Speed Buttons */}
-          <div>
-            <div className="text-xs text-[var(--color-text-secondary)] mb-2 text-center">Fan Speed</div>
-            <div className="grid grid-cols-3 gap-2">
-              {['low', 'medium', 'high'].map((speed) => (
-                <button
-                  key={speed}
-                  onClick={() => handleFanChange(speed)}
-                  disabled={loading}
-                  className="py-2 rounded-xl text-xs font-bold transition-all capitalize"
-                  style={{
-                    backgroundColor: fanMode === speed ? '#9f5644' : '#e8e4e1',
-                    color: fanMode === speed ? 'white' : '#8a8380',
-                  }}
-                >
-                  {speed}
-                </button>
-              ))}
-            </div>
+          {/* Fan Speed Buttons - single row */}
+          <div className="grid grid-cols-3 gap-2">
+            {['low', 'medium', 'high'].map((speed) => (
+              <button
+                key={speed}
+                onClick={() => handleFanChange(speed)}
+                disabled={loading}
+                className="py-1.5 rounded-xl text-xs font-bold transition-all capitalize"
+                style={{
+                  backgroundColor: fanMode === speed ? 'var(--ds-accent)' : 'var(--ds-warm-inactive-bg)',
+                  color: fanMode === speed ? 'white' : 'var(--ds-warm-inactive-text)',
+                }}
+              >
+                {speed}
+              </button>
+            ))}
           </div>
         </>
       )}

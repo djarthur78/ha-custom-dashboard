@@ -12,8 +12,8 @@
   --ds-bg: #ededf1;
   --ds-card: #ffffff;
   --ds-sidebar: #2c2e2e;
-  --ds-accent: #9f5644;
-  --ds-accent-hover: #8a4839;
+  --ds-accent: #b5453a;
+  --ds-accent-hover: #9c3a30;
   --ds-accent-secondary: #b08a62;
   --ds-text: #2c2e2e;
   --ds-text-secondary: #9aa1a8;
@@ -30,8 +30,8 @@
   --ds-tint-cameras: #fef2f0;
 
   /* Warm interactive states */
-  --ds-warm-active: #9f5644;
-  --ds-warm-active-hover: #8a4a3b;
+  --ds-warm-active: #b5453a;
+  --ds-warm-active-hover: #9c3a30;
   --ds-warm-inactive-bg: #e8e4e1;
   --ds-warm-inactive-text: #8a8380;
 
@@ -101,5 +101,5 @@
 }
 
 .ds-btn-secondary:hover {
-  background: rgba(159, 86, 68, 0.06);
+  background: rgba(181, 69, 58, 0.06);
 }
