@@ -36,6 +36,19 @@ function sortByLastPlayed(items, playHistory) {
   });
 }
 
+// Simple deterministic shuffle (Fisher-Yates with seed from array length)
+// Stable across re-renders for the same track list
+function shuffleArray(arr) {
+  const result = [...arr];
+  let seed = result.length * 9301 + 49297;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
   const [activeTab, setActiveTab] = useState('daz'); // 'daz' | 'nic' | 'queue'
   const { items, title, loading, error, browseToPlaylists, browseInto, goBack, reset, canGoBack, currentItem } =
@@ -43,10 +56,14 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
   const hasLoadedRef = useRef(false);
   const lastSpeakerRef = useRef(null);
 
-  // Track the last played playlist so Queue view can show upcoming tracks
-  const [lastPlayedPlaylist, setLastPlayedPlaylist] = useState(null);
-  // Pre-fetched track list for the queue (fetched at play time, not in QueueView)
-  const [lastPlayedTracks, setLastPlayedTracks] = useState([]);
+  // Track the last played playlist per speaker so Queue view shows the right queue
+  // Maps: { [entityId]: { id, type } } and { [entityId]: [...tracks] }
+  const [playedPlaylistMap, setPlayedPlaylistMap] = useState({});
+  const [playedTracksMap, setPlayedTracksMap] = useState({});
+
+  // Convenience: get queue data for the active speaker
+  const lastPlayedPlaylist = activeSpeaker ? playedPlaylistMap[activeSpeaker.entityId] || null : null;
+  const lastPlayedTracks = activeSpeaker ? playedTracksMap[activeSpeaker.entityId] || [] : [];
 
   // Play history for sorting playlists by last played
   const [playHistory, setPlayHistory] = useState(loadPlayHistory);
@@ -77,8 +94,16 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     if (!activeSpeaker) return;
     setPlayLoading(true);
 
-    // Instant UI feedback
-    setLastPlayedPlaylist({ id: mediaContentId, type: mediaContentType });
+    // Instant UI feedback — store queue for this speaker AND all group members
+    const speakerIds = activeSpeaker.groupMembers?.length > 0
+      ? activeSpeaker.groupMembers
+      : [activeSpeaker.entityId];
+    const playlistEntry = { id: mediaContentId, type: mediaContentType };
+    setPlayedPlaylistMap(prev => {
+      const next = { ...prev };
+      speakerIds.forEach(id => { next[id] = playlistEntry; });
+      return next;
+    });
     const updated = { ...playHistory, [mediaContentId]: Date.now() };
     setPlayHistory(updated);
     savePlayHistory(updated);
@@ -98,9 +123,18 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     console.log('[PlaylistPanel] Playing:', mediaContentId, mediaContentType, 'on', activeSpeaker.entityId);
     onPlayMedia(activeSpeaker.entityId, mediaContentId, mediaContentType);
 
+    // Helper to store tracks for this speaker + group members
+    const storeTracks = (tracks) => {
+      setPlayedTracksMap(prev => {
+        const next = { ...prev };
+        speakerIds.forEach(id => { next[id] = tracks; });
+        return next;
+      });
+    };
+
     // If preloaded tracks provided (e.g. from Replace Playlist), use them directly
     if (preloadedTracks && preloadedTracks.length > 0) {
-      setLastPlayedTracks(preloadedTracks);
+      storeTracks(preloadedTracks);
       setPlayLoading(false);
       return;
     }
@@ -118,10 +152,10 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
         setTimeout(() => reject(new Error('Browse timeout')), 8000)
       );
       const result = await Promise.race([browsePromise, timeoutPromise]);
-      setLastPlayedTracks(result.children || []);
+      storeTracks(result.children || []);
     } catch (err) {
       console.warn('[PlaylistPanel] Could not pre-fetch tracks:', err);
-      setLastPlayedTracks([]);
+      storeTracks([]);
     } finally {
       setPlayLoading(false);
     }
@@ -268,12 +302,10 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                 {currentItem && currentItem.can_play && title !== 'Playlists' && (
                   <button
                     onClick={() => {
-                      const firstTrack = items.length > 0 && items[0].can_play ? items[0] : null;
-                      if (firstTrack) {
-                        handlePlayPlaylist(firstTrack.media_content_id, firstTrack.media_content_type, items);
-                      } else {
-                        handlePlayPlaylist(currentItem.media_content_id, currentItem.media_content_type);
-                      }
+                      // Play the container (album/playlist) so Sonos loads the full queue.
+                      // Stop-then-play in handlePlayPlaylist makes this reliable even cross-account.
+                      // Pass items as preloaded tracks so queue view works immediately.
+                      handlePlayPlaylist(currentItem.media_content_id, currentItem.media_content_type, items);
                     }}
                     disabled={playLoading}
                     className="w-full mb-3 flex items-center justify-center gap-2 py-3 px-4 rounded-lg
@@ -459,11 +491,11 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
   if (tracks.length > 0) {
     if (currentIdx >= 0) {
       upcomingTracks = isShuffled
-        ? tracks.filter((_, idx) => idx !== currentIdx)
+        ? shuffleArray(tracks.filter((_, idx) => idx !== currentIdx))
         : tracks.slice(currentIdx + 1);
     } else {
       // Can't find current track in list — show all tracks rather than hiding queue
-      upcomingTracks = tracks;
+      upcomingTracks = isShuffled ? shuffleArray([...tracks]) : tracks;
     }
   }
 
@@ -520,10 +552,10 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
             {upcomingTracks.map((track, idx) => (
               <button
                 key={track.media_content_id || idx}
-                onClick={() => handleSkipTo(idx + 1)}
-                disabled={skipping}
-                className="w-full flex items-center gap-2.5 p-2 rounded-lg hover:bg-gray-50
-                           active:bg-gray-100 transition-colors text-left disabled:opacity-50"
+                onClick={() => !isShuffled && handleSkipTo(idx + 1)}
+                disabled={skipping || isShuffled}
+                className={`w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors text-left
+                           ${isShuffled ? 'opacity-80 cursor-default' : 'hover:bg-gray-50 active:bg-gray-100 disabled:opacity-50'}`}
               >
                 <span className="text-xs font-medium text-[var(--color-text-secondary)] w-5 text-center flex-shrink-0">
                   {currentIdx < 0 ? '·' : isShuffled ? '·' : currentIdx + idx + 2}
@@ -544,7 +576,7 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
                     {track.title}
                   </div>
                 </div>
-                <SkipForward size={12} className="text-[var(--color-text-secondary)] flex-shrink-0" />
+                {!isShuffled && <SkipForward size={12} className="text-[var(--color-text-secondary)] flex-shrink-0" />}
               </button>
             ))}
           </div>
