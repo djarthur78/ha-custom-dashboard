@@ -7,7 +7,7 @@
  * 2. Queue: Show what's coming up on the active speaker with upcoming tracks
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Music, ChevronLeft, ListMusic, Library, RefreshCw, SkipForward, Play, FolderOpen } from 'lucide-react';
 import { useBrowseMedia } from './hooks/useBrowseMedia';
 import { SPOTIFY_ACCOUNTS } from './musicConfig';
@@ -36,12 +36,11 @@ function sortByLastPlayed(items, playHistory) {
   });
 }
 
-// Simple deterministic shuffle (Fisher-Yates with seed from array length)
-// Stable across re-renders for the same track list
-function shuffleArray(arr) {
+// Seeded Fisher-Yates shuffle — same seed = same permutation, different seed = different order
+function shuffleWithSeed(arr, seed) {
   const result = [...arr];
-  let seed = result.length * 9301 + 49297;
-  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  let s = Math.floor(seed * 233280);
+  const rand = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1));
     [result[i], result[j]] = [result[j], result[i]];
@@ -109,7 +108,6 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     savePlayHistory(updated);
 
     // Stop current playback first to ensure Sonos queue is cleared
-    // (enqueue: 'replace' is unreliable for cross-account Spotify content)
     try {
       await haWebSocket.callService('media_player', 'media_stop', {
         entity_id: activeSpeaker.entityId
@@ -118,10 +116,6 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     } catch (err) {
       console.warn('[PlaylistPanel] Stop before play failed:', err);
     }
-
-    // Fire play command
-    console.log('[PlaylistPanel] Playing:', mediaContentId, mediaContentType, 'on', activeSpeaker.entityId);
-    onPlayMedia(activeSpeaker.entityId, mediaContentId, mediaContentType);
 
     // Helper to store tracks for this speaker + group members
     const storeTracks = (tracks) => {
@@ -132,32 +126,65 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
       });
     };
 
-    // If preloaded tracks provided (e.g. from Replace Playlist), use them directly
-    if (preloadedTracks && preloadedTracks.length > 0) {
-      storeTracks(preloadedTracks);
+    // Get tracks: use preloaded, or fetch via browse_media (8s timeout)
+    let tracks = preloadedTracks || null;
+    if (!tracks || tracks.length === 0) {
+      try {
+        const browsePromise = haWebSocket.send({
+          type: 'media_player/browse_media',
+          entity_id: activeSpeaker.entityId,
+          media_content_type: mediaContentType,
+          media_content_id: mediaContentId,
+        });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Browse timeout')), 8000)
+        );
+        const result = await Promise.race([browsePromise, timeoutPromise]);
+        tracks = result.children || [];
+      } catch (err) {
+        console.warn('[PlaylistPanel] Could not fetch tracks:', err);
+        tracks = [];
+      }
+    }
+
+    storeTracks(tracks);
+
+    if (tracks.length === 0) {
+      // Fallback: play the container directly (old behavior)
+      console.log('[PlaylistPanel] No tracks, playing container:', mediaContentId);
+      onPlayMedia(activeSpeaker.entityId, mediaContentId, mediaContentType);
       setPlayLoading(false);
       return;
     }
 
-    // Pre-fetch the playlist's track list for the Queue view (background)
-    // Timeout after 8s to prevent spinner getting stuck (e.g. browsing individual tracks)
+    // Build real Sonos queue: play first track, enqueue the rest
+    console.log('[PlaylistPanel] Building queue:', tracks.length, 'tracks on', activeSpeaker.entityId);
+
+    // Play first track immediately
     try {
-      const browsePromise = haWebSocket.send({
-        type: 'media_player/browse_media',
+      await haWebSocket.callService('media_player', 'play_media', {
         entity_id: activeSpeaker.entityId,
-        media_content_type: mediaContentType,
-        media_content_id: mediaContentId,
+        media_content_id: tracks[0].media_content_id,
+        media_content_type: tracks[0].media_content_type,
+        enqueue: 'play',
       });
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Browse timeout')), 8000)
-      );
-      const result = await Promise.race([browsePromise, timeoutPromise]);
-      storeTracks(result.children || []);
     } catch (err) {
-      console.warn('[PlaylistPanel] Could not pre-fetch tracks:', err);
-      storeTracks([]);
-    } finally {
+      console.error('[PlaylistPanel] Failed to play first track:', err);
       setPlayLoading(false);
+      return;
+    }
+
+    setPlayLoading(false);
+
+    // Enqueue remaining tracks (fire-and-forget with small delays)
+    for (let i = 1; i < tracks.length; i++) {
+      await new Promise(r => setTimeout(r, 100));
+      haWebSocket.callService('media_player', 'play_media', {
+        entity_id: activeSpeaker.entityId,
+        media_content_id: tracks[i].media_content_id,
+        media_content_type: tracks[i].media_content_type,
+        enqueue: 'add',
+      });
     }
   };
 
@@ -432,13 +459,73 @@ function PlaylistListItem({ item, isPlaying, onPlay, onBrowse }) {
  */
 function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], onNextTrack }) {
   const [skipping, setSkipping] = useState(false);
+  const [autoFetchedTracks, setAutoFetchedTracks] = useState([]);
+  const [fetchLoading, setFetchLoading] = useState(false);
+  const lastFetchedIdRef = useRef(null);
+  const [shuffleSeed, setShuffleSeed] = useState(() => Math.random());
+  const prevShuffleRef = useRef(null);
 
   const isActive =
     activeSpeaker &&
     (activeSpeaker.state === 'playing' || activeSpeaker.state === 'paused');
 
-  // Use pre-fetched tracks from when the playlist was played
-  const tracks = prefetchedTracks;
+  // Use prefetched tracks if available, otherwise auto-fetched
+  const tracks = prefetchedTracks.length > 0 ? prefetchedTracks : autoFetchedTracks;
+
+  // Auto-fetch tracks when no prefetched data and speaker has a browsable Spotify URI
+  useEffect(() => {
+    if (!isActive || !activeSpeaker) return;
+    if (prefetchedTracks.length > 0) return; // already have tracks from dashboard play
+
+    const contentId = activeSpeaker.mediaContentId;
+    if (!contentId) return;
+    // Only auto-fetch for browsable Spotify URIs (playlists and albums)
+    if (!contentId.includes('spotify:playlist') && !contentId.includes('spotify:album')) return;
+    // Don't re-fetch the same content
+    const fetchKey = `${activeSpeaker.entityId}:${contentId}`;
+    if (lastFetchedIdRef.current === fetchKey) return;
+    lastFetchedIdRef.current = fetchKey;
+
+    const fetchTracks = async () => {
+      setFetchLoading(true);
+      try {
+        const browsePromise = haWebSocket.send({
+          type: 'media_player/browse_media',
+          entity_id: activeSpeaker.entityId,
+          media_content_type: activeSpeaker.mediaContentType || 'spotify',
+          media_content_id: contentId,
+        });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Browse timeout')), 8000)
+        );
+        const result = await Promise.race([browsePromise, timeoutPromise]);
+        setAutoFetchedTracks(result.children || []);
+      } catch (err) {
+        console.warn('[QueueView] Auto-fetch tracks failed:', err);
+        setAutoFetchedTracks([]);
+      } finally {
+        setFetchLoading(false);
+      }
+    };
+    fetchTracks();
+  }, [isActive, activeSpeaker?.entityId, activeSpeaker?.mediaContentId, prefetchedTracks.length]);
+
+  // Clear auto-fetched tracks when speaker changes
+  useEffect(() => {
+    setAutoFetchedTracks([]);
+    lastFetchedIdRef.current = null;
+  }, [activeSpeaker?.entityId]);
+
+  // Generate new shuffle seed when shuffle toggles on
+  useEffect(() => {
+    if (!activeSpeaker) return;
+    const wasShuffled = prevShuffleRef.current;
+    const isNowShuffled = activeSpeaker.shuffle;
+    if (wasShuffled === false && isNowShuffled === true) {
+      setShuffleSeed(Math.random());
+    }
+    prevShuffleRef.current = isNowShuffled;
+  }, [activeSpeaker?.shuffle]);
 
   // Skip forward N tracks by calling next_track repeatedly via direct WebSocket
   const handleSkipTo = useCallback(
@@ -448,12 +535,10 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
       try {
         for (let i = 0; i < skipsNeeded; i++) {
           haWebSocket.callService('media_player', 'media_next_track', { entity_id: activeSpeaker.entityId });
-          // Small delay between calls so Sonos can process each one
           if (i < skipsNeeded - 1) {
             await new Promise((r) => setTimeout(r, 250));
           }
         }
-        // Brief delay then clear skipping state
         await new Promise((r) => setTimeout(r, 500));
       } catch (err) {
         console.error('[QueueView] Skip failed:', err);
@@ -476,28 +561,26 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
   }
 
   const isShuffled = activeSpeaker.shuffle;
-  // Use playlist track count if available, otherwise fall back to Sonos queue info
   const playlistSize = tracks.length > 0 ? tracks.length : (activeSpeaker.queueSize || 0);
 
-  // Find current track position in the pre-fetched playlist by matching title
-  // (queuePosition from Sonos may include accumulated tracks from previous playlists)
+  // Find current track by title match
   let currentIdx = -1;
   if (tracks.length > 0 && activeSpeaker.mediaTitle) {
     const needle = activeSpeaker.mediaTitle.trim().toLowerCase();
     currentIdx = tracks.findIndex(t => t.title?.trim().toLowerCase() === needle);
   }
 
-  let upcomingTracks = [];
-  if (tracks.length > 0) {
+  // Compute upcoming tracks with stable shuffle via useMemo
+  const upcomingTracks = useMemo(() => {
+    if (tracks.length === 0) return [];
     if (currentIdx >= 0) {
-      upcomingTracks = isShuffled
-        ? shuffleArray(tracks.filter((_, idx) => idx !== currentIdx))
+      return isShuffled
+        ? shuffleWithSeed(tracks.filter((_, idx) => idx !== currentIdx), shuffleSeed)
         : tracks.slice(currentIdx + 1);
-    } else {
-      // Can't find current track in list — show all tracks rather than hiding queue
-      upcomingTracks = isShuffled ? shuffleArray([...tracks]) : tracks;
     }
-  }
+    // Can't find current track — show all
+    return isShuffled ? shuffleWithSeed([...tracks], shuffleSeed) : tracks;
+  }, [tracks, currentIdx, isShuffled, shuffleSeed]);
 
   return (
     <div>
@@ -531,7 +614,6 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
             {activeSpeaker.mediaAlbumName}
           </div>
         )}
-        {/* Compact progress bar */}
         {playlistSize > 1 && currentIdx >= 0 && (
           <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
             <div
@@ -583,10 +665,17 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
         </div>
       )}
 
-      {/* No track list available hint */}
+      {/* No track list available / loading */}
       {tracks.length === 0 && isActive && (
         <div className="text-center py-6 text-sm text-[var(--color-text-secondary)]">
-          <p>Play a playlist from the Daz or Nic tab to see upcoming tracks</p>
+          {fetchLoading ? (
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-6 h-6 border-2 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+              <p>Loading queue...</p>
+            </div>
+          ) : (
+            <p>Play a playlist from the Daz or Nic tab to see upcoming tracks</p>
+          )}
         </div>
       )}
 
