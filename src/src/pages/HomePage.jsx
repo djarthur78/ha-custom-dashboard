@@ -96,7 +96,7 @@ export function HomePage() {
       </div>
 
       <div className="text-center text-sm" style={{ color: 'var(--ds-text-secondary)' }}>
-        Family Dashboard <span className="font-semibold" style={{ color: 'var(--ds-text)' }}>v2.8.3</span>
+        Family Dashboard <span className="font-semibold" style={{ color: 'var(--ds-text)' }}>v2.8.4</span>
       </div>
     </PageContainer>
   );

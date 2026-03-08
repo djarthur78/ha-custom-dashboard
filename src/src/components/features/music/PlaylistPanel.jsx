@@ -73,7 +73,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
   }, [activeTab, reset]);
 
   const [playLoading, setPlayLoading] = useState(false);
-  const handlePlayPlaylist = async (mediaContentId, mediaContentType, preloadedTracks) => {
+  const handlePlayPlaylist = async (mediaContentId, mediaContentType, preloadedTracks = null) => {
     if (!activeSpeaker) return;
     setPlayLoading(true);
 
@@ -83,11 +83,22 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     setPlayHistory(updated);
     savePlayHistory(updated);
 
-    // Fire play command (don't await - let it go)
+    // Stop current playback first to ensure Sonos queue is cleared
+    // (enqueue: 'replace' is unreliable for cross-account Spotify content)
+    try {
+      await haWebSocket.callService('media_player', 'media_stop', {
+        entity_id: activeSpeaker.entityId
+      });
+      await new Promise(r => setTimeout(r, 300));
+    } catch (err) {
+      console.warn('[PlaylistPanel] Stop before play failed:', err);
+    }
+
+    // Fire play command
     console.log('[PlaylistPanel] Playing:', mediaContentId, mediaContentType, 'on', activeSpeaker.entityId);
     onPlayMedia(activeSpeaker.entityId, mediaContentId, mediaContentType);
 
-    // If caller provided tracks (e.g. Replace Playlist with already-loaded items), use them directly
+    // If preloaded tracks provided (e.g. from Replace Playlist), use them directly
     if (preloadedTracks && preloadedTracks.length > 0) {
       setLastPlayedTracks(preloadedTracks);
       setPlayLoading(false);
@@ -259,8 +270,6 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                     onClick={() => {
                       const firstTrack = items.length > 0 && items[0].can_play ? items[0] : null;
                       if (firstTrack) {
-                        // Play first track directly (Sonos rejects some containers like Liked Songs)
-                        // Pass loaded items as preloaded tracks for queue view
                         handlePlayPlaylist(firstTrack.media_content_id, firstTrack.media_content_type, items);
                       } else {
                         handlePlayPlaylist(currentItem.media_content_id, currentItem.media_content_type);
