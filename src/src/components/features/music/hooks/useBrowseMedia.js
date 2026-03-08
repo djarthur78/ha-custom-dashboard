@@ -23,8 +23,9 @@ export function useBrowseMedia() {
   // Stack for back navigation: [{ entityId, title, items }]
   const [history, setHistory] = useState([]);
 
-  // Cache the Spotify library path so we don't re-discover it every time
-  const spotifyCacheRef = useRef(null);
+  // Cache Spotify entries per account so we don't re-discover every time
+  // Map of spotifyEntityId → spotify browse entry
+  const spotifyCacheRef = useRef({});
 
   /**
    * Raw browse: send a browse_media WebSocket message and return the result.
@@ -68,30 +69,51 @@ export function useBrowseMedia() {
    * Auto-navigate to Spotify playlists through the Sonos speaker browse tree.
    * Chain: Speaker root → Spotify library → Playlists category → Playlist items
    * Sets up history so user can navigate back to library categories.
+   *
+   * @param {string} speakerEntityId - The Sonos speaker to browse through
+   * @param {string} [spotifyEntityId] - Optional Spotify entity ID to match the correct account
    */
-  const browseToPlaylists = useCallback(async (speakerEntityId) => {
+  const browseToPlaylists = useCallback(async (speakerEntityId, spotifyEntityId) => {
     if (!speakerEntityId) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      let spotifyEntry = spotifyCacheRef.current;
+      const cacheKey = spotifyEntityId || '_default';
+      let spotifyEntry = spotifyCacheRef.current[cacheKey];
       let libraryCategories = null;
 
-      // Step 1: Find Spotify entry (use cache if available)
+      // Step 1: Find the correct Spotify entry (use cache if available)
       if (!spotifyEntry) {
         const root = await rawBrowse(speakerEntityId);
         if (!root?.children) {
           throw new Error('Could not browse speaker media');
         }
-        spotifyEntry = root.children.find(
+
+        // Find all Spotify entries
+        const spotifyEntries = root.children.filter(
           (c) => c.media_content_type?.startsWith('spotify://')
         );
-        if (!spotifyEntry) {
+
+        if (spotifyEntries.length === 0) {
           throw new Error('No Spotify account linked to this speaker');
         }
-        spotifyCacheRef.current = spotifyEntry;
+
+        // Match by entity ID if provided (e.g. media_content_id contains the entity name)
+        if (spotifyEntityId && spotifyEntries.length > 1) {
+          // The media_content_id typically contains the spotify entity name
+          // e.g. "spotify://media_player.spotify_nic" or the title contains the account name
+          const entityName = spotifyEntityId.split('.').pop(); // e.g. "spotify_nic"
+          spotifyEntry = spotifyEntries.find(
+            (c) => c.media_content_id?.includes(entityName) ||
+                   c.title?.toLowerCase().includes(entityName.replace('spotify_', ''))
+          ) || spotifyEntries[0];
+        } else {
+          spotifyEntry = spotifyEntries[0];
+        }
+
+        spotifyCacheRef.current[cacheKey] = spotifyEntry;
       }
 
       // Step 2: Browse Spotify library to get categories
@@ -174,6 +196,7 @@ export function useBrowseMedia() {
     setHistory([]);
     setError(null);
     setLoading(false);
+    spotifyCacheRef.current = {};
   }, []);
 
   return {

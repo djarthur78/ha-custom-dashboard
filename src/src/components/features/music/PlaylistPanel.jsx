@@ -61,7 +61,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
 
     hasLoadedRef.current = true;
     lastSpeakerRef.current = activeSpeaker.entityId;
-    browseToPlaylists(activeSpeaker.entityId);
+    browseToPlaylists(activeSpeaker.entityId, activeAccount?.entityId);
   }, [activeTab, activeSpeaker?.entityId, activeAccount, browseToPlaylists]);
 
   // Reset when switching tabs

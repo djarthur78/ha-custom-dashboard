@@ -1,0 +1,1 @@
+import{t as n,c as t,n as s,s as o}from"./index-ac5u2vgE.js";import{c as a}from"./constructNow-lwNPfM-b.js";function i(s,o,a){const i=n(s,null==a?void 0:a.in);return isNaN(o)?t(s,NaN):o?(i.setDate(i.getDate()+o),i):i}function r(n,t,a){const[i,r]=s(null==a?void 0:a.in,n,t);return+o(i)===+o(r)}function c(n,s){return r(t(n,n),a(n))}export{i as a,r as b,c as i};
