@@ -309,19 +309,35 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, onNextTrack }) {
   const [tracks, setTracks] = useState([]);
   const [tracksLoading, setTracksLoading] = useState(false);
   const [skipping, setSkipping] = useState(false);
-  const lastFetchedPlaylistRef = useRef(null);
+  const lastFetchedRef = useRef(null);
 
   const isActive =
     activeSpeaker &&
     (activeSpeaker.state === 'playing' || activeSpeaker.state === 'paused');
 
+  // Determine which playlist to fetch tracks from:
+  // 1. Use lastPlayedPlaylist if set (played from dashboard UI)
+  // 2. Fall back to the speaker's media_content_id ONLY if it looks like a playlist/album
+  //    (Sonos track URIs like "x-sonos-spotify:..." can't be browsed)
+  const speakerContentId = activeSpeaker?.mediaContentId;
+  const isPlaylistUri = speakerContentId &&
+    (speakerContentId.startsWith('spotify:playlist:') ||
+     speakerContentId.startsWith('spotify:album:') ||
+     speakerContentId.includes('current_user_playlists'));
+
+  const playlistSource = lastPlayedPlaylist
+    ? { id: lastPlayedPlaylist.id, type: lastPlayedPlaylist.type }
+    : isPlaylistUri
+      ? { id: speakerContentId, type: activeSpeaker.mediaContentType }
+      : null;
+
   // Fetch track list when a playlist is playing
   useEffect(() => {
-    if (!lastPlayedPlaylist || !activeSpeaker?.entityId || !isActive) return;
+    if (!playlistSource || !activeSpeaker?.entityId || !isActive) return;
 
-    // Don't re-fetch if we already have tracks for this playlist
-    if (lastFetchedPlaylistRef.current === lastPlayedPlaylist.id) return;
-    lastFetchedPlaylistRef.current = lastPlayedPlaylist.id;
+    // Don't re-fetch if we already have tracks for this source
+    if (lastFetchedRef.current === playlistSource.id) return;
+    lastFetchedRef.current = playlistSource.id;
 
     async function fetchTracks() {
       setTracksLoading(true);
@@ -329,8 +345,8 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, onNextTrack }) {
         const result = await haWebSocket.send({
           type: 'media_player/browse_media',
           entity_id: activeSpeaker.entityId,
-          media_content_type: lastPlayedPlaylist.type,
-          media_content_id: lastPlayedPlaylist.id,
+          media_content_type: playlistSource.type,
+          media_content_id: playlistSource.id,
         });
         setTracks(result.children || []);
       } catch (err) {
@@ -341,7 +357,7 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, onNextTrack }) {
     }
 
     fetchTracks();
-  }, [lastPlayedPlaylist, activeSpeaker?.entityId, isActive]);
+  }, [playlistSource?.id, activeSpeaker?.entityId, isActive]);
 
   // Skip forward N tracks by calling next_track repeatedly
   const handleSkipTo = useCallback(
@@ -382,11 +398,11 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, onNextTrack }) {
   const progress = queueSize > 0 ? (queuePosition / queueSize) * 100 : 0;
   const isShuffled = activeSpeaker.shuffle;
 
-  // Get upcoming tracks from the playlist track list
+  // Get all remaining tracks from the playlist track list
   // queuePosition is 1-based, tracks array is 0-based
   const upcomingTracks =
     !isShuffled && tracks.length > 0 && queuePosition > 0
-      ? tracks.slice(queuePosition, queuePosition + 5)
+      ? tracks.slice(queuePosition)
       : [];
 
   return (
@@ -398,8 +414,15 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, onNextTrack }) {
 
       {/* Current track */}
       <div className="p-3 rounded-lg mb-3" style={{ backgroundColor: 'rgba(159,86,68,0.06)', borderLeft: '4px solid #9f5644' }}>
-        <div className="text-xs font-medium uppercase tracking-wider mb-1" style={{ color: '#9f5644' }}>
-          Now Playing
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-xs font-medium uppercase tracking-wider" style={{ color: '#9f5644' }}>
+            Now Playing
+          </div>
+          {queueSize > 1 && (
+            <div className="text-xs text-[var(--color-text-secondary)]">
+              {queuePosition} / {queueSize} &middot; {remaining} left
+            </div>
+          )}
         </div>
         <div className="text-base font-semibold text-[var(--color-text)] mb-1">
           {activeSpeaker.mediaTitle || 'Unknown Track'}
@@ -414,48 +437,16 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, onNextTrack }) {
             {activeSpeaker.mediaAlbumName}
           </div>
         )}
-      </div>
-
-      {/* Upcoming tracks */}
-      {upcomingTracks.length > 0 && (
-        <div className="mb-3">
-          <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">
-            Up Next
-          </h4>
-          <div className="space-y-1">
-            {upcomingTracks.map((track, idx) => (
-              <button
-                key={track.media_content_id || idx}
-                onClick={() => handleSkipTo(idx + 1)}
-                disabled={skipping}
-                className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50
-                           active:bg-gray-100 transition-colors text-left disabled:opacity-50"
-              >
-                <span className="text-xs font-medium text-[var(--color-text-secondary)] w-5 text-center flex-shrink-0">
-                  {queuePosition + idx + 1}
-                </span>
-                {track.thumbnail ? (
-                  <img
-                    src={track.thumbnail}
-                    alt=""
-                    className="w-10 h-10 rounded object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    <Music size={14} className="text-gray-400" />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-[var(--color-text)] truncate">
-                    {track.title}
-                  </div>
-                </div>
-                <SkipForward size={14} className="text-[var(--color-text-secondary)] flex-shrink-0 opacity-0 group-hover:opacity-100" />
-              </button>
-            ))}
+        {/* Compact progress bar */}
+        {queueSize > 1 && (
+          <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+            <div
+              className="h-1.5 rounded-full transition-all"
+              style={{ backgroundColor: '#9f5644', width: `${progress}%` }}
+            />
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Loading tracks indicator */}
       {tracksLoading && (
@@ -466,31 +457,57 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, onNextTrack }) {
       )}
 
       {/* Shuffle notice */}
-      {isShuffled && tracks.length > 0 && (
-        <div className="mb-3 p-3 bg-gray-50 rounded-lg text-sm text-[var(--color-text-secondary)]">
-          Shuffle is on — track order may differ from playlist
+      {isShuffled && (
+        <div className="mb-3 p-2.5 bg-gray-50 rounded-lg text-xs text-[var(--color-text-secondary)]">
+          Shuffle is on — track order may differ
         </div>
       )}
 
-      {/* Queue progress */}
-      {queueSize > 1 && (
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-[var(--color-text)]">
-              Track {queuePosition} of {queueSize}
-            </span>
-            <span className="text-sm text-[var(--color-text-secondary)]">
-              {remaining} remaining
-            </span>
+      {/* Upcoming tracks */}
+      {upcomingTracks.length > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">
+            Up Next
+          </h4>
+          <div className="space-y-0.5">
+            {upcomingTracks.map((track, idx) => (
+              <button
+                key={track.media_content_id || idx}
+                onClick={() => handleSkipTo(idx + 1)}
+                disabled={skipping}
+                className="w-full flex items-center gap-2.5 p-2 rounded-lg hover:bg-gray-50
+                           active:bg-gray-100 transition-colors text-left disabled:opacity-50"
+              >
+                <span className="text-xs font-medium text-[var(--color-text-secondary)] w-5 text-center flex-shrink-0">
+                  {queuePosition + idx + 1}
+                </span>
+                {track.thumbnail ? (
+                  <img
+                    src={track.thumbnail}
+                    alt=""
+                    className="w-9 h-9 rounded object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <Music size={12} className="text-gray-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-[var(--color-text)] truncate">
+                    {track.title}
+                  </div>
+                </div>
+                <SkipForward size={12} className="text-[var(--color-text-secondary)] flex-shrink-0" />
+              </button>
+            ))}
           </div>
+        </div>
+      )}
 
-          {/* Progress bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="h-2 rounded-full transition-all"
-              style={{ backgroundColor: '#9f5644', width: `${progress}%` }}
-            />
-          </div>
+      {/* No track list available hint */}
+      {!tracksLoading && upcomingTracks.length === 0 && isActive && !isShuffled && (
+        <div className="text-center py-6 text-sm text-[var(--color-text-secondary)]">
+          <p>Play a playlist from the Daz or Nic tab to see upcoming tracks</p>
         </div>
       )}
 
