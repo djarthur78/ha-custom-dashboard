@@ -4,7 +4,7 @@
  * transport controls, shuffle/repeat, and volume for the active speaker.
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   SkipBack, Play, Pause, SkipForward,
   Volume2, VolumeX, Shuffle, Repeat, Repeat1,
@@ -58,17 +58,6 @@ export function NowPlayingPanel({ speaker, controls }) {
       if (speaker) controls.setVolume(speaker.entityId, newVolume);
     }, VOLUME_DEBOUNCE_MS);
   };
-
-  // Debounce transport controls to prevent double-presses
-  const lastActionRef = useRef(0);
-  const TRANSPORT_DEBOUNCE = 400; // ms
-
-  const fireAction = useCallback((action) => {
-    const now = Date.now();
-    if (now - lastActionRef.current < TRANSPORT_DEBOUNCE) return;
-    lastActionRef.current = now;
-    action(); // fire-and-forget, don't await
-  }, []);
 
   const isPlaying = speaker?.state === 'playing';
   const isPaused = speaker?.state === 'paused';
@@ -196,7 +185,7 @@ export function NowPlayingPanel({ speaker, controls }) {
           {/* Shuffle */}
           {supports(SUPPORT_SHUFFLE_SET) && (
             <button
-              onClick={() => fireAction(() => controls.setShuffle(speaker.entityId, !speaker.shuffle))}
+              onClick={() => controls.setShuffle(speaker.entityId, !speaker.shuffle)}
               className={`p-3 rounded-full transition-colors active:scale-90 ${
                 speaker.shuffle
                   ? 'text-[var(--ds-accent)] bg-[rgba(181,69,58,0.08)]'
@@ -210,7 +199,7 @@ export function NowPlayingPanel({ speaker, controls }) {
           {/* Previous */}
           {supports(SUPPORT_PREVIOUS_TRACK) && (
             <button
-              onClick={() => fireAction(() => controls.previous(speaker.entityId))}
+              onClick={() => controls.previous(speaker.entityId)}
               className="p-4 rounded-full hover:bg-gray-100 active:bg-gray-200 active:scale-90 transition-all"
             >
               <SkipBack size={28} className="text-[var(--color-text)]" />
@@ -220,7 +209,7 @@ export function NowPlayingPanel({ speaker, controls }) {
           {/* Play/Pause */}
           {(supports(SUPPORT_PLAY) || supports(SUPPORT_PAUSE)) && (
             <button
-              onClick={() => fireAction(() => controls.playPause(speaker.entityId))}
+              onClick={() => controls.playPause(speaker.entityId)}
               className="p-5 rounded-full bg-[var(--ds-accent)] text-white hover:opacity-90 active:scale-90 transition-all"
             >
               {isPlaying ? (
@@ -234,7 +223,7 @@ export function NowPlayingPanel({ speaker, controls }) {
           {/* Next */}
           {supports(SUPPORT_NEXT_TRACK) && (
             <button
-              onClick={() => fireAction(() => controls.next(speaker.entityId))}
+              onClick={() => controls.next(speaker.entityId)}
               className="p-4 rounded-full hover:bg-gray-100 active:bg-gray-200 active:scale-90 transition-all"
             >
               <SkipForward size={28} className="text-[var(--color-text)]" />
@@ -244,11 +233,11 @@ export function NowPlayingPanel({ speaker, controls }) {
           {/* Repeat */}
           {supports(SUPPORT_REPEAT_SET) && (
             <button
-              onClick={() => fireAction(() => {
+              onClick={() => {
                 const nextRepeat = speaker.repeat === 'off' ? 'all'
                   : speaker.repeat === 'all' ? 'one' : 'off';
                 controls.setRepeat(speaker.entityId, nextRepeat);
-              })}
+              }}
               className={`p-3 rounded-full transition-colors active:scale-90 ${
                 speaker.repeat !== 'off'
                   ? 'text-[var(--ds-accent)] bg-[rgba(181,69,58,0.08)]'

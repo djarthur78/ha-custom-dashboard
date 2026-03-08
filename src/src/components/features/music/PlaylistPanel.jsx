@@ -72,10 +72,10 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     reset();
   }, [activeTab, reset]);
 
-  const playingRef = useRef(false);
+  const [playLoading, setPlayLoading] = useState(false);
   const handlePlayPlaylist = async (mediaContentId, mediaContentType) => {
-    if (!activeSpeaker || playingRef.current) return;
-    playingRef.current = true;
+    if (!activeSpeaker) return;
+    setPlayLoading(true);
 
     // Instant UI feedback
     setLastPlayedPlaylist({ id: mediaContentId, type: mediaContentType });
@@ -98,8 +98,9 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     } catch (err) {
       console.warn('[PlaylistPanel] Could not pre-fetch tracks:', err);
       setLastPlayedTracks([]);
+    } finally {
+      setPlayLoading(false);
     }
-    playingRef.current = false;
   };
 
   // IMPORTANT: Always browse using the Sonos speaker entity (not Spotify entity)
@@ -241,12 +242,18 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                 {currentItem && currentItem.can_play && title !== 'Playlists' && (
                   <button
                     onClick={() => handlePlayPlaylist(currentItem.media_content_id, currentItem.media_content_type)}
+                    disabled={playLoading}
                     className="w-full mb-3 flex items-center justify-center gap-2 py-3 px-4 rounded-lg
-                               text-base font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                               text-base font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]
+                               disabled:opacity-60"
                     style={{ backgroundColor: 'var(--ds-accent)' }}
                   >
-                    <Play size={18} fill="white" />
-                    Replace Playlist
+                    {playLoading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Play size={18} fill="white" />
+                    )}
+                    {playLoading ? 'Loading...' : 'Replace Playlist'}
                   </button>
                 )}
 
@@ -368,14 +375,14 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
   // Use pre-fetched tracks from when the playlist was played
   const tracks = prefetchedTracks;
 
-  // Skip forward N tracks by calling next_track repeatedly
+  // Skip forward N tracks by calling next_track repeatedly via direct WebSocket
   const handleSkipTo = useCallback(
     async (skipsNeeded) => {
-      if (!activeSpeaker?.entityId || !onNextTrack || skipping) return;
+      if (!activeSpeaker?.entityId || skipping) return;
       setSkipping(true);
       try {
         for (let i = 0; i < skipsNeeded; i++) {
-          onNextTrack(activeSpeaker.entityId); // fire-and-forget each skip
+          haWebSocket.callService('media_player', 'media_next_track', { entity_id: activeSpeaker.entityId });
           // Small delay between calls so Sonos can process each one
           if (i < skipsNeeded - 1) {
             await new Promise((r) => setTimeout(r, 250));
@@ -388,7 +395,7 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
       }
       setSkipping(false);
     },
-    [activeSpeaker?.entityId, onNextTrack, skipping]
+    [activeSpeaker?.entityId, skipping]
   );
 
   if (!isActive) {
