@@ -1,1 +1,0 @@
-import{c as n}from"./index-BMzx2X4_.js";function o(o){return n(o,Date.now())}export{o as c};

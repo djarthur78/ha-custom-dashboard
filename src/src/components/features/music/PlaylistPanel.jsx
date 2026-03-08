@@ -73,7 +73,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
   }, [activeTab, reset]);
 
   const [playLoading, setPlayLoading] = useState(false);
-  const handlePlayPlaylist = async (mediaContentId, mediaContentType) => {
+  const handlePlayPlaylist = async (mediaContentId, mediaContentType, preloadedTracks) => {
     if (!activeSpeaker) return;
     setPlayLoading(true);
 
@@ -86,6 +86,13 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     // Fire play command (don't await - let it go)
     console.log('[PlaylistPanel] Playing:', mediaContentId, mediaContentType, 'on', activeSpeaker.entityId);
     onPlayMedia(activeSpeaker.entityId, mediaContentId, mediaContentType);
+
+    // If caller provided tracks (e.g. Replace Playlist with already-loaded items), use them directly
+    if (preloadedTracks && preloadedTracks.length > 0) {
+      setLastPlayedTracks(preloadedTracks);
+      setPlayLoading(false);
+      return;
+    }
 
     // Pre-fetch the playlist's track list for the Queue view (background)
     // Timeout after 8s to prevent spinner getting stuck (e.g. browsing individual tracks)
@@ -252,7 +259,9 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                     onClick={() => {
                       const firstTrack = items.length > 0 && items[0].can_play ? items[0] : null;
                       if (firstTrack) {
-                        handlePlayPlaylist(firstTrack.media_content_id, firstTrack.media_content_type);
+                        // Play first track directly (Sonos rejects some containers like Liked Songs)
+                        // Pass loaded items as preloaded tracks for queue view
+                        handlePlayPlaylist(firstTrack.media_content_id, firstTrack.media_content_type, items);
                       } else {
                         handlePlayPlaylist(currentItem.media_content_id, currentItem.media_content_type);
                       }
