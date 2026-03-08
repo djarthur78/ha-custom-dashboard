@@ -5,14 +5,14 @@
 
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Calendar, Music, Camera, Users, MoreHorizontal } from 'lucide-react';
+import { Calendar, Utensils, Gamepad2, Snowflake, MoreHorizontal } from 'lucide-react';
 import { MobileMoreSheet } from './MobileMoreSheet';
 
 const tabs = [
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
-  { to: '/music', icon: Music, label: 'Music' },
-  { to: '/cameras', icon: Camera, label: 'Cameras' },
-  { to: '/people', icon: Users, label: 'People' },
+  { to: '/meals', icon: Utensils, label: 'Meals' },
+  { to: '/games-room', icon: Gamepad2, label: 'Games Room' },
+  { to: '/cold-plunge', icon: Snowflake, label: 'Cold Plunge' },
 ];
 
 export function MobileBottomTabBar() {

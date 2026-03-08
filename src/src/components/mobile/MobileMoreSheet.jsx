@@ -4,14 +4,14 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { Home, Utensils, Gamepad2, Heart, Snowflake, X } from 'lucide-react';
+import { Home, Music, Camera, Users, Heart, X } from 'lucide-react';
 
 const moreItems = [
   { to: '/home', icon: Home, label: 'Home' },
-  { to: '/meals', icon: Utensils, label: 'Meals' },
-  { to: '/games-room', icon: Gamepad2, label: 'Games Room' },
+  { to: '/music', icon: Music, label: 'Music' },
+  { to: '/cameras', icon: Camera, label: 'Cameras' },
+  { to: '/people', icon: Users, label: 'People' },
   { to: '/health', icon: Heart, label: 'Health' },
-  { to: '/cold-plunge', icon: Snowflake, label: 'Cold Plunge' },
 ];
 
 export function MobileMoreSheet({ isOpen, onClose }) {

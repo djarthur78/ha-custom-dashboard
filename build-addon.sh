@@ -7,9 +7,9 @@ set -e
 
 # Detect OS for sed compatibility
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  SED_INPLACE="sed -i ''"
+  sed_inplace() { sed -i '' "$@"; }
 else
-  SED_INPLACE="sed -i"
+  sed_inplace() { sed -i "$@"; }
 fi
 
 echo "🏗️  Building Family Dashboard Add-on..."
@@ -27,12 +27,12 @@ cp -r src/dist family-dashboard/build
 
 # Step 3: Inject config.js script into index.html
 echo "🔧 Injecting runtime config loader..."
-$SED_INPLACE 's|<head>|<head>\n    <script src="./config.js"></script>|' family-dashboard/build/index.html
-$SED_INPLACE 's|<head>|<head>\n    <script src="/config.js"></script>|' family-dashboard/build/mobile.html
+sed_inplace 's|<head>|<head>\n    <script src="./config.js"></script>|' family-dashboard/build/index.html
+sed_inplace 's|<head>|<head>\n    <script src="/config.js"></script>|' family-dashboard/build/mobile.html
 
 # Fix relative paths in mobile.html — assets are at /assets/, not /mobile/assets/
-$SED_INPLACE 's|"\./assets/|"/assets/|g' family-dashboard/build/mobile.html
-$SED_INPLACE 's|"\./vite.svg|"/vite.svg|g' family-dashboard/build/mobile.html
+sed_inplace 's|"\./assets/|"/assets/|g' family-dashboard/build/mobile.html
+sed_inplace 's|"\./vite.svg|"/vite.svg|g' family-dashboard/build/mobile.html
 
 # Step 3: Update version in config.json (optional)
 VERSION=$(date +%Y.%m.%d)
