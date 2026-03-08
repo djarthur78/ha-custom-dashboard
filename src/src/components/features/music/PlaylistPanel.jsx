@@ -88,13 +88,18 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     onPlayMedia(activeSpeaker.entityId, mediaContentId, mediaContentType);
 
     // Pre-fetch the playlist's track list for the Queue view (background)
+    // Timeout after 8s to prevent spinner getting stuck (e.g. browsing individual tracks)
     try {
-      const result = await haWebSocket.send({
+      const browsePromise = haWebSocket.send({
         type: 'media_player/browse_media',
         entity_id: activeSpeaker.entityId,
         media_content_type: mediaContentType,
         media_content_id: mediaContentId,
       });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Browse timeout')), 8000)
+      );
+      const result = await Promise.race([browsePromise, timeoutPromise]);
       setLastPlayedTracks(result.children || []);
     } catch (err) {
       console.warn('[PlaylistPanel] Could not pre-fetch tracks:', err);
