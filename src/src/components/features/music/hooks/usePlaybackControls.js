@@ -54,7 +54,7 @@ export function usePlaybackControls() {
       seek_position: seekPosition,
     });
 
-  const playMedia = (entityId, mediaContentId, mediaContentType, enqueue = 'play') =>
+  const playMedia = (entityId, mediaContentId, mediaContentType, enqueue = 'replace') =>
     callService('media_player', 'play_media', {
       entity_id: entityId,
       media_content_id: mediaContentId,

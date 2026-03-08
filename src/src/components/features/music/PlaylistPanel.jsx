@@ -234,6 +234,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                     <PlaylistListItem
                       key={item.media_content_id || idx}
                       item={item}
+                      isPlaying={lastPlayedPlaylist?.id === item.media_content_id}
                       onPlay={handlePlayPlaylist}
                       onBrowse={item.can_expand && !item.can_play ? handleBrowseInto : undefined}
                     />
@@ -267,7 +268,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
 /**
  * PlaylistListItem - horizontal row format for playlist items
  */
-function PlaylistListItem({ item, onPlay, onBrowse }) {
+function PlaylistListItem({ item, isPlaying, onPlay, onBrowse }) {
   const [imageError, setImageError] = useState(false);
 
   const handleClick = () => {
@@ -280,7 +281,11 @@ function PlaylistListItem({ item, onPlay, onBrowse }) {
 
   return (
     <div
-      className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+      className="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors"
+      style={isPlaying
+        ? { backgroundColor: 'var(--ds-accent)', color: 'white' }
+        : undefined
+      }
       onClick={handleClick}
     >
       {/* Thumbnail */}
@@ -304,14 +309,20 @@ function PlaylistListItem({ item, onPlay, onBrowse }) {
       </div>
 
       {/* Title */}
-      <span className="text-sm font-medium text-[var(--color-text)] flex-1 truncate">
+      <span
+        className="text-sm font-medium flex-1 truncate"
+        style={{ color: isPlaying ? 'white' : 'var(--color-text)' }}
+      >
         {item.title}
       </span>
 
       {/* Play button */}
       {item.can_play && (
-        <div className="p-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'rgba(159,86,68,0.1)' }}>
-          <Play size={14} fill="var(--ds-accent)" style={{ color: 'var(--ds-accent)' }} />
+        <div
+          className="p-1.5 rounded-full flex-shrink-0"
+          style={{ backgroundColor: isPlaying ? 'rgba(255,255,255,0.2)' : 'rgba(159,86,68,0.1)' }}
+        >
+          <Play size={14} fill={isPlaying ? 'white' : 'var(--ds-accent)'} style={{ color: isPlaying ? 'white' : 'var(--ds-accent)' }} />
         </div>
       )}
     </div>
@@ -365,24 +376,27 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
     );
   }
 
-  const queuePosition = activeSpeaker.queuePosition || 0;
-  const queueSize = activeSpeaker.queueSize || 0;
-  const remaining = queueSize > queuePosition ? queueSize - queuePosition : 0;
-  const progress = queueSize > 0 ? (queuePosition / queueSize) * 100 : 0;
   const isShuffled = activeSpeaker.shuffle;
+  // Use playlist track count if available, otherwise fall back to Sonos queue info
+  const playlistSize = tracks.length > 0 ? tracks.length : (activeSpeaker.queueSize || 0);
 
-  // Get all remaining tracks from the playlist track list
-  // queuePosition is 1-based, tracks array is 0-based
+  // Find current track position in the pre-fetched playlist by matching title
+  // (queuePosition from Sonos may include accumulated tracks from previous playlists)
+  let currentIdx = -1;
+  if (tracks.length > 0 && activeSpeaker.mediaTitle) {
+    currentIdx = tracks.findIndex(t => t.title === activeSpeaker.mediaTitle);
+  }
+
   const upcomingTracks =
-    !isShuffled && tracks.length > 0 && queuePosition > 0
-      ? tracks.slice(queuePosition)
+    !isShuffled && tracks.length > 0 && currentIdx >= 0
+      ? tracks.slice(currentIdx + 1)
       : [];
 
   return (
     <div>
       <h3 className="text-base font-semibold text-[var(--color-text)] mb-3">
         Playing on {activeSpeaker.label}
-        {queueSize > 0 && ` \u2014 ${queueSize} tracks`}
+        {playlistSize > 0 && ` \u2014 ${playlistSize} tracks`}
       </h3>
 
       {/* Current track */}
@@ -391,9 +405,9 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
           <div className="text-xs font-medium uppercase tracking-wider" style={{ color: '#9f5644' }}>
             Now Playing
           </div>
-          {queueSize > 1 && (
+          {playlistSize > 1 && currentIdx >= 0 && (
             <div className="text-xs text-[var(--color-text-secondary)]">
-              {queuePosition} / {queueSize} &middot; {remaining} left
+              {currentIdx + 1} / {playlistSize} &middot; {playlistSize - currentIdx - 1} left
             </div>
           )}
         </div>
@@ -411,11 +425,11 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
           </div>
         )}
         {/* Compact progress bar */}
-        {queueSize > 1 && (
+        {playlistSize > 1 && currentIdx >= 0 && (
           <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
             <div
               className="h-1.5 rounded-full transition-all"
-              style={{ backgroundColor: '#9f5644', width: `${progress}%` }}
+              style={{ backgroundColor: '#9f5644', width: `${((currentIdx + 1) / playlistSize) * 100}%` }}
             />
           </div>
         )}
@@ -444,7 +458,7 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
                            active:bg-gray-100 transition-colors text-left disabled:opacity-50"
               >
                 <span className="text-xs font-medium text-[var(--color-text-secondary)] w-5 text-center flex-shrink-0">
-                  {queuePosition + idx + 1}
+                  {currentIdx + idx + 2}
                 </span>
                 {track.thumbnail ? (
                   <img
