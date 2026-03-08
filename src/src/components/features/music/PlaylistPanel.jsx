@@ -38,7 +38,7 @@ function sortByLastPlayed(items, playHistory) {
 
 export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
   const [activeTab, setActiveTab] = useState('daz'); // 'daz' | 'nic' | 'queue'
-  const { items, title, loading, error, browseToPlaylists, browseInto, goBack, reset, canGoBack } =
+  const { items, title, loading, error, browseToPlaylists, browseInto, goBack, reset, canGoBack, currentItem } =
     useBrowseMedia();
   const hasLoadedRef = useRef(false);
   const lastSpeakerRef = useRef(null);
@@ -228,17 +228,33 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                   </button>
                 </div>
 
+                {/* Replace Playlist button for non-playlist browse views */}
+                {currentItem && currentItem.can_play && title !== 'Playlists' && (
+                  <button
+                    onClick={() => handlePlayPlaylist(currentItem.media_content_id, currentItem.media_content_type)}
+                    className="w-full mb-3 flex items-center justify-center gap-2 py-3 px-4 rounded-lg
+                               text-base font-semibold text-white transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: 'var(--ds-accent)' }}
+                  >
+                    <Play size={18} fill="white" />
+                    Replace Playlist
+                  </button>
+                )}
+
                 {/* Playlist list */}
                 <div className="flex flex-col gap-2">
-                  {sortByLastPlayed(items, playHistory).map((item, idx) => (
-                    <PlaylistListItem
-                      key={item.media_content_id || idx}
-                      item={item}
-                      isPlaying={lastPlayedPlaylist?.id === item.media_content_id}
-                      onPlay={handlePlayPlaylist}
-                      onBrowse={item.can_expand && !item.can_play ? handleBrowseInto : undefined}
-                    />
-                  ))}
+                  {sortByLastPlayed(items, playHistory).map((item, idx) => {
+                    const isPlaylistsView = title === 'Playlists';
+                    return (
+                      <PlaylistListItem
+                        key={item.media_content_id || idx}
+                        item={item}
+                        isPlaying={lastPlayedPlaylist?.id === item.media_content_id}
+                        onPlay={handlePlayPlaylist}
+                        onBrowse={item.can_expand && (!item.can_play || !isPlaylistsView) ? handleBrowseInto : undefined}
+                      />
+                    );
+                  })}
                 </div>
 
                 {items.length === 0 && (
@@ -272,10 +288,10 @@ function PlaylistListItem({ item, isPlaying, onPlay, onBrowse }) {
   const [imageError, setImageError] = useState(false);
 
   const handleClick = () => {
-    if (item.can_play) {
-      onPlay(item.media_content_id, item.media_content_type);
-    } else if (onBrowse) {
+    if (onBrowse) {
       onBrowse(item);
+    } else if (item.can_play) {
+      onPlay(item.media_content_id, item.media_content_type);
     }
   };
 
@@ -388,8 +404,8 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
   }
 
   const upcomingTracks =
-    !isShuffled && tracks.length > 0 && currentIdx >= 0
-      ? tracks.slice(currentIdx + 1)
+    tracks.length > 0 && currentIdx >= 0
+      ? (isShuffled ? tracks.filter((_, idx) => idx !== currentIdx) : tracks.slice(currentIdx + 1))
       : [];
 
   return (
@@ -458,7 +474,7 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
                            active:bg-gray-100 transition-colors text-left disabled:opacity-50"
               >
                 <span className="text-xs font-medium text-[var(--color-text-secondary)] w-5 text-center flex-shrink-0">
-                  {currentIdx + idx + 2}
+                  {isShuffled ? '·' : currentIdx + idx + 2}
                 </span>
                 {track.thumbnail ? (
                   <img
@@ -484,7 +500,7 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
       )}
 
       {/* No track list available hint */}
-      {upcomingTracks.length === 0 && isActive && !isShuffled && (
+      {upcomingTracks.length === 0 && isActive && (
         <div className="text-center py-6 text-sm text-[var(--color-text-secondary)]">
           <p>Play a playlist from the Daz or Nic tab to see upcoming tracks</p>
         </div>

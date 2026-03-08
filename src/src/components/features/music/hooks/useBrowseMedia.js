@@ -20,8 +20,9 @@ export function useBrowseMedia() {
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  // Stack for back navigation: [{ entityId, title, items }]
+  // Stack for back navigation: [{ entityId, title, items, currentItem }]
   const [history, setHistory] = useState([]);
+  const [currentItem, setCurrentItem] = useState(null);
 
   // Cache Spotify entries per account so we don't re-discover every time
   // Map of spotifyEntityId → spotify browse entry
@@ -54,12 +55,19 @@ export function useBrowseMedia() {
       const result = await rawBrowse(entityId, mediaContentType, mediaContentId);
       setTitle(result.title || '');
       setItems(result.children || []);
+      setCurrentItem({
+        media_content_id: result.media_content_id,
+        media_content_type: result.media_content_type,
+        can_play: result.can_play,
+        title: result.title,
+      });
       setLoading(false);
       return result;
     } catch (err) {
       console.error('[useBrowseMedia] Browse failed:', err);
       setError(err.message);
       setItems([]);
+      setCurrentItem(null);
       setLoading(false);
       return null;
     }
@@ -150,11 +158,13 @@ export function useBrowseMedia() {
           entityId: speakerEntityId,
           title: spotifyEntry.title || 'Spotify Library',
           items: libraryCategories,
+          currentItem: null,
         },
       ]);
 
       setTitle(playlists.title || 'Playlists');
       setItems(playlists.children || []);
+      setCurrentItem(null);
       setLoading(false);
     } catch (err) {
       console.error('[useBrowseMedia] Failed to load playlists:', err);
@@ -169,9 +179,9 @@ export function useBrowseMedia() {
    * Pushes the current view onto the history stack for back navigation.
    */
   const browseInto = useCallback(async (entityId, item) => {
-    setHistory((prev) => [...prev, { entityId, title, items }]);
+    setHistory((prev) => [...prev, { entityId, title, items, currentItem }]);
     return browse(entityId, item.media_content_type, item.media_content_id);
-  }, [browse, title, items]);
+  }, [browse, title, items, currentItem]);
 
   /**
    * Go back to the previous browse level.
@@ -183,6 +193,7 @@ export function useBrowseMedia() {
       const last = newHistory.pop();
       setTitle(last.title);
       setItems(last.items);
+      setCurrentItem(last.currentItem || null);
       return newHistory;
     });
   }, []);
@@ -194,6 +205,7 @@ export function useBrowseMedia() {
     setItems([]);
     setTitle('');
     setHistory([]);
+    setCurrentItem(null);
     setError(null);
     setLoading(false);
     spotifyCacheRef.current = {};
@@ -209,6 +221,7 @@ export function useBrowseMedia() {
     browseInto,
     goBack,
     reset,
+    currentItem,
     canGoBack: history.length > 0,
   };
 }
