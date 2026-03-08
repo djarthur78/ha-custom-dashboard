@@ -84,6 +84,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     savePlayHistory(updated);
 
     // Fire play command (don't await - let it go)
+    console.log('[PlaylistPanel] Playing:', mediaContentId, mediaContentType, 'on', activeSpeaker.entityId);
     onPlayMedia(activeSpeaker.entityId, mediaContentId, mediaContentType);
 
     // Pre-fetch the playlist's track list for the Queue view (background)
@@ -418,13 +419,21 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
   // (queuePosition from Sonos may include accumulated tracks from previous playlists)
   let currentIdx = -1;
   if (tracks.length > 0 && activeSpeaker.mediaTitle) {
-    currentIdx = tracks.findIndex(t => t.title === activeSpeaker.mediaTitle);
+    const needle = activeSpeaker.mediaTitle.trim().toLowerCase();
+    currentIdx = tracks.findIndex(t => t.title?.trim().toLowerCase() === needle);
   }
 
-  const upcomingTracks =
-    tracks.length > 0 && currentIdx >= 0
-      ? (isShuffled ? tracks.filter((_, idx) => idx !== currentIdx) : tracks.slice(currentIdx + 1))
-      : [];
+  let upcomingTracks = [];
+  if (tracks.length > 0) {
+    if (currentIdx >= 0) {
+      upcomingTracks = isShuffled
+        ? tracks.filter((_, idx) => idx !== currentIdx)
+        : tracks.slice(currentIdx + 1);
+    } else {
+      // Can't find current track in list — show all tracks rather than hiding queue
+      upcomingTracks = tracks;
+    }
+  }
 
   return (
     <div>
@@ -473,7 +482,7 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
       {upcomingTracks.length > 0 && (
         <div>
           <h4 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">
-            {isShuffled ? 'Remaining Tracks (shuffled)' : 'Up Next'}
+            {currentIdx < 0 ? 'All Tracks' : isShuffled ? 'Remaining Tracks (shuffled)' : 'Up Next'}
           </h4>
           <div className="space-y-0.5">
             {upcomingTracks.map((track, idx) => (
@@ -485,7 +494,7 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
                            active:bg-gray-100 transition-colors text-left disabled:opacity-50"
               >
                 <span className="text-xs font-medium text-[var(--color-text-secondary)] w-5 text-center flex-shrink-0">
-                  {isShuffled ? '·' : currentIdx + idx + 2}
+                  {currentIdx < 0 ? '·' : isShuffled ? '·' : currentIdx + idx + 2}
                 </span>
                 {track.thumbnail ? (
                   <img
@@ -511,7 +520,7 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
       )}
 
       {/* No track list available hint */}
-      {upcomingTracks.length === 0 && isActive && (
+      {tracks.length === 0 && isActive && (
         <div className="text-center py-6 text-sm text-[var(--color-text-secondary)]">
           <p>Play a playlist from the Daz or Nic tab to see upcoming tracks</p>
         </div>
