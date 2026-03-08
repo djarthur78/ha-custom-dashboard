@@ -1,28 +1,32 @@
 /**
  * useServiceCall Hook
- * Call Home Assistant services with loading and error states
+ * Call Home Assistant services with loading and error states.
+ * Uses a pending counter so multiple concurrent calls don't block each other.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import haWebSocket from '../services/ha-websocket';
 
 export function useServiceCall() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const pendingRef = useRef(0);
 
   const callService = useCallback(async (domain, service, serviceData = {}) => {
+    pendingRef.current++;
     setLoading(true);
     setError(null);
 
     try {
       const result = await haWebSocket.callService(domain, service, serviceData);
-      setLoading(false);
       return result;
     } catch (err) {
       console.error('Service call failed:', err);
       setError(err.message);
-      setLoading(false);
       throw err;
+    } finally {
+      pendingRef.current--;
+      if (pendingRef.current === 0) setLoading(false);
     }
   }, []);
 

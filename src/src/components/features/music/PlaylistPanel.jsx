@@ -72,30 +72,34 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     reset();
   }, [activeTab, reset]);
 
+  const playingRef = useRef(false);
   const handlePlayPlaylist = async (mediaContentId, mediaContentType) => {
-    if (activeSpeaker) {
-      // Remember which playlist was played so queue can fetch its tracks
-      setLastPlayedPlaylist({ id: mediaContentId, type: mediaContentType });
-      // Record play timestamp for sorting
-      const updated = { ...playHistory, [mediaContentId]: Date.now() };
-      setPlayHistory(updated);
-      savePlayHistory(updated);
-      onPlayMedia(activeSpeaker.entityId, mediaContentId, mediaContentType);
+    if (!activeSpeaker || playingRef.current) return;
+    playingRef.current = true;
 
-      // Pre-fetch the playlist's track list for the Queue view
-      try {
-        const result = await haWebSocket.send({
-          type: 'media_player/browse_media',
-          entity_id: activeSpeaker.entityId,
-          media_content_type: mediaContentType,
-          media_content_id: mediaContentId,
-        });
-        setLastPlayedTracks(result.children || []);
-      } catch (err) {
-        console.warn('[PlaylistPanel] Could not pre-fetch tracks:', err);
-        setLastPlayedTracks([]);
-      }
+    // Instant UI feedback
+    setLastPlayedPlaylist({ id: mediaContentId, type: mediaContentType });
+    const updated = { ...playHistory, [mediaContentId]: Date.now() };
+    setPlayHistory(updated);
+    savePlayHistory(updated);
+
+    // Fire play command (don't await - let it go)
+    onPlayMedia(activeSpeaker.entityId, mediaContentId, mediaContentType);
+
+    // Pre-fetch the playlist's track list for the Queue view (background)
+    try {
+      const result = await haWebSocket.send({
+        type: 'media_player/browse_media',
+        entity_id: activeSpeaker.entityId,
+        media_content_type: mediaContentType,
+        media_content_id: mediaContentId,
+      });
+      setLastPlayedTracks(result.children || []);
+    } catch (err) {
+      console.warn('[PlaylistPanel] Could not pre-fetch tracks:', err);
+      setLastPlayedTracks([]);
     }
+    playingRef.current = false;
   };
 
   // IMPORTANT: Always browse using the Sonos speaker entity (not Spotify entity)
@@ -233,7 +237,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                   <button
                     onClick={() => handlePlayPlaylist(currentItem.media_content_id, currentItem.media_content_type)}
                     className="w-full mb-3 flex items-center justify-center gap-2 py-3 px-4 rounded-lg
-                               text-base font-semibold text-white transition-opacity hover:opacity-90"
+                               text-base font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
                     style={{ backgroundColor: 'var(--ds-accent)' }}
                   >
                     <Play size={18} fill="white" />
@@ -297,7 +301,7 @@ function PlaylistListItem({ item, isPlaying, onPlay, onBrowse }) {
 
   return (
     <div
-      className="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors"
+      className="flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all active:scale-[0.98]"
       style={isPlaying
         ? { backgroundColor: 'var(--ds-accent)', color: 'white' }
         : undefined
@@ -366,12 +370,14 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
       setSkipping(true);
       try {
         for (let i = 0; i < skipsNeeded; i++) {
-          await onNextTrack(activeSpeaker.entityId);
+          onNextTrack(activeSpeaker.entityId); // fire-and-forget each skip
           // Small delay between calls so Sonos can process each one
           if (i < skipsNeeded - 1) {
-            await new Promise((r) => setTimeout(r, 400));
+            await new Promise((r) => setTimeout(r, 250));
           }
         }
+        // Brief delay then clear skipping state
+        await new Promise((r) => setTimeout(r, 500));
       } catch (err) {
         console.error('[QueueView] Skip failed:', err);
       }
@@ -451,18 +457,11 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
         )}
       </div>
 
-      {/* Shuffle notice */}
-      {isShuffled && (
-        <div className="mb-3 p-2.5 bg-gray-50 rounded-lg text-xs text-[var(--color-text-secondary)]">
-          Shuffle is on — track order may differ
-        </div>
-      )}
-
       {/* Upcoming tracks */}
       {upcomingTracks.length > 0 && (
         <div>
           <h4 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">
-            Up Next
+            {isShuffled ? 'Remaining Tracks (shuffled)' : 'Up Next'}
           </h4>
           <div className="space-y-0.5">
             {upcomingTracks.map((track, idx) => (
