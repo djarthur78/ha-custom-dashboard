@@ -284,10 +284,13 @@ export function NowPlayingPanel({ speaker, controls }) {
                         groupVolumeControls.setGroupVolume(groupMembers, newVolume);
                       }, VOLUME_DEBOUNCE_MS);
                     }}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
+                    className="flex-1 h-2 rounded-lg appearance-none cursor-pointer
                                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5
                                [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full
                                [&::-webkit-slider-thumb]:bg-[var(--ds-accent)]"
+                    style={{
+                      background: `linear-gradient(to right, var(--ds-accent-secondary) ${localVolume * 100}%, #e5e7eb ${localVolume * 100}%)`,
+                    }}
                   />
                   <span className="text-sm font-medium min-w-[3ch]" style={{ color: 'var(--ds-accent)' }}>
                     {Math.round(localVolume * 100)}%
@@ -318,10 +321,13 @@ export function NowPlayingPanel({ speaker, controls }) {
                 min="0" max="1" step="0.01"
                 value={localVolume}
                 onChange={handleVolumeChange}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer
+                className="flex-1 h-2 rounded-lg appearance-none cursor-pointer
                            [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4
                            [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full
                            [&::-webkit-slider-thumb]:bg-[var(--ds-accent)]"
+                style={{
+                  background: `linear-gradient(to right, var(--ds-accent-secondary) ${localVolume * 100}%, #e5e7eb ${localVolume * 100}%)`,
+                }}
               />
               <span className="text-sm font-medium text-[var(--color-text)] min-w-[3ch]">
                 {Math.round(localVolume * 100)}%

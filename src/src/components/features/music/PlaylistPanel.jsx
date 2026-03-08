@@ -13,6 +13,29 @@ import { useBrowseMedia } from './hooks/useBrowseMedia';
 import { SPOTIFY_ACCOUNTS } from './musicConfig';
 import haWebSocket from '../../../services/ha-websocket';
 
+// Load play history from localStorage
+function loadPlayHistory() {
+  try {
+    return JSON.parse(localStorage.getItem('music-play-history') || '{}');
+  } catch { return {}; }
+}
+
+function savePlayHistory(history) {
+  localStorage.setItem('music-play-history', JSON.stringify(history));
+}
+
+// Sort items by last played timestamp (most recent first), unplayed items keep original order
+function sortByLastPlayed(items, playHistory) {
+  return [...items].sort((a, b) => {
+    const aTime = playHistory[a.media_content_id] || 0;
+    const bTime = playHistory[b.media_content_id] || 0;
+    if (aTime && bTime) return bTime - aTime;
+    if (aTime) return -1;
+    if (bTime) return 1;
+    return 0;
+  });
+}
+
 export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
   const [activeTab, setActiveTab] = useState('daz'); // 'daz' | 'nic' | 'queue'
   const { items, title, loading, error, browseToPlaylists, browseInto, goBack, reset, canGoBack } =
@@ -22,6 +45,9 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
 
   // Track the last played playlist so Queue view can show upcoming tracks
   const [lastPlayedPlaylist, setLastPlayedPlaylist] = useState(null);
+
+  // Play history for sorting playlists by last played
+  const [playHistory, setPlayHistory] = useState(loadPlayHistory);
 
   const activeAccount = SPOTIFY_ACCOUNTS.find((a) => a.id === activeTab);
 
@@ -48,6 +74,10 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     if (activeSpeaker) {
       // Remember which playlist was played so queue can fetch its tracks
       setLastPlayedPlaylist({ id: mediaContentId, type: mediaContentType });
+      // Record play timestamp for sorting
+      const updated = { ...playHistory, [mediaContentId]: Date.now() };
+      setPlayHistory(updated);
+      savePlayHistory(updated);
       onPlayMedia(activeSpeaker.entityId, mediaContentId, mediaContentType);
     }
   };
@@ -183,7 +213,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
 
                 {/* Playlist list */}
                 <div className="flex flex-col gap-2">
-                  {items.map((item, idx) => (
+                  {sortByLastPlayed(items, playHistory).map((item, idx) => (
                     <PlaylistListItem
                       key={item.media_content_id || idx}
                       item={item}

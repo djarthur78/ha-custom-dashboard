@@ -149,8 +149,8 @@ export function SpeakerPanel({
       </div>
 
       {/* Preset Groups */}
-      <div className="p-3 border-t border-[var(--ds-border)] flex-shrink-0">
-        <div className="text-xs font-medium uppercase tracking-wider mb-2.5 px-1" style={{ color: 'var(--ds-text-secondary)' }}>
+      <div className="p-4 border-t border-[var(--ds-border)] flex-shrink-0">
+        <div className="text-xs font-medium uppercase tracking-wider mb-3 px-1" style={{ color: 'var(--ds-text-secondary)' }}>
           Quick Groups
         </div>
         <div className="flex gap-2.5">
@@ -161,7 +161,7 @@ export function SpeakerPanel({
                 key={preset.id}
                 onClick={() => handlePresetClick(preset)}
                 disabled={groupControls.groupLoading}
-                className="flex-1 flex flex-col items-center justify-center gap-1 py-3 px-3 text-sm font-semibold
+                className="flex-1 flex flex-col items-center justify-center gap-1.5 py-4 px-3 text-base font-semibold
                            rounded-xl disabled:opacity-40 disabled:cursor-not-allowed
                            transition-all hover:shadow-md"
                 style={isActive
@@ -188,12 +188,12 @@ export function SpeakerPanel({
       </div>
 
       {/* Manual Grouping Controls */}
-      <div className="p-3 border-t border-[var(--ds-border)] flex-shrink-0 space-y-2">
+      <div className="p-4 border-t border-[var(--ds-border)] flex-shrink-0 space-y-3">
         {/* Group Selected */}
         <button
           onClick={handleGroupSelected}
           disabled={checkedSpeakers.size < 2 || groupControls.groupLoading}
-          className="w-full flex items-center justify-center gap-2 py-2 px-3 text-sm font-medium
+          className="w-full flex items-center justify-center gap-2 py-3 px-3 text-sm font-medium
                      text-white rounded-xl
                      disabled:opacity-40 disabled:cursor-not-allowed
                      hover:opacity-90 transition-opacity"
@@ -204,11 +204,11 @@ export function SpeakerPanel({
         </button>
 
         {/* Play Everywhere + Ungroup row */}
-        <div className="flex gap-2">
+        <div className="flex gap-2.5">
           <button
             onClick={handlePlayEverywhere}
             disabled={!activeSpeakerId || groupControls.groupLoading}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 px-2 text-sm font-medium
                        rounded-xl
                        disabled:opacity-40 disabled:cursor-not-allowed
                        hover:shadow-md transition-all"
@@ -218,13 +218,13 @@ export function SpeakerPanel({
               border: '1px solid var(--ds-border)',
             }}
           >
-            <PlayCircle size={14} />
+            <PlayCircle size={16} />
             Everywhere
           </button>
           <button
             onClick={() => groupControls.ungroupAll(speakers)}
             disabled={groupControls.groupLoading}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2 text-xs font-medium
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 px-2 text-sm font-medium
                        rounded-xl
                        disabled:opacity-40 disabled:cursor-not-allowed
                        hover:shadow-md transition-all"
@@ -234,7 +234,7 @@ export function SpeakerPanel({
               border: '1px solid var(--ds-border)',
             }}
           >
-            <Unlink size={14} />
+            <Unlink size={16} />
             Ungroup All
           </button>
         </div>

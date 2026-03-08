@@ -16,7 +16,7 @@ export const SONOS_SPEAKERS = [
   { entityId: 'media_player.games_room',         label: 'Games Room',   zone: 'downstairs' },
   { entityId: 'media_player.gym',                label: 'Gym',          zone: 'downstairs' },
   { entityId: 'media_player.garden',             label: 'Garden',       zone: 'outside' },
-  { entityId: 'media_player.games_room_outside', label: 'GR Outside',   zone: 'outside' },
+  { entityId: 'media_player.games_room_outside', label: 'Games Room Outside', zone: 'outside' },
 ];
 
 // ─── PRESET GROUPS ───────────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ export const SPOTIFY_ACCOUNTS = [
   {
     id: 'nic',
     label: "Nic",
-    entityId: null, // TODO: Add Spotify integration for nichola_beney@hotmail.co.uk in HA, then update entity ID here
+    entityId: 'media_player.spotify_nic',
   },
 ];
 

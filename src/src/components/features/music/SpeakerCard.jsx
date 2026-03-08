@@ -144,8 +144,11 @@ export function SpeakerCard({ speaker, speakers, isSelected, isChecked, onSelect
                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3
                      [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full"
           style={{
-            background: isSelected ? 'rgba(255,255,255,0.3)' : '#e5e7eb',
-            // Tailwind v4 can't do dynamic thumb colors, so we use a CSS variable trick
+            background: isSelected
+              ? `linear-gradient(to right, white ${localVolume * 100}%, rgba(255,255,255,0.3) ${localVolume * 100}%)`
+              : groupColor
+                ? `linear-gradient(to right, ${groupColor} ${localVolume * 100}%, #e5e7eb ${localVolume * 100}%)`
+                : `linear-gradient(to right, var(--ds-accent-secondary) ${localVolume * 100}%, #e5e7eb ${localVolume * 100}%)`,
           }}
         />
         <span className="text-xs font-medium min-w-[36px] text-right flex-shrink-0" style={{ color: textColor }}>
