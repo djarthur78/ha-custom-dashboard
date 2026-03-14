@@ -215,7 +215,7 @@ class HAWebSocket {
   /**
    * Send a message to Home Assistant
    */
-  send(message, needsId = true) {
+  send(message, needsId = true, customTimeout) {
     return new Promise((resolve, reject) => {
       if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
         reject(new Error('WebSocket not connected'));
@@ -233,13 +233,14 @@ class HAWebSocket {
 
       if (needsId) {
         // Add timeout to prevent hanging promises
+        const timeoutMs = customTimeout || 10000;
         const timeout = setTimeout(() => {
           const listener = this.listeners.get(id);
           if (listener) {
             this.listeners.delete(id);
             listener.reject(new Error('Request timeout'));
           }
-        }, 10000); // 10 second timeout
+        }, timeoutMs);
 
         this.listeners.set(id, { resolve, reject, timeout });
       }
@@ -296,14 +297,19 @@ class HAWebSocket {
 
   /**
    * Call a Home Assistant service
+   * @param {string} domain
+   * @param {string} service
+   * @param {object} serviceData
+   * @param {object} [options]
+   * @param {number} [options.timeout] - Custom timeout in ms (default: 10000)
    */
-  async callService(domain, service, serviceData = {}) {
+  async callService(domain, service, serviceData = {}, options = {}) {
     return this.send({
       type: 'call_service',
       domain,
       service,
       service_data: serviceData,
-    });
+    }, true, options.timeout);
   }
 
   /**

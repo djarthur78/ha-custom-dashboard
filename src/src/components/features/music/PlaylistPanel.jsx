@@ -112,7 +112,7 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
       await haWebSocket.callService('media_player', 'media_stop', {
         entity_id: activeSpeaker.entityId
       });
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 500));
     } catch (err) {
       console.warn('[PlaylistPanel] Stop before play failed:', err);
     }
@@ -176,16 +176,40 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
 
     setPlayLoading(false);
 
-    // Enqueue remaining tracks (fire-and-forget with small delays)
+    // Enqueue remaining tracks sequentially — await each call so Sonos processes one at a time
+    let enqueued = 0;
+    let failed = 0;
     for (let i = 1; i < tracks.length; i++) {
-      await new Promise(r => setTimeout(r, 100));
-      haWebSocket.callService('media_player', 'play_media', {
-        entity_id: activeSpeaker.entityId,
-        media_content_id: tracks[i].media_content_id,
-        media_content_type: tracks[i].media_content_type,
-        enqueue: 'add',
-      });
+      await new Promise(r => setTimeout(r, 150));
+      try {
+        await haWebSocket.callService('media_player', 'play_media', {
+          entity_id: activeSpeaker.entityId,
+          media_content_id: tracks[i].media_content_id,
+          media_content_type: tracks[i].media_content_type,
+          enqueue: 'add',
+        });
+        enqueued++;
+        if (enqueued % 10 === 0) {
+          console.log(`[PlaylistPanel] Enqueued ${enqueued}/${tracks.length - 1} tracks`);
+        }
+      } catch (err) {
+        console.warn(`[PlaylistPanel] Enqueue failed for track ${i}, retrying...`, err);
+        await new Promise(r => setTimeout(r, 500));
+        try {
+          await haWebSocket.callService('media_player', 'play_media', {
+            entity_id: activeSpeaker.entityId,
+            media_content_id: tracks[i].media_content_id,
+            media_content_type: tracks[i].media_content_type,
+            enqueue: 'add',
+          });
+          enqueued++;
+        } catch (retryErr) {
+          console.error(`[PlaylistPanel] Enqueue failed permanently for track ${i}:`, tracks[i].title);
+          failed++;
+        }
+      }
     }
+    console.log(`[PlaylistPanel] Queue complete: ${enqueued} enqueued, ${failed} failed, out of ${tracks.length - 1} tracks`);
   };
 
   // IMPORTANT: Always browse using the Sonos speaker entity (not Spotify entity)
