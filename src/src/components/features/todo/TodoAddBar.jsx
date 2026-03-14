@@ -1,17 +1,26 @@
 /**
  * TodoAddBar Component
- * Always-visible input bar for quickly adding todo items
+ * Always-visible input bar with person assignment toggle
  */
 
 import { useState, useRef } from 'react';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { PERSON_COLORS, buildSummary } from './todoUtils';
+
+const PEOPLE = [null, 'Daz', 'Nic'];
 
 export function TodoAddBar({ onAdd }) {
   const [summary, setSummary] = useState('');
   const [description, setDescription] = useState('');
+  const [person, setPerson] = useState(null);
   const [showDescription, setShowDescription] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const inputRef = useRef(null);
+
+  const cyclePerson = () => {
+    const idx = PEOPLE.indexOf(person);
+    setPerson(PEOPLE[(idx + 1) % PEOPLE.length]);
+  };
 
   const handleSubmit = async () => {
     const trimmed = summary.trim();
@@ -19,10 +28,10 @@ export function TodoAddBar({ onAdd }) {
 
     setSubmitting(true);
     try {
-      await onAdd(trimmed, description.trim() || undefined);
+      const fullSummary = buildSummary(trimmed, person);
+      await onAdd(fullSummary, description.trim() || undefined);
       setSummary('');
       setDescription('');
-      setShowDescription(false);
       inputRef.current?.focus();
     } catch {
       // Error handled by hook
@@ -39,19 +48,22 @@ export function TodoAddBar({ onAdd }) {
   };
 
   return (
-    <div className="ds-card" style={{ padding: '12px 16px' }}>
+    <div className="ds-card" style={{ padding: '10px 12px' }}>
       <div className="flex items-center gap-2">
-        {/* Description toggle */}
+        {/* Person toggle */}
         <button
-          onClick={() => setShowDescription(!showDescription)}
-          className="flex-shrink-0 p-1 rounded-lg transition-colors hover:bg-black/[0.05]"
-          aria-label="Toggle description"
+          onClick={cyclePerson}
+          className="flex-shrink-0 flex items-center justify-center rounded-full text-xs font-bold transition-all"
+          style={{
+            width: 32,
+            height: 32,
+            ...(person
+              ? { backgroundColor: PERSON_COLORS[person].bg, color: PERSON_COLORS[person].text }
+              : { backgroundColor: 'var(--ds-border)', color: 'var(--ds-text-secondary)' }),
+          }}
+          title={person ? `Assigned to ${person}` : 'Tap to assign (Daz/Nic)'}
         >
-          {showDescription ? (
-            <ChevronUp size={18} style={{ color: 'var(--ds-text-secondary)' }} />
-          ) : (
-            <ChevronDown size={18} style={{ color: 'var(--ds-text-secondary)' }} />
-          )}
+          {person ? person[0] : '?'}
         </button>
 
         {/* Summary input */}
@@ -63,19 +75,33 @@ export function TodoAddBar({ onAdd }) {
           onKeyDown={handleKeyDown}
           placeholder="Add item..."
           className="flex-1 text-sm bg-transparent outline-none"
-          style={{ color: 'var(--ds-text)' }}
+          style={{ color: 'var(--ds-text)', height: 36 }}
           disabled={submitting}
         />
+
+        {/* Description toggle */}
+        <button
+          onClick={() => setShowDescription(!showDescription)}
+          className="flex-shrink-0 flex items-center justify-center rounded-lg transition-colors hover:bg-black/[0.05]"
+          style={{ width: 32, height: 32 }}
+          aria-label="Toggle description"
+        >
+          {showDescription ? (
+            <ChevronUp size={16} style={{ color: 'var(--ds-text-secondary)' }} />
+          ) : (
+            <ChevronDown size={16} style={{ color: 'var(--ds-text-secondary)' }} />
+          )}
+        </button>
 
         {/* Add button */}
         <button
           onClick={handleSubmit}
           disabled={!summary.trim() || submitting}
-          className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30"
-          style={{ backgroundColor: 'var(--ds-accent)', color: 'white' }}
+          className="flex-shrink-0 flex items-center justify-center rounded-lg transition-colors disabled:opacity-30"
+          style={{ width: 36, height: 36, backgroundColor: 'var(--ds-accent)', color: 'white' }}
           aria-label="Add item"
         >
-          <Plus size={18} />
+          <Plus size={20} />
         </button>
       </div>
 

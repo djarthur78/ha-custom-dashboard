@@ -1,10 +1,10 @@
 /**
  * MobileTodoPage Component
- * Mobile to-do list backed by Todoist via HA integration
+ * Mobile to-do list — touch-optimised, completed collapsed by default
  */
 
 import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, ListChecks } from 'lucide-react';
 import { MobilePageContainer } from '../../components/mobile/MobilePageContainer';
 import { useTodoList } from '../../components/features/todo/hooks/useTodoList';
 import { TodoAddBar } from '../../components/features/todo/TodoAddBar';
@@ -12,9 +12,9 @@ import { TodoItem } from '../../components/features/todo/TodoItem';
 import { TodoEditModal } from '../../components/features/todo/TodoEditModal';
 
 const LISTS = [
-  { id: 'todo.nic_and_daz', label: 'Nic & Daz' },
-  { id: 'todo.this_week', label: 'This Week' },
-  { id: 'todo.this_month', label: 'This Month' },
+  { id: 'todo.nic_and_daz', label: 'Nic & Daz', emoji: '🏠' },
+  { id: 'todo.this_week', label: 'This Week', emoji: '📅' },
+  { id: 'todo.this_month', label: 'This Month', emoji: '📆' },
 ];
 
 export function MobileTodoPage() {
@@ -55,41 +55,72 @@ export function MobileTodoPage() {
     <MobilePageContainer>
       <div className="space-y-3">
         {/* Tab bar */}
-        <div className="flex gap-1 p-1 rounded-xl" style={{ backgroundColor: 'var(--ds-card)' }}>
-          {LISTS.map((list) => (
-            <button
-              key={list.id}
-              onClick={() => setSelectedList(list.id)}
-              className="flex-1 py-2 px-2 text-xs font-medium rounded-lg transition-colors"
-              style={
-                selectedList === list.id
-                  ? { backgroundColor: 'var(--ds-accent)', color: 'white' }
-                  : { color: 'var(--ds-text-secondary)' }
-              }
-            >
-              {list.label}
-            </button>
-          ))}
+        <div
+          className="flex gap-1 p-1 rounded-xl"
+          style={{ backgroundColor: 'var(--ds-card)', border: '1px solid var(--ds-border)' }}
+        >
+          {LISTS.map((list) => {
+            const isActive = selectedList === list.id;
+            return (
+              <button
+                key={list.id}
+                onClick={() => { setSelectedList(list.id); setShowCompleted(false); }}
+                className="flex-1 flex items-center justify-center gap-1 py-2.5 px-2 text-xs font-semibold rounded-lg transition-all"
+                style={
+                  isActive
+                    ? {
+                        backgroundColor: 'var(--ds-accent)',
+                        color: 'white',
+                        boxShadow: '0 2px 6px rgba(181,69,58,0.2)',
+                      }
+                    : { color: 'var(--ds-text-secondary)' }
+                }
+              >
+                <span>{list.emoji}</span>
+                <span>{list.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Add bar */}
         <TodoAddBar onAdd={addItem} />
 
         {/* Items */}
-        <div className="ds-card" style={{ padding: 0 }}>
+        <div
+          className="ds-card overflow-hidden"
+          style={{ padding: 0, border: '1px solid var(--ds-border)' }}
+        >
           {loading ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex items-center justify-center py-16">
               <div
                 className="w-6 h-6 border-2 rounded-full animate-spin"
                 style={{ borderColor: '#e2e2e6', borderTopColor: 'var(--ds-accent)' }}
               />
             </div>
           ) : activeItems.length === 0 && completedItems.length === 0 ? (
-            <div className="text-center py-12 text-sm" style={{ color: 'var(--ds-text-secondary)' }}>
-              No items yet. Add one above.
+            <div className="flex flex-col items-center justify-center py-14 gap-2.5">
+              <div
+                className="flex items-center justify-center rounded-xl"
+                style={{ width: 48, height: 48, backgroundColor: 'rgba(181,69,58,0.08)' }}
+              >
+                <ListChecks size={24} style={{ color: 'var(--ds-accent)' }} />
+              </div>
+              <p className="text-sm font-medium" style={{ color: 'var(--ds-text-secondary)' }}>
+                All clear! Add something above.
+              </p>
             </div>
           ) : (
             <>
+              {/* Active count */}
+              {activeItems.length > 0 && (
+                <div
+                  className="px-4 py-2 text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: 'var(--ds-text-secondary)', backgroundColor: 'rgba(0,0,0,0.02)' }}
+                >
+                  To do ({activeItems.length})
+                </div>
+              )}
               {activeItems.map((item) => (
                 <TodoItem
                   key={item.uid}
@@ -103,23 +134,26 @@ export function MobileTodoPage() {
               {completedItems.length > 0 && (
                 <>
                   <div
-                    className="flex items-center justify-between px-4 py-2"
-                    style={{ borderTop: '1px solid var(--ds-border)', backgroundColor: 'var(--color-background)' }}
+                    className="flex items-center justify-between px-4 py-2.5"
+                    style={{
+                      borderTop: '1px solid var(--ds-border)',
+                      backgroundColor: 'rgba(0,0,0,0.02)',
+                    }}
                   >
                     <button
                       onClick={() => setShowCompleted(!showCompleted)}
-                      className="flex items-center gap-1 text-xs font-medium"
+                      className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider"
                       style={{ color: 'var(--ds-text-secondary)' }}
                     >
                       {showCompleted ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                      Completed ({completedItems.length})
+                      Done ({completedItems.length})
                     </button>
                     <button
                       onClick={clearCompleted}
-                      className="text-xs font-medium px-2 py-1 rounded-lg transition-colors hover:bg-black/[0.05]"
+                      className="text-xs font-semibold px-3 py-1 rounded-lg transition-colors hover:bg-black/[0.05]"
                       style={{ color: 'var(--ds-accent)' }}
                     >
-                      Clear
+                      Clear all
                     </button>
                   </div>
 
