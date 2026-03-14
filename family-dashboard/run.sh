@@ -42,7 +42,10 @@ chmod -R 755 /var/lib/nginx /var/log/nginx /run/nginx
 echo "[INFO] Injecting runtime configuration into HTML..."
 $SED_INPLACE 's|<script src="./config.js"></script>|<script>window.HA_CONFIG={url:"'"${HA_URL}"'",token:"'"${HA_TOKEN}"'",supervisorToken:"'"${SUPERVISOR_TOKEN}"'",useIngress:true,useProxy:true};</script>|' /usr/share/nginx/html/index.html
 
-echo "[INFO] Configuration injected: url=${HA_URL}, useProxy=true"
+# Also inject into mobile.html (uses /config.js path, not ./config.js)
+$SED_INPLACE 's|<script src="/config.js"></script>|<script>window.HA_CONFIG={url:"'"${HA_URL}"'",token:"'"${HA_TOKEN}"'",supervisorToken:"'"${SUPERVISOR_TOKEN}"'",useIngress:true,useProxy:true};</script>|' /usr/share/nginx/html/mobile.html
+
+echo "[INFO] Configuration injected into index.html and mobile.html: url=${HA_URL}, useProxy=true"
 
 # Determine the token for nginx proxy (prefer user token, fall back to supervisor)
 PROXY_TOKEN="${HA_TOKEN:-${SUPERVISOR_TOKEN}}"
