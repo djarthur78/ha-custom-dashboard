@@ -16,6 +16,7 @@ const MobilePeoplePage = lazy(() => import('./pages/mobile/MobilePeoplePage'));
 const MobileHealthPage = lazy(() => import('./pages/mobile/MobileHealthPage'));
 const MobileCamerasPage = lazy(() => import('./pages/mobile/MobileCamerasPage'));
 const MobileColdPlungePage = lazy(() => import('./pages/mobile/MobileColdPlungePage'));
+const MobileTodoPage = lazy(() => import('./pages/mobile/MobileTodoPage'));
 
 function MobileApp() {
   return (
@@ -31,6 +32,7 @@ function MobileApp() {
         <Route path="health" element={<MobileHealthPage />} />
         <Route path="cameras" element={<MobileCamerasPage />} />
         <Route path="cold-plunge" element={<MobileColdPlungePage />} />
+        <Route path="todo" element={<MobileTodoPage />} />
       </Route>
     </Routes>
   );

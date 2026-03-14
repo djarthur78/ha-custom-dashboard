@@ -5,7 +5,7 @@
 
 import { Suspense } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { Calendar, Utensils, Gamepad2, Camera, Home, Music, Users, Heart, Snowflake } from 'lucide-react';
+import { Calendar, Utensils, Gamepad2, Camera, Home, Music, Users, Heart, Snowflake, ListChecks } from 'lucide-react';
 import { useWeather } from '../../hooks/useWeather';
 import { useHAConnection } from '../../hooks/useHAConnection';
 import { getWeatherIcon } from '../../utils/weather';
@@ -25,6 +25,7 @@ const navItems = [
   { to: '/health', icon: Heart, label: 'Health' },
   { to: '/cameras', icon: Camera, label: 'Cameras' },
   { to: '/cold-plunge', icon: Snowflake, label: 'Cold Plunge' },
+  { to: '/todo', icon: ListChecks, label: 'To-Do' },
 ];
 
 export function MainLayout() {
