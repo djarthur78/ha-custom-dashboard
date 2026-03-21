@@ -3,11 +3,12 @@
  * Vertical stack: status + master controls + device grid
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Power, Snowflake, Waves, Wind, Sparkles, Thermometer } from 'lucide-react';
 import { MobilePageContainer } from '../../components/mobile/MobilePageContainer';
 import { useEntity } from '../../hooks/useEntity';
 import haWebSocket from '../../services/ha-websocket';
+import { countTriggers } from '../../services/ha-rest';
 
 const COLD_PLUNGE = {
   chiller: 'switch.cold_plunge_devices_p304m_cold_plunge_chiller',
@@ -113,6 +114,17 @@ export function MobileColdPlungePage() {
   const tempColor = getTempColor(waterTemp);
   const motionDetected = motionEntity.state === 'on';
 
+  // Motion stats
+  const [triggerCount, setTriggerCount] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    countTriggers(COLD_PLUNGE_SENSORS.motion, 24)
+      .then(count => { if (mounted) setTriggerCount(count); })
+      .catch(() => { if (mounted) setTriggerCount(null); });
+    return () => { mounted = false; };
+  }, [motionDetected]);
+
   const handleMasterOn = useCallback(async () => {
     setLoading(true);
     try {
@@ -207,6 +219,24 @@ export function MobileColdPlungePage() {
           {DEVICES.map(({ key, label, icon, color }) => (
             <DeviceToggleCard key={key} deviceKey={key} label={label} icon={icon} color={color} />
           ))}
+        </div>
+
+        {/* Motion sensor stats */}
+        <div className="ds-card flex justify-between" style={{ padding: '12px 16px' }}>
+          <div>
+            <div className="text-[10px] text-[var(--ds-text-secondary)] uppercase tracking-wider mb-0.5">Motion Last Triggered</div>
+            <div className="text-sm font-medium text-[var(--ds-text)]">
+              {motionEntity.lastChanged && motionEntity.state !== 'unavailable'
+                ? new Date(motionEntity.lastChanged).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                : 'No data'}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] text-[var(--ds-text-secondary)] uppercase tracking-wider mb-0.5">Triggers (24h)</div>
+            <div className="text-sm font-medium text-[var(--ds-text)]">
+              {triggerCount != null ? `${triggerCount} time${triggerCount !== 1 ? 's' : ''}` : 'No data'}
+            </div>
+          </div>
         </div>
       </div>
     </MobilePageContainer>

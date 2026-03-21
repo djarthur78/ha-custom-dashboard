@@ -3,10 +3,11 @@
  * Full viewport cold plunge page with giant status display + controls
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Power, Snowflake, Waves, Wind, Sparkles, Thermometer } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import haWebSocket from '../../../services/ha-websocket';
+import { countTriggers } from '../../../services/ha-rest';
 
 const COLD_PLUNGE = {
   chiller: 'switch.cold_plunge_devices_p304m_cold_plunge_chiller',
@@ -116,6 +117,18 @@ export function ColdPlungeDashboard() {
   const tempColor = getTempColor(waterTemp);
   const motionDetected = motionEntity.state === 'on';
 
+  // Motion stats
+  const [triggerCount, setTriggerCount] = useState(null);
+  const motionLastChanged = motionEntity.attributes?.last_changed || motionEntity.lastChanged;
+
+  useEffect(() => {
+    let mounted = true;
+    countTriggers(COLD_PLUNGE_SENSORS.motion, 24)
+      .then(count => { if (mounted) setTriggerCount(count); })
+      .catch(() => { if (mounted) setTriggerCount(null); });
+    return () => { mounted = false; };
+  }, [motionDetected]); // Re-fetch when motion state changes
+
   const handleMasterOn = useCallback(async () => {
     setLoading(true);
     try {
@@ -151,7 +164,7 @@ export function ColdPlungeDashboard() {
     <div className="flex gap-3 p-3" style={{ height: 'calc(100vh - 72px)' }}>
       {/* Left: Giant Status Display (55%) */}
       <div className="flex-[55] min-h-0">
-        <div className="ds-card h-full flex flex-col items-center justify-center text-center"
+        <div className="ds-card h-full flex flex-col items-center text-center"
           style={{
             background: coreOn
               ? 'linear-gradient(135deg, rgba(90,143,184,0.06), rgba(90,143,184,0.02))'
@@ -159,29 +172,51 @@ export function ColdPlungeDashboard() {
           }}
         >
           {/* Water Temperature - Hero */}
-          <Thermometer size={64} style={{ color: tempColor }} className="mb-2" />
-          <div className="text-[140px] font-bold leading-none mb-1" style={{ color: tempColor }}>
-            {waterTemp != null ? `${waterTemp.toFixed(1)}°` : '--'}
-          </div>
-          <div className="text-2xl font-medium text-[var(--color-text-secondary)] mb-6">
-            Water Temperature
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <Thermometer size={64} style={{ color: tempColor }} className="mb-2" />
+            <div className="text-[140px] font-bold leading-none mb-1" style={{ color: tempColor }}>
+              {waterTemp != null ? `${waterTemp.toFixed(1)}°` : '--'}
+            </div>
+            <div className="text-2xl font-medium text-[var(--color-text-secondary)] mb-6">
+              Water Temperature
+            </div>
+
+            {/* Status row */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Snowflake size={24} style={{ color: statusColor }} />
+                <span className="text-2xl font-bold" style={{ color: statusColor }}>
+                  {activeCount === 0 ? 'All Off' : activeCount === 4 ? 'All On' : `${activeCount} of 4 devices on`}
+                </span>
+              </div>
+              <span className="text-lg font-medium" style={{ color: statusColor }}>{statusText}</span>
+              {motionDetected && (
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(212,148,76,0.15)' }}>
+                  <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#d4944c' }} />
+                  <span className="text-sm font-medium" style={{ color: '#d4944c' }}>Lid Open — Shutting Down</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Status row */}
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Snowflake size={24} style={{ color: statusColor }} />
-              <span className="text-2xl font-bold" style={{ color: statusColor }}>
-                {activeCount === 0 ? 'All Off' : activeCount === 4 ? 'All On' : `${activeCount} of 4 devices on`}
-              </span>
-            </div>
-            <span className="text-lg font-medium" style={{ color: statusColor }}>{statusText}</span>
-            {motionDetected && (
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(212,148,76,0.15)' }}>
-                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#d4944c' }} />
-                <span className="text-sm font-medium" style={{ color: '#d4944c' }}>Lid Open — Shutting Down</span>
+          {/* Motion sensor stats */}
+          <div className="w-full flex-shrink-0 pt-4 mt-4" style={{ borderTop: '1px solid var(--ds-border)' }}>
+            <div className="flex justify-between px-6 text-sm">
+              <div className="text-left">
+                <div className="text-xs text-[var(--ds-text-secondary)] uppercase tracking-wider mb-1">Motion Last Triggered</div>
+                <div className="font-medium text-[var(--ds-text)]">
+                  {motionEntity.lastChanged && motionEntity.state !== 'unavailable'
+                    ? new Date(motionEntity.lastChanged).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                    : 'No data'}
+                </div>
               </div>
-            )}
+              <div className="text-right">
+                <div className="text-xs text-[var(--ds-text-secondary)] uppercase tracking-wider mb-1">Triggers (24h)</div>
+                <div className="font-medium text-[var(--ds-text)]">
+                  {triggerCount != null ? `${triggerCount} time${triggerCount !== 1 ? 's' : ''}` : 'No data'}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

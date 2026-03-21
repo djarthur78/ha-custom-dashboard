@@ -152,6 +152,35 @@ export async function getYesterdayState(entityId) {
   return null;
 }
 
+/**
+ * Count how many times a binary sensor triggered (off→on) in the last N hours
+ */
+export async function countTriggers(entityId, hours = 24) {
+  const now = new Date();
+  const start = new Date(now.getTime() - hours * 60 * 60 * 1000);
+
+  const params = new URLSearchParams({
+    filter_entity_id: entityId,
+    end_time: now.toISOString(),
+    minimal_response: '',
+    no_attributes: '',
+  });
+
+  const data = await request(`/history/period/${start.toISOString()}?${params}`);
+
+  if (!data || !data[0]) return 0;
+
+  // Count transitions from off→on
+  let count = 0;
+  const states = data[0];
+  for (let i = 1; i < states.length; i++) {
+    if (states[i].state === 'on' && states[i - 1].state === 'off') {
+      count++;
+    }
+  }
+  return count;
+}
+
 export default {
   getConfig,
   getStates,
@@ -160,6 +189,7 @@ export default {
   getServices,
   getCalendarEvents,
   getYesterdayState,
+  countTriggers,
   turnOn,
   turnOff,
   toggle,
