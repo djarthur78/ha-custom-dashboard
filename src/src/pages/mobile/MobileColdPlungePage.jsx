@@ -158,13 +158,15 @@ export function MobileColdPlungePage() {
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <Snowflake size={20} style={{ color: statusColor }} />
-              <span className="text-2xl font-bold" style={{ color: statusColor }}>{activeCount}/4</span>
+              <span className="text-lg font-bold" style={{ color: statusColor }}>
+                {activeCount === 0 ? 'All Off' : activeCount === 4 ? 'All On' : `${activeCount} of 4 on`}
+              </span>
             </div>
             <div className="text-sm font-medium" style={{ color: statusColor }}>{statusText}</div>
             {motionDetected && (
               <div className="flex items-center gap-1.5 mt-1">
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#d4944c' }} />
-                <span className="text-xs font-medium" style={{ color: '#d4944c' }}>Motion Detected</span>
+                <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: '#d4944c' }} />
+                <span className="text-xs font-medium" style={{ color: '#d4944c' }}>Lid Open — Shutting Down</span>
               </div>
             )}
           </div>

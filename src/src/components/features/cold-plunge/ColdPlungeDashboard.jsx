@@ -168,16 +168,18 @@ export function ColdPlungeDashboard() {
           </div>
 
           {/* Status row */}
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-2">
               <Snowflake size={24} style={{ color: statusColor }} />
-              <span className="text-3xl font-bold" style={{ color: statusColor }}>{activeCount}/4</span>
-              <span className="text-lg font-medium" style={{ color: statusColor }}>{statusText}</span>
+              <span className="text-2xl font-bold" style={{ color: statusColor }}>
+                {activeCount === 0 ? 'All Off' : activeCount === 4 ? 'All On' : `${activeCount} of 4 devices on`}
+              </span>
             </div>
+            <span className="text-lg font-medium" style={{ color: statusColor }}>{statusText}</span>
             {motionDetected && (
               <div className="flex items-center gap-2 px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(212,148,76,0.15)' }}>
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#d4944c' }} />
-                <span className="text-sm font-medium" style={{ color: '#d4944c' }}>Motion Detected</span>
+                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#d4944c' }} />
+                <span className="text-sm font-medium" style={{ color: '#d4944c' }}>Lid Open — Shutting Down</span>
               </div>
             )}
           </div>
