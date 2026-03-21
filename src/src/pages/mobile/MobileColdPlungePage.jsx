@@ -32,11 +32,13 @@ function getTempColor(temp) {
 }
 
 const COLD_PLUNGE_POWER = {
-  chiller: 'sensor.cold_plunge_devices_p304m_cold_plunge_chiller_power',
-  pump: 'sensor.cold_plunge_devices_p304m_cold_plunge_pump_power',
-  fan: 'sensor.cold_plunge_devices_p304m_cold_plunge_fan_power',
-  ozone: 'sensor.cold_plunge_devices_p304m_cold_plunge_ozone_power',
+  chiller: 'sensor.unnamed_p304m_cold_plunge_chiller_current_consumption',
+  pump: 'sensor.unnamed_p304m_cold_plunge_pump_current_consumption',
+  fan: 'sensor.unnamed_p304m_cold_plunge_fan_current_consumption',
+  ozone: 'sensor.unnamed_p304m_cold_plunge_ozone_current_consumption',
 };
+
+const CHILLER_ACTIVE_THRESHOLD = 100; // Watts - above this = compressor running
 
 const DEVICES = [
   { key: 'chiller', label: 'Chiller', icon: Snowflake, color: '#5a8fb8' },
@@ -103,9 +105,16 @@ export function MobileColdPlungePage() {
   const ozoneEntity = useEntity(COLD_PLUNGE.ozone);
   const waterTempEntity = useEntity(COLD_PLUNGE_SENSORS.waterTemp);
   const motionEntity = useEntity(COLD_PLUNGE_SENSORS.motion);
+  const chillerPowerEntity = useEntity(COLD_PLUNGE_POWER.chiller);
 
   const coreOn = chillerEntity.state === 'on' && pumpEntity.state === 'on' && fanEntity.state === 'on';
   const anyOn = [chillerEntity, pumpEntity, fanEntity, ozoneEntity].some(e => e.state === 'on');
+
+  // Chiller active detection via power consumption
+  const chillerPower = chillerPowerEntity.state && chillerPowerEntity.state !== 'unavailable'
+    ? parseFloat(chillerPowerEntity.state) : null;
+  const chillerIsOn = chillerEntity.state === 'on';
+  const chillerActivelyChilling = chillerIsOn && chillerPower != null && chillerPower > CHILLER_ACTIVE_THRESHOLD;
   const activeCount = [chillerEntity, pumpEntity, fanEntity, ozoneEntity].filter(e => e.state === 'on').length;
 
   const waterTemp = waterTempEntity.state && waterTempEntity.state !== 'unavailable'
@@ -175,6 +184,17 @@ export function MobileColdPlungePage() {
               </span>
             </div>
             <div className="text-sm font-medium" style={{ color: statusColor }}>{statusText}</div>
+            {chillerIsOn && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <div className="w-1.5 h-1.5 rounded-full" style={{
+                  backgroundColor: chillerActivelyChilling ? '#5a8fb8' : '#9ca3af',
+                  ...(chillerActivelyChilling ? { animation: 'pulse 2s infinite' } : {}),
+                }} />
+                <span className="text-xs font-medium" style={{ color: chillerActivelyChilling ? '#5a8fb8' : '#9ca3af' }}>
+                  {chillerActivelyChilling ? 'Actively Chilling' : 'Standby'}{chillerPower != null ? ` · ${chillerPower.toFixed(0)}W` : ''}
+                </span>
+              </div>
+            )}
             {motionDetected && (
               <div className="flex items-center gap-1.5 mt-1">
                 <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: '#d4944c' }} />
