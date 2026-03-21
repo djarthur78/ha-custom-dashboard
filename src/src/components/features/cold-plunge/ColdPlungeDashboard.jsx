@@ -126,6 +126,16 @@ export function ColdPlungeDashboard() {
   const tempColor = getTempColor(waterTemp);
   const motionDetected = motionEntity.state === 'on';
 
+  // Determine if motion is stale (on for >5 min with all devices off = likely false positive)
+  const [motionStale, setMotionStale] = useState(false);
+  useEffect(() => {
+    if (!motionDetected) { setMotionStale(false); return; }
+    if (anyOn) { setMotionStale(false); return; }
+    // Motion is on but all devices off — start 5 min timer
+    const timer = setTimeout(() => setMotionStale(true), 5 * 60 * 1000);
+    return () => clearTimeout(timer);
+  }, [motionDetected, anyOn]);
+
   // Motion stats — both use history API so they're consistent
   const [motionStats, setMotionStats] = useState({ count: null, lastTriggered: null });
 
@@ -216,10 +226,12 @@ export function ColdPlungeDashboard() {
                   )}
                 </div>
               )}
-              {motionDetected && (
+              {motionDetected && !motionStale && (
                 <div className="flex items-center gap-2 px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(212,148,76,0.15)' }}>
                   <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#d4944c' }} />
-                  <span className="text-sm font-medium" style={{ color: '#d4944c' }}>Lid Open — Shutting Down</span>
+                  <span className="text-sm font-medium" style={{ color: '#d4944c' }}>
+                    Motion Detected {anyOn ? '(monitoring)' : ''}
+                  </span>
                 </div>
               )}
             </div>

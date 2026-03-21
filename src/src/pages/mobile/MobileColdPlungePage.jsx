@@ -123,6 +123,15 @@ export function MobileColdPlungePage() {
   const tempColor = getTempColor(waterTemp);
   const motionDetected = motionEntity.state === 'on';
 
+  // Determine if motion is stale (on for >5 min with all devices off = likely false positive)
+  const [motionStale, setMotionStale] = useState(false);
+  useEffect(() => {
+    if (!motionDetected) { setMotionStale(false); return; }
+    if (anyOn) { setMotionStale(false); return; }
+    const timer = setTimeout(() => setMotionStale(true), 5 * 60 * 1000);
+    return () => clearTimeout(timer);
+  }, [motionDetected, anyOn]);
+
   // Motion stats
   const [motionStats, setMotionStats] = useState({ count: null, lastTriggered: null });
 
@@ -195,10 +204,12 @@ export function MobileColdPlungePage() {
                 </span>
               </div>
             )}
-            {motionDetected && (
+            {motionDetected && !motionStale && (
               <div className="flex items-center gap-1.5 mt-1">
                 <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: '#d4944c' }} />
-                <span className="text-xs font-medium" style={{ color: '#d4944c' }}>Lid Open — Shutting Down</span>
+                <span className="text-xs font-medium" style={{ color: '#d4944c' }}>
+                  Motion Detected {anyOn ? '(monitoring)' : ''}
+                </span>
               </div>
             )}
           </div>
