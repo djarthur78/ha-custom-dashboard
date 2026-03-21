@@ -614,35 +614,35 @@ function QueueView({ activeSpeaker, lastPlayedPlaylist, prefetchedTracks = [], o
       </h3>
 
       {/* Current track */}
-      <div className="p-3 rounded-lg mb-3" style={{ backgroundColor: 'rgba(159,86,68,0.06)', borderLeft: '4px solid #9f5644' }}>
+      <div className="p-3 rounded-lg mb-3" style={{ backgroundColor: 'var(--ds-accent)' }}>
         <div className="flex items-center justify-between mb-1">
-          <div className="text-xs font-medium uppercase tracking-wider" style={{ color: '#9f5644' }}>
+          <div className="text-xs font-medium uppercase tracking-wider" style={{ color: 'white' }}>
             Now Playing
           </div>
           {playlistSize > 1 && currentIdx >= 0 && (
-            <div className="text-xs text-[var(--color-text-secondary)]">
+            <div className="text-xs" style={{ color: 'rgba(255,255,255,0.75)' }}>
               {currentIdx + 1} / {playlistSize} &middot; {playlistSize - currentIdx - 1} left
             </div>
           )}
         </div>
-        <div className="text-base font-semibold text-[var(--color-text)] mb-1">
+        <div className="text-base font-semibold mb-1" style={{ color: 'white' }}>
           {activeSpeaker.mediaTitle || 'Unknown Track'}
         </div>
         {activeSpeaker.mediaArtist && (
-          <div className="text-sm text-[var(--color-text-secondary)]">
+          <div className="text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>
             {activeSpeaker.mediaArtist}
           </div>
         )}
         {activeSpeaker.mediaAlbumName && (
-          <div className="text-xs text-[var(--color-text-secondary)] mt-1">
+          <div className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
             {activeSpeaker.mediaAlbumName}
           </div>
         )}
         {playlistSize > 1 && currentIdx >= 0 && (
-          <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+          <div className="w-full rounded-full h-1.5 mt-2" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
             <div
               className="h-1.5 rounded-full transition-all"
-              style={{ backgroundColor: '#9f5644', width: `${((currentIdx + 1) / playlistSize) * 100}%` }}
+              style={{ backgroundColor: 'white', width: `${((currentIdx + 1) / playlistSize) * 100}%` }}
             />
           </div>
         )}

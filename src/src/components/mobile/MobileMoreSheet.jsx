@@ -4,11 +4,12 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { Home, Music, Camera, Users, Heart, ListChecks, X } from 'lucide-react';
+import { Home, Music, Camera, Users, Heart, ListChecks, CloudSun, X } from 'lucide-react';
 
 const moreItems = [
   { to: '/home', icon: Home, label: 'Home' },
   { to: '/todo', icon: ListChecks, label: 'To-Do' },
+  { to: '/weather', icon: CloudSun, label: 'Weather' },
   { to: '/music', icon: Music, label: 'Music' },
   { to: '/cameras', icon: Camera, label: 'Cameras' },
   { to: '/people', icon: Users, label: 'People' },

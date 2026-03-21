@@ -18,6 +18,7 @@ const PeoplePage = lazy(() => import('./pages/PeoplePage'));
 const HealthPage = lazy(() => import('./pages/HealthPage'));
 const ColdPlungePage = lazy(() => import('./pages/ColdPlungePage'));
 const TodoPage = lazy(() => import('./pages/TodoPage'));
+const WeatherPage = lazy(() => import('./pages/WeatherPage'));
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="home" element={<HomePage />} />
         <Route path="calendar" element={<CalendarViewList />} />
         <Route path="meals" element={<MealsPage />} />
+        <Route path="weather" element={<WeatherPage />} />
         <Route path="games-room" element={<GamesRoomPage />} />
         <Route path="people" element={<PeoplePage />} />
         <Route path="cameras" element={<CamerasPage />} />

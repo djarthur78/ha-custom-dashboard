@@ -15,6 +15,20 @@ const COLD_PLUNGE = {
   ozone: 'switch.cold_plunge_devices_p304m_cold_plunge_ozone',
 };
 
+const COLD_PLUNGE_SENSORS = {
+  waterTemp: 'sensor.cold_plunge_temp_cold_plunge_water_temp',
+  motion: 'binary_sensor.cold_plunge_temp_cold_plunge_motion',
+};
+
+function getTempColor(temp) {
+  if (temp == null) return '#9ca3af';
+  if (temp < 5) return '#5a8fb8';
+  if (temp < 10) return '#4a9a9a';
+  if (temp < 15) return '#4a9a4a';
+  if (temp < 20) return '#d4944c';
+  return '#b5453a';
+}
+
 const COLD_PLUNGE_POWER = {
   chiller: 'sensor.cold_plunge_devices_p304m_cold_plunge_chiller_power',
   pump: 'sensor.cold_plunge_devices_p304m_cold_plunge_pump_power',
@@ -86,12 +100,21 @@ export function ColdPlungeDashboard() {
   const pumpEntity = useEntity(COLD_PLUNGE.pump);
   const fanEntity = useEntity(COLD_PLUNGE.fan);
   const ozoneEntity = useEntity(COLD_PLUNGE.ozone);
+  const waterTempEntity = useEntity(COLD_PLUNGE_SENSORS.waterTemp);
+  const motionEntity = useEntity(COLD_PLUNGE_SENSORS.motion);
 
   const coreOn = chillerEntity.state === 'on' && pumpEntity.state === 'on' && fanEntity.state === 'on';
   const anyOn = [chillerEntity, pumpEntity, fanEntity, ozoneEntity].some(e => e.state === 'on');
 
   // Count active devices
   const activeCount = [chillerEntity, pumpEntity, fanEntity, ozoneEntity].filter(e => e.state === 'on').length;
+
+  // Water temperature
+  const waterTemp = waterTempEntity.state && waterTempEntity.state !== 'unavailable'
+    ? parseFloat(waterTempEntity.state)
+    : null;
+  const tempColor = getTempColor(waterTemp);
+  const motionDetected = motionEntity.state === 'on';
 
   const handleMasterOn = useCallback(async () => {
     setLoading(true);
@@ -135,16 +158,28 @@ export function ColdPlungeDashboard() {
               : 'var(--ds-card)',
           }}
         >
-          <Thermometer size={80} style={{ color: statusColor }} className="mb-4" />
-          <div className="text-[120px] font-bold leading-none mb-2" style={{ color: statusColor }}>
-            <Snowflake size={60} style={{ color: statusColor, display: 'inline', verticalAlign: 'middle', marginRight: '12px' }} />
-            {activeCount}/4
+          {/* Water Temperature - Hero */}
+          <Thermometer size={64} style={{ color: tempColor }} className="mb-2" />
+          <div className="text-[140px] font-bold leading-none mb-1" style={{ color: tempColor }}>
+            {waterTemp != null ? `${waterTemp.toFixed(1)}°` : '--'}
           </div>
-          <div className="text-2xl font-medium text-[var(--color-text-secondary)] mb-2">
-            Cold Plunge
+          <div className="text-2xl font-medium text-[var(--color-text-secondary)] mb-6">
+            Water Temperature
           </div>
-          <div className="text-xl font-semibold" style={{ color: statusColor }}>
-            {statusText}
+
+          {/* Status row */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Snowflake size={24} style={{ color: statusColor }} />
+              <span className="text-3xl font-bold" style={{ color: statusColor }}>{activeCount}/4</span>
+              <span className="text-lg font-medium" style={{ color: statusColor }}>{statusText}</span>
+            </div>
+            {motionDetected && (
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full" style={{ backgroundColor: 'rgba(212,148,76,0.15)' }}>
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#d4944c' }} />
+                <span className="text-sm font-medium" style={{ color: '#d4944c' }}>Motion Detected</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
