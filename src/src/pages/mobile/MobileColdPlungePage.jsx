@@ -8,7 +8,7 @@ import { Power, Snowflake, Waves, Wind, Sparkles, Thermometer } from 'lucide-rea
 import { MobilePageContainer } from '../../components/mobile/MobilePageContainer';
 import { useEntity } from '../../hooks/useEntity';
 import haWebSocket from '../../services/ha-websocket';
-import { countTriggers } from '../../services/ha-rest';
+import { getTriggerStats } from '../../services/ha-rest';
 
 const COLD_PLUNGE = {
   chiller: 'switch.cold_plunge_devices_p304m_cold_plunge_chiller',
@@ -115,13 +115,13 @@ export function MobileColdPlungePage() {
   const motionDetected = motionEntity.state === 'on';
 
   // Motion stats
-  const [triggerCount, setTriggerCount] = useState(null);
+  const [motionStats, setMotionStats] = useState({ count: null, lastTriggered: null });
 
   useEffect(() => {
     let mounted = true;
-    countTriggers(COLD_PLUNGE_SENSORS.motion, 24)
-      .then(count => { if (mounted) setTriggerCount(count); })
-      .catch(() => { if (mounted) setTriggerCount(null); });
+    getTriggerStats(COLD_PLUNGE_SENSORS.motion, 24)
+      .then(stats => { if (mounted) setMotionStats(stats); })
+      .catch(() => { if (mounted) setMotionStats({ count: null, lastTriggered: null }); });
     return () => { mounted = false; };
   }, [motionDetected]);
 
@@ -224,17 +224,17 @@ export function MobileColdPlungePage() {
         {/* Motion sensor stats */}
         <div className="ds-card flex justify-between" style={{ padding: '12px 16px' }}>
           <div>
-            <div className="text-[10px] text-[var(--ds-text-secondary)] uppercase tracking-wider mb-0.5">Motion Last Triggered</div>
+            <div className="text-[10px] text-[var(--ds-text-secondary)] uppercase tracking-wider mb-0.5">Last Triggered</div>
             <div className="text-sm font-medium text-[var(--ds-text)]">
-              {motionEntity.lastChanged && motionEntity.state !== 'unavailable'
-                ? new Date(motionEntity.lastChanged).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-                : 'No data'}
+              {motionStats.lastTriggered
+                ? new Date(motionStats.lastTriggered).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                : 'Not in last 24h'}
             </div>
           </div>
           <div className="text-right">
             <div className="text-[10px] text-[var(--ds-text-secondary)] uppercase tracking-wider mb-0.5">Triggers (24h)</div>
             <div className="text-sm font-medium text-[var(--ds-text)]">
-              {triggerCount != null ? `${triggerCount} time${triggerCount !== 1 ? 's' : ''}` : 'No data'}
+              {motionStats.count != null ? `${motionStats.count} time${motionStats.count !== 1 ? 's' : ''}` : 'No data'}
             </div>
           </div>
         </div>

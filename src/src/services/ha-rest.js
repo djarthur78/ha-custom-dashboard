@@ -153,32 +153,33 @@ export async function getYesterdayState(entityId) {
 }
 
 /**
- * Count how many times a binary sensor triggered (off→on) in the last N hours
+ * Get trigger stats for a binary sensor (off→on transitions) in the last N hours
+ * Returns { count, lastTriggered } where lastTriggered is the ISO timestamp of the most recent off→on
  */
-export async function countTriggers(entityId, hours = 24) {
+export async function getTriggerStats(entityId, hours = 24) {
   const now = new Date();
   const start = new Date(now.getTime() - hours * 60 * 60 * 1000);
 
   const params = new URLSearchParams({
     filter_entity_id: entityId,
     end_time: now.toISOString(),
-    minimal_response: '',
     no_attributes: '',
   });
 
   const data = await request(`/history/period/${start.toISOString()}?${params}`);
 
-  if (!data || !data[0]) return 0;
+  if (!data || !data[0]) return { count: 0, lastTriggered: null };
 
-  // Count transitions from off→on
   let count = 0;
+  let lastTriggered = null;
   const states = data[0];
   for (let i = 1; i < states.length; i++) {
     if (states[i].state === 'on' && states[i - 1].state === 'off') {
       count++;
+      lastTriggered = states[i].last_changed;
     }
   }
-  return count;
+  return { count, lastTriggered };
 }
 
 export default {
@@ -189,7 +190,7 @@ export default {
   getServices,
   getCalendarEvents,
   getYesterdayState,
-  countTriggers,
+  getTriggerStats,
   turnOn,
   turnOff,
   toggle,

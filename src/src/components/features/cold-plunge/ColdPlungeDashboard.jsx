@@ -7,7 +7,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { Power, Snowflake, Waves, Wind, Sparkles, Thermometer } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import haWebSocket from '../../../services/ha-websocket';
-import { countTriggers } from '../../../services/ha-rest';
+import { getTriggerStats } from '../../../services/ha-rest';
 
 const COLD_PLUNGE = {
   chiller: 'switch.cold_plunge_devices_p304m_cold_plunge_chiller',
@@ -117,15 +117,14 @@ export function ColdPlungeDashboard() {
   const tempColor = getTempColor(waterTemp);
   const motionDetected = motionEntity.state === 'on';
 
-  // Motion stats
-  const [triggerCount, setTriggerCount] = useState(null);
-  const motionLastChanged = motionEntity.attributes?.last_changed || motionEntity.lastChanged;
+  // Motion stats — both use history API so they're consistent
+  const [motionStats, setMotionStats] = useState({ count: null, lastTriggered: null });
 
   useEffect(() => {
     let mounted = true;
-    countTriggers(COLD_PLUNGE_SENSORS.motion, 24)
-      .then(count => { if (mounted) setTriggerCount(count); })
-      .catch(() => { if (mounted) setTriggerCount(null); });
+    getTriggerStats(COLD_PLUNGE_SENSORS.motion, 24)
+      .then(stats => { if (mounted) setMotionStats(stats); })
+      .catch(() => { if (mounted) setMotionStats({ count: null, lastTriggered: null }); });
     return () => { mounted = false; };
   }, [motionDetected]); // Re-fetch when motion state changes
 
@@ -203,17 +202,17 @@ export function ColdPlungeDashboard() {
           <div className="w-full flex-shrink-0 pt-4 mt-4" style={{ borderTop: '1px solid var(--ds-border)' }}>
             <div className="flex justify-between px-6 text-sm">
               <div className="text-left">
-                <div className="text-xs text-[var(--ds-text-secondary)] uppercase tracking-wider mb-1">Motion Last Triggered</div>
+                <div className="text-xs text-[var(--ds-text-secondary)] uppercase tracking-wider mb-1">Last Triggered</div>
                 <div className="font-medium text-[var(--ds-text)]">
-                  {motionEntity.lastChanged && motionEntity.state !== 'unavailable'
-                    ? new Date(motionEntity.lastChanged).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-                    : 'No data'}
+                  {motionStats.lastTriggered
+                    ? new Date(motionStats.lastTriggered).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                    : 'Not in last 24h'}
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-xs text-[var(--ds-text-secondary)] uppercase tracking-wider mb-1">Triggers (24h)</div>
                 <div className="font-medium text-[var(--ds-text)]">
-                  {triggerCount != null ? `${triggerCount} time${triggerCount !== 1 ? 's' : ''}` : 'No data'}
+                  {motionStats.count != null ? `${motionStats.count} time${motionStats.count !== 1 ? 's' : ''}` : 'No data'}
                 </div>
               </div>
             </div>
