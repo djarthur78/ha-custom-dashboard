@@ -2,34 +2,44 @@
 
 Wall-mounted kitchen dashboard for Home Assistant. React 19 + Vite + Tailwind CSS v4.
 
-**Version:** 2.3.0
-**Device:** Android 14 PoE tablet (1920x1080)
-**Access:** http://192.168.1.2:8099
+**Version:** 3.2.3
+**Devices:** 1920x1080 wall panel (desktop) + iPhone (mobile dashboard)
+**Access:** http://192.168.1.2:8099 (desktop) | http://192.168.1.2:8099/mobile/ (mobile)
 
 ## Features
 
 - **Calendar** - 6 view modes, 8 Google calendars, event CRUD, weather integration
 - **Meal Planner** - Two-week planning grid with inline editing
 - **Games Room** - Harmony Hub scenes, climate control, light toggles
-- **Music** - Sonos multi-room control, Spotify playlists, speaker grouping
+- **Music** - Sonos multi-room control, Spotify playlists, speaker grouping, queue building
 - **People** - Family location tracking with Leaflet map
 - **Health** - Oura Ring data (sleep, activity, heart rate) + cold plunge controls
-- **Cameras** - 8 camera feeds (3 MJPEG streams, 5 snapshot), priority loading
+- **Cold Plunge** - Water temp, motion sensor, chiller status, device controls
+- **Cameras** - 9 camera feeds (3 MJPEG streams, 6 snapshot), priority loading
+- **Weather** - Ecowitt GW3000A indoor sensors + Met Office forecast
+- **To-Do** - Todoist integration via HA (3 lists: Nic & Daz, This Week, This Month)
+- **Mobile Dashboard** - iPhone-optimized layout with bottom tabs and swipe navigation
 
 ## Quick Start
 
 ```bash
 cd src
 npm install
-npm run dev          # http://localhost:5173
+npm run dev          # Desktop: http://localhost:5173
+                     # Mobile:  http://localhost:5173/mobile/
 ```
 
 ## Build & Deploy
 
 ```bash
-cd src && npm run build
-cd .. && ./build-addon.sh
-git add -A && git commit -m "v2.3.0" && git push
+# Update version in THREE places:
+#   family-dashboard/config.json
+#   src/package.json
+#   src/src/pages/HomePage.jsx
+
+cd src && npm run build && cd ..
+./build-addon.sh
+git add -A && git commit -m "v3.2.3" && git push
 # Then update addon via HA UI or Puppeteer
 ```
 
@@ -52,13 +62,20 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for full deployment guide.
 ```
 ha-custom-dashboard/
 ├── src/                          # React app
+│   ├── index.html                # Desktop entry point
+│   ├── mobile.html               # Mobile entry point
 │   ├── src/
-│   │   ├── App.jsx               # Lazy-loaded routes
+│   │   ├── App.jsx               # Desktop lazy-loaded routes
+│   │   ├── MobileApp.jsx         # Mobile lazy-loaded routes
+│   │   ├── main.jsx              # Desktop entry
+│   │   ├── mobile-main.jsx       # Mobile entry (basename="/mobile")
 │   │   ├── components/
 │   │   │   ├── layout/           # MainLayout, Navigation
+│   │   │   ├── mobile/           # MobileLayout, MobileBottomTabBar, MobileMoreSheet
 │   │   │   ├── common/           # ErrorBoundary, LoadingSpinner, Toast
-│   │   │   └── features/         # calendar, meals, games-room, music, people, health, cameras
-│   │   ├── pages/                # Route page wrappers
+│   │   │   └── features/         # calendar, meals, games-room, music, people, health, cameras, todo, weather, cold-plunge
+│   │   ├── pages/                # Desktop route pages
+│   │   ├── pages/mobile/         # Mobile route pages (9 pages)
 │   │   ├── hooks/                # useEntity, useHAConnection, useServiceCall
 │   │   ├── services/             # ha-websocket.js (singleton), ha-rest.js
 │   │   ├── utils/                # Helpers (calendar, weather, logger)
@@ -71,8 +88,8 @@ ha-custom-dashboard/
 │   ├── Dockerfile
 │   ├── nginx.conf
 │   └── run.sh
-├── config/                       # Entity mappings
-└── docs/                         # Archive
+├── HA/                           # Home Assistant config files
+└── config/                       # Entity mappings
 ```
 
 ## Architecture
@@ -81,9 +98,11 @@ ha-custom-dashboard/
 
 **Data flow:** HA -> WebSocket -> Service subscribers -> React hooks -> Components
 
-**Routes:** All pages lazy-loaded with `React.lazy()` + `Suspense` for code splitting.
+**Desktop routes:** All pages lazy-loaded with `React.lazy()` + `Suspense` for code splitting.
 
-**Design:** Clean minimal - white cards, 1px `#e0e0e0` borders, 8px radius, no shadows. Accent colors via left stripe.
+**Mobile:** Separate Vite entry point (`mobile.html` → `mobile-main.jsx` → `MobileApp.jsx`), shares all hooks/services/features with desktop. Client-side redirect sends phones to `/mobile/`.
+
+**HA Integration:** "Arthur Dashboard" native ingress sidebar panel, works via HTTPS/Cloudflare.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for details.
 
@@ -102,6 +121,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for details.
 - **URL:** http://192.168.1.2:8123
 - **Add-on slug:** `c2ba14e6_family-dashboard`
 - **Port:** 8099 (direct access)
+- **Sidebar:** "Arthur Dashboard" (native ingress panel)
 - **Remote:** https://ha.99swanlane.uk (Cloudflare tunnel)
 
 ## License

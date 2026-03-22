@@ -2,6 +2,69 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.2.3] - 2026-03-22
+
+### Changes
+- Renamed sidebar panel to "Arthur Dashboard"
+- Client-side phone redirect for HA ingress panel (window.innerWidth < 768 → /mobile/)
+- Removed old "Arthur Dashboard - Phone" panel and iframe-panel.js
+
+---
+
+## [3.2.2] - 2026-03-22
+
+### Changes
+- Native HA ingress sidebar panel replaces old panel_custom iframe hack
+- Works via HTTPS through Cloudflare (https://ha.99swanlane.uk)
+- Removed panel_custom from configuration.yaml
+
+---
+
+## [3.2.1] - 2026-03-21
+
+### Changes
+- Renamed person "Cerys" to "Tom" in People page display
+
+---
+
+## [3.2.0] - 2026-03-21
+
+### Added
+- **Weather tab** — full Ecowitt GW3000A integration + Met Office forecast
+  - Desktop: full-viewport 2-panel layout (current conditions + forecast/sensors)
+  - Mobile: single-column vertical scroll
+  - Live sensors: indoor temp/humidity/dewpoint, pressure, soil moisture
+  - Placeholder cards for WS69 outdoor station (wind, rain, UV/solar)
+  - Components: CurrentConditions, ForecastCard, WindCard, RainCard, UVSolarCard, PressureCard, SoilMoistureCard
+- **Cold plunge sensors** — water temp (~4.7-5°C), motion sensor, chiller active/standby indicator
+- **Music queue styling** — "Now Playing" card restyled with full accent background
+
+---
+
+## [3.1.0] - 2026-03-20
+
+### Added
+- **To-Do list page** backed by Todoist via HA integration
+  - 3 lists as tabs: Nic & Daz, This Week, This Month
+  - Full CRUD: add, complete, edit (modal), delete, clear completed
+  - Desktop and mobile pages
+  - Hook: useTodoList.js with WS fetch and todo service domain
+
+---
+
+## [3.0.0] - 2026-03-18
+
+### Added
+- **iPhone-optimized mobile dashboard** — separate Vite entry point sharing all hooks/services/features with desktop
+- Multi-entry Vite build: index.html (desktop) + mobile.html (mobile)
+- Nginx /mobile location block with try_files
+- 9 mobile pages: Calendar, Music, Cameras, People, Home, Meals, Games Room, Health, Cold Plunge
+- Mobile layout: 44px header, 56px bottom tab bar, 5 tabs + More sheet
+- MobileLayout, MobileBottomTabBar, MobileMoreSheet, MobilePageContainer, MobileTabSwitcher components
+- build-addon.sh updated for multi-entry (config.js injection, absolute asset paths)
+
+---
+
 ## [2.0.40] - 2026-02-15
 
 ### Mac Migration Complete

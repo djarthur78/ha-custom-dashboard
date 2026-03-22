@@ -1,13 +1,13 @@
 # Architecture
 
-**Version:** 2.3.0
-**Last Updated:** 2026-03-06
+**Version:** 3.2.3
+**Last Updated:** 2026-03-22
 
 ## System Overview
 
 ```
 ┌──────────────────────────────────────┐
-│  Android Tablet / Browser            │
+│  Wall Panel / Browser (Desktop)      │
 │  http://192.168.1.2:8099             │
 │                                      │
 │  React 19 SPA (Vite)                 │
@@ -15,6 +15,14 @@
 │  ├── Feature components              │
 │  ├── Hooks (useEntity, etc.)         │
 │  └── Services (singleton WS + REST)  │
+├──────────────────────────────────────┤
+│  iPhone / Mobile Browser             │
+│  http://192.168.1.2:8099/mobile/     │
+│                                      │
+│  Separate Vite entry (mobile.html)   │
+│  ├── MobileApp.jsx (lazy routes)     │
+│  ├── MobileLayout + bottom tabs      │
+│  └── Shares hooks/services/features  │
 └──────────┬───────────┬───────────────┘
            │           │
       WebSocket     REST API
@@ -23,12 +31,15 @@
 ┌──────────▼───────────▼───────────────┐
 │  Home Assistant (192.168.1.2:8123)   │
 │  ├── 8 Google Calendars              │
-│  ├── 8 UniFi Cameras                 │
+│  ├── 9 UniFi Cameras                 │
 │  ├── Sonos speakers                  │
 │  ├── Climate (games room)            │
 │  ├── Oura Ring sensors               │
 │  ├── Person tracking                 │
-│  └── Harmony Hub                     │
+│  ├── Harmony Hub                     │
+│  ├── Ecowitt GW3000A (weather)       │
+│  ├── Todoist (3 lists)               │
+│  └── Cold plunge sensors + chiller   │
 └──────────────────────────────────────┘
 ```
 
@@ -42,11 +53,21 @@ Single persistent connection shared by all components. Managed by `ha-websocket.
 const [status, setStatus] = useState(() => haWebSocket.getStatus()); // correct
 ```
 
+### Multi-Entry Vite Build
+Desktop and mobile share all hooks, services, and feature components but have separate entry points:
+- `index.html` → `main.jsx` → `App.jsx` → `MainLayout` (desktop)
+- `mobile.html` → `mobile-main.jsx` → `MobileApp.jsx` → `MobileLayout` (mobile)
+
+Configured via `rollupOptions.input` in `vite.config.js`. Dev server uses a custom `mobile-spa-fallback` plugin to rewrite `/mobile*` to `/mobile.html`.
+
+### HA Ingress Panel
+"Arthur Dashboard" sidebar panel uses native HA ingress (no iframe or panel_custom). Works through HTTPS/Cloudflare. Client-side redirect in `index.html` sends phones to `/mobile/`.
+
 ### Lazy Routes
-All page routes use `React.lazy()` with a `Suspense` boundary in MainLayout. Each page loads its bundle on first visit. Leaflet (39KB) only loads on the People page.
+All page routes use `React.lazy()` with a `Suspense` boundary in MainLayout (desktop) and MobileLayout (mobile). Each page loads its bundle on first visit. Leaflet (39KB) only loads on the People page.
 
 ### Camera Priority Loading
-Front 3 cameras use MJPEG streams (loaded immediately). Back 5 cameras use snapshot polling with `IntersectionObserver` to pause when off-screen. Snapshot interval: 10s (was 3s).
+Front 3 cameras use MJPEG streams (loaded immediately). Back 6 cameras use snapshot polling with `IntersectionObserver` to pause when off-screen. Snapshot interval: 10s.
 
 ### Feature-Based Organization
 Each feature has its own directory under `components/features/`:
@@ -59,41 +80,52 @@ features/calendar/
 ```
 
 ### Visual Design
-Calendar's design language applied everywhere:
-- White cards, 1px `#e0e0e0` border, 8px radius
-- No drop shadows
-- Accent colors via left stripe or purposeful highlights
-- Large scannable numbers, secondary text in `#666`
+Design system (`design-system.css`) with warm palette:
+- `--ds-accent` (#b5453a) for interactive elements
+- `--ds-state-on` (#4a9a4a) / `--ds-state-off` (#b5453a) for ON/OFF states
+- White cards, subtle borders, 8px radius
+- Desktop header: 72px. Mobile header: 44px. Mobile tab bar: 56px.
 
 ## Component Tree
 
+### Desktop
 ```
 App.jsx (lazy routes)
 └── MainLayout
     ├── Header (blue bar, nav icons, clock, weather, status)
     ├── Suspense boundary
     │   ├── CalendarViewList (biweekly default)
-    │   ├── HomePage (clean cards with live previews)
+    │   ├── HomePage
     │   ├── MealsPage → MealGrid
-    │   ├── GamesRoomPage → GamesRoomDashboard
-    │   │   ├── NowPlaying
-    │   │   ├── SceneButtons
-    │   │   ├── ClimateCard
-    │   │   └── PowerGrid
-    │   ├── MusicPage → MusicDashboard
-    │   │   ├── NowPlayingPanel
-    │   │   ├── PlaylistPanel
-    │   │   └── SpeakerPanel
-    │   ├── PeoplePage → PeopleDashboard
-    │   │   ├── PersonCard list
-    │   │   └── LocationMap (Leaflet)
-    │   ├── HealthPage → HealthDashboard
-    │   │   ├── Sleep, Heart, Activity panels
-    │   │   └── ColdPlungeControls
-    │   └── CamerasPage → CameraGrid
-    │       ├── CameraFeed (stream or snapshot)
-    │       └── CameraModal
+    │   ├── WeatherPage → CurrentConditions + Forecast + Sensor cards
+    │   ├── GamesRoomPage → SceneButtons, ClimateCard, PowerGrid, NowPlaying
+    │   ├── MusicPage → NowPlayingPanel, PlaylistPanel, SpeakerPanel
+    │   ├── PeoplePage → PersonCard list + LocationMap
+    │   ├── HealthPage → Sleep, Heart, Activity, ColdPlungeControls
+    │   ├── ColdPlungePage → Status + device controls
+    │   ├── TodoPage → 3-tab todo list with CRUD
+    │   └── CamerasPage → CameraGrid + CameraModal
     └── Footer (hidden on full-viewport pages)
+```
+
+### Mobile
+```
+MobileApp.jsx (lazy routes)
+└── MobileLayout
+    ├── Header (44px, dark charcoal, title + connection dot)
+    ├── Content (scrollable)
+    │   ├── MobileCalendarPage (day list default, month option)
+    │   ├── MobileMealsPage (card-per-day)
+    │   ├── MobileGamesRoomPage (vertical scroll)
+    │   ├── MobileColdPlungePage (status + device grid)
+    │   ├── MobileMusicPage (compact now-playing + tabs)
+    │   ├── MobileCamerasPage (single-column stacked)
+    │   ├── MobilePeoplePage (tabbed People/Map)
+    │   ├── MobileHealthPage (single-column rings)
+    │   ├── MobileHomePage (card grid)
+    │   ├── MobileTodoPage (3-tab list)
+    │   └── MobileWeatherPage (single-column scroll)
+    └── BottomTabBar (56px, 5 tabs + More sheet)
 ```
 
 ## Data Flow
@@ -130,9 +162,10 @@ Component action → useServiceCall.callService()
 | `useEntity` | Subscribe to entity state |
 | `useServiceCall` | Call HA services |
 | `useWeather` | Weather entity |
-| `useInactivityTimer` | 5-min redirect to calendar |
+| `useInactivityTimer` | 5-min redirect to calendar (desktop only) |
 | `useDoorbellAlert` | Doorbell event detection |
 | `useYesterdayValue` | REST history for comparisons |
+| `useTodoList` | Todoist list CRUD via HA |
 
 ## Performance
 
@@ -140,12 +173,13 @@ Component action → useServiceCall.callService()
 - Camera IntersectionObserver (no off-screen polling)
 - Single WebSocket connection (not per-component)
 - Debounced volume sliders (200ms)
-- 10s snapshot interval for back cameras (was 3s)
+- 10s snapshot interval for back cameras
 
 ## Known Constraints
 
 - JavaScript only (no TypeScript)
 - No automated tests (manual testing)
-- HTTP only on local network
+- HTTP only on local network (HTTPS via Cloudflare for remote)
 - Single WebSocket connection (singleton)
 - Yesterday comparisons only work in production (CORS in dev)
+- HRV Chart REST endpoint only works via nginx proxy (production)

@@ -1,14 +1,15 @@
 # Deployment Guide
 
-**Version:** 2.3.0
+**Version:** 3.2.3
 **Status:** Deployed and working
 
 ## Access Methods
 
 | Method | URL | Notes |
 |--------|-----|-------|
-| Direct (local) | http://192.168.1.2:8099 | Primary access |
-| Home Assistant | http://192.168.1.2:8123 | Arthur Dashboard in sidebar |
+| Direct (local) | http://192.168.1.2:8099 | Desktop dashboard |
+| Mobile (local) | http://192.168.1.2:8099/mobile/ | iPhone dashboard |
+| Home Assistant | http://192.168.1.2:8123 | "Arthur Dashboard" in sidebar (native ingress) |
 | Remote | https://ha.99swanlane.uk | Via Cloudflare tunnel |
 
 ## How It Works
@@ -16,8 +17,10 @@
 The dashboard runs as a Home Assistant add-on in a Docker container:
 - **Add-on:** Family Dashboard (`c2ba14e6_family-dashboard`)
 - **Port:** 8099
-- **Stack:** React SPA served by Nginx
+- **Stack:** React SPA served by Nginx (desktop + mobile entry points)
 - **Container:** Built from `family-dashboard/Dockerfile`
+- **Sidebar:** Native ingress panel ("Arthur Dashboard") — no iframe or panel_custom needed
+- **Phone redirect:** Client-side redirect in `index.html` sends phones (width < 768) to `/mobile/`
 
 ## Updating the Dashboard
 
@@ -30,8 +33,9 @@ cd src && npm run build && cd ..
 
 ### Step 2: Version bump
 
-Update version in **both** files:
+Update version in **three** files:
 - `family-dashboard/config.json` (line 3)
+- `src/package.json` (line 4)
 - `src/src/pages/HomePage.jsx` (version display)
 
 ### Step 3: Push
@@ -58,49 +62,40 @@ await hass.callWS({ type: 'supervisor/api', endpoint: '/addons/c2ba14e6_family-d
 
 ### Step 5: Verify
 
-Open http://192.168.1.2:8099 and check version number.
+- Desktop: http://192.168.1.2:8099 — check version number
+- Mobile: http://192.168.1.2:8099/mobile/ — check mobile layout
+- Sidebar: Open HA → "Arthur Dashboard" in sidebar
 
-## Tablet Setup
+## Wall Panel Setup
 
-### Android Tablet (PoE)
+1. Open browser → http://192.168.1.2:8099
+2. Add to Home Screen for fullscreen app experience
+3. Dashboard auto-redirects to Calendar after 5 minutes of inactivity
 
-1. Open Chrome -> http://192.168.1.2:8099
-2. Menu -> Add to Home Screen -> "Family Dashboard"
-3. Launch from home screen for fullscreen app experience
+## Mobile Access
 
-### iPad (alternative)
+Phones are automatically redirected to the mobile dashboard via client-side detection in `index.html`. The mobile dashboard has:
+- Bottom tab bar navigation (5 tabs + More sheet)
+- No inactivity timer
+- Touch-optimized layouts
 
-1. Safari -> http://192.168.1.2:8099
-2. Share -> Add to Home Screen
+## HA Sidebar Panel (Ingress)
 
-## Remote Access (Cloudflare Tunnel)
-
-The dashboard is accessible remotely via Cloudflare tunnel.
-
-### Setup
-
-1. Log in to https://dash.cloudflare.com
-2. Zero Trust -> Access -> Tunnels
-3. Configure existing tunnel, add public hostname:
-   - Subdomain: `dashboard`
-   - Domain: `99swanlane.uk`
-   - Type: HTTP
-   - URL: `192.168.1.2:8099`
-
-### HA Dashboard (iframe)
-
-The "Arthur Dashboard" in HA sidebar uses an iframe:
+The "Arthur Dashboard" sidebar panel is a native HA ingress panel configured in `family-dashboard/config.json`:
 ```json
 {
-  "url": "https://dashboard.99swanlane.uk"
+  "ingress": true,
+  "ingress_port": 8099,
+  "panel_icon": "mdi:view-dashboard",
+  "panel_title": "Arthur Dashboard"
 }
 ```
 
-Config location: `/config/.storage/lovelace.arthur_dashboard` on HA
+This works through HTTPS/Cloudflare without mixed-content issues.
 
-### Mixed Content Fix
+## Remote Access (Cloudflare Tunnel)
 
-If HA is accessed via HTTPS (Cloudflare) but dashboard uses HTTP, browsers block the iframe. Solution: route dashboard through Cloudflare too, so both are HTTPS.
+The dashboard is accessible remotely via Cloudflare tunnel at https://ha.99swanlane.uk.
 
 ## Troubleshooting
 
@@ -120,6 +115,15 @@ If HA is accessed via HTTPS (Cloudflare) but dashboard uses HTTP, browsers block
 2. Run store reload: `hass.callWS({ type: 'supervisor/api', endpoint: '/store/reload', method: 'post' })`
 3. Wait 5 seconds, then check addon info
 4. If version_latest hasn't changed, the git push may not have included `family-dashboard/config.json`
+
+### Same-version redeployment
+Use rebuild instead of update:
+```js
+const hass = document.querySelector('home-assistant').hass;
+await hass.callWS({ type: 'supervisor/api', endpoint: '/store/reload', method: 'post' });
+// Wait 5 seconds
+await hass.callWS({ type: 'supervisor/api', endpoint: '/addons/c2ba14e6_family-dashboard/rebuild', method: 'post' });
+```
 
 ## SSH Access
 

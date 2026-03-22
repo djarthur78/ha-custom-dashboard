@@ -24,27 +24,41 @@ VITE_HA_TOKEN=<your-long-lived-token>
 
 ```bash
 cd src
-npm run dev          # Start dev server at http://localhost:5173
+npm run dev          # Start dev server
 npm run build        # Production build
 npm run lint         # ESLint
 npm run preview      # Preview production build
 ```
 
+### Access URLs (Dev)
+
+| URL | What |
+|-----|------|
+| http://localhost:5173 | Desktop dashboard |
+| http://localhost:5173/mobile/ | Mobile dashboard |
+
+The Vite dev server includes a custom `mobile-spa-fallback` plugin that rewrites `/mobile*` routes to `mobile.html` for SPA routing.
+
 ## Testing
 
-Manual testing on localhost and production tablet. Check browser console for `[HA WebSocket]` logs.
+Manual testing on localhost and production wall panel. Check browser console for `[HA WebSocket]` logs.
 
 ```bash
 cd src && npx vitest run    # Run any existing tests
 ```
+
+### Testing both layouts
+1. Desktop: http://localhost:5173 — test at 1920x1080
+2. Mobile: http://localhost:5173/mobile/ — test with mobile viewport or iPhone
 
 ## Deployment
 
 ### Full workflow:
 
 ```bash
-# 1. Update version in BOTH:
+# 1. Update version in THREE places:
 #    - family-dashboard/config.json
+#    - src/package.json
 #    - src/src/pages/HomePage.jsx
 
 # 2. Build
@@ -59,7 +73,8 @@ git commit -m "feat: description (vX.X.X)"
 git push
 
 # 5. Update addon in HA (via Puppeteer or UI)
-# 6. Verify: http://192.168.1.2:8099
+# 6. Verify desktop: http://192.168.1.2:8099
+# 7. Verify mobile:  http://192.168.1.2:8099/mobile/
 ```
 
 ### Addon update via HA UI:
@@ -73,22 +88,21 @@ await hass.callWS({ type: 'supervisor/api', endpoint: '/store/reload', method: '
 await hass.callWS({ type: 'supervisor/api', endpoint: '/addons/c2ba14e6_family-dashboard/update', method: 'post' });
 ```
 
-## Access URLs
+## Access URLs (Production)
 
 | Environment | URL |
 |-------------|-----|
-| Dev server | http://localhost:5173 |
-| Production | http://192.168.1.2:8099 |
+| Desktop | http://192.168.1.2:8099 |
+| Mobile | http://192.168.1.2:8099/mobile/ |
 | Home Assistant | http://192.168.1.2:8123 |
 | Remote | https://ha.99swanlane.uk |
 
 ## Common Tasks
 
 ### Add a new page
-1. Create page component in `src/pages/`
-2. Add lazy import in `App.jsx`
-3. Add route in `App.jsx`
-4. Add nav link in `MainLayout.jsx`
+1. Create page component in `src/pages/` (desktop) and optionally `src/pages/mobile/` (mobile)
+2. Add lazy import and route in `App.jsx` (desktop) and/or `MobileApp.jsx` (mobile)
+3. Add nav link in `Navigation.jsx` (desktop header) and/or `MobileBottomTabBar.jsx` / `MobileMoreSheet.jsx`
 
 ### Add a new entity
 ```jsx
@@ -107,7 +121,7 @@ callService('light', 'turn_on', { entity_id: 'light.my_light' });
 
 - **Machine:** Mac mini at 192.168.1.150
 - **HA:** Raspberry Pi at 192.168.1.2
-- **Tablet:** Android 14 PoE at 1920x1080
+- **Wall panel:** 1920x1080
 - **Git:** HTTPS with PAT stored in `~/.git-credentials`
 
 ## Tailwind v4 Gotcha

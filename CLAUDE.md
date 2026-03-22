@@ -21,7 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Working Dashboard:**
 - Direct URL: http://192.168.1.2:8099 (CONFIRMED WORKING)
 - Use puppeteer to screenshot and verify it loads
-- This is the PRIMARY access method (panel_iframe not available in this HA installation)
+- This is the PRIMARY access method (native ingress panel "Arthur Dashboard" also in HA sidebar)
 
 ## Project Overview
 
@@ -118,21 +118,30 @@ const [status, setStatus] = useState('disconnected');
 ```
 ha-custom-dashboard/
 ├── src/                              # React app root
+│   ├── index.html                    # Desktop entry point
+│   ├── mobile.html                   # Mobile entry point
 │   ├── src/                          # Application source
-│   │   ├── App.jsx                   # Router with MainLayout
-│   │   ├── main.jsx                  # Entry point
+│   │   ├── App.jsx                   # Desktop router with MainLayout
+│   │   ├── MobileApp.jsx             # Mobile router with MobileLayout
+│   │   ├── main.jsx                  # Desktop entry
+│   │   ├── mobile-main.jsx           # Mobile entry (basename="/mobile")
 │   │   ├── index.css                 # Global styles + Tailwind + HA theme
 │   │   │
 │   │   ├── components/
 │   │   │   ├── common/               # Shared components (ErrorBoundary, LoadingSpinner)
-│   │   │   ├── layout/               # Layout shells (MainLayout, Navigation)
+│   │   │   ├── layout/               # Desktop layout (MainLayout, Navigation)
+│   │   │   ├── mobile/               # Mobile layout (MobileLayout, BottomTabBar, MoreSheet)
 │   │   │   └── features/             # Feature-specific components
 │   │   │       ├── calendar/         # Calendar feature
 │   │   │       ├── meals/            # Meal planner
 │   │   │       ├── games-room/       # Games room controls
-│   │   │       └── cameras/          # Camera feeds
+│   │   │       ├── cameras/          # Camera feeds
+│   │   │       ├── weather/          # Weather sensors + forecast
+│   │   │       ├── todo/             # Todoist integration
+│   │   │       └── cold-plunge/      # Cold plunge controls
 │   │   │
-│   │   ├── pages/                    # Route pages
+│   │   ├── pages/                    # Desktop route pages
+│   │   ├── pages/mobile/             # Mobile route pages
 │   │   ├── hooks/                    # Generic React hooks
 │   │   ├── services/                 # HA integration (WebSocket + REST)
 │   │   ├── utils/                    # Helper functions
@@ -142,16 +151,14 @@ ha-custom-dashboard/
 │   ├── package.json
 │   └── vite.config.js
 │
-├── family-dashboard/                            # Home Assistant add-on
+├── family-dashboard/                 # Home Assistant add-on
 │   ├── build/                       # Built React app (created by build-addon.sh)
 │   ├── config.json                  # Add-on metadata
 │   ├── Dockerfile                   # Container definition
 │   ├── nginx.conf                   # Web server config
 │   └── run.sh                       # Startup script
-├── discovery/                        # HA entity discovery docs
-├── specs/                            # Feature specifications
+├── HA/                               # Home Assistant config files (yaml snapshots)
 ├── config/                           # Entity mappings (entities.json, automations.json)
-├── operations/                       # Testing/deployment plans
 │
 ├── README.md                         # Project overview
 ├── DEPLOYMENT.md                     # Add-on deployment guide
@@ -314,18 +321,13 @@ export const CALENDAR_COLORS = {
 2. **ARCHITECTURE.md** - Technical design and decisions
 3. **DEVELOPMENT.md** - Setup guide and daily workflow
 4. **FOLDER-STRUCTURE.md** - Frontend organization patterns
-5. **specs/** - Detailed feature specifications
 
 ### For Resuming Work
-- **SESSION-NOTES.md** - Working notes for original developer
 - **CHANGELOG.md** - What's been built
-- Build prompts: `00-DISCOVERY-PROMPT.md`, `01-BUILD-PHASE-1-FOUNDATION.md`, etc.
+- **HA/** - Home Assistant config file snapshots
 
 ### Reference
-- **discovery/** - HA entity inventory and current dashboard analysis
 - **config/** - Entity and automation mappings
-- **operations/** - Testing, deployment, security plans
-- **DIAGRAMS.md** - Mermaid architecture diagrams
 
 ## Known Constraints
 
