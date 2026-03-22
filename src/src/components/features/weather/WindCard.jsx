@@ -5,7 +5,7 @@
 
 import { Wind } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
-import { WIND, getWindColor } from './weatherConfig';
+import { WIND, MET_OFFICE, getWindColor } from './weatherConfig';
 
 function getWindDirection(degrees) {
   if (degrees == null) return '--';
@@ -17,12 +17,17 @@ export function WindCard() {
   const speed = useEntity(WIND.speed);
   const direction = useEntity(WIND.direction);
   const gust = useEntity(WIND.gust);
+  const metWindSpeed = useEntity(MET_OFFICE.windSpeed);
 
   const speedVal = speed.state && speed.state !== 'unavailable' ? parseFloat(speed.state) : null;
   const dirVal = direction.state && direction.state !== 'unavailable' ? parseFloat(direction.state) : null;
   const gustVal = gust.state && gust.state !== 'unavailable' ? parseFloat(gust.state) : null;
+  const metSpeedVal = metWindSpeed.state && metWindSpeed.state !== 'unavailable' ? parseFloat(metWindSpeed.state) : null;
 
-  const anyAvailable = speedVal != null || dirVal != null || gustVal != null;
+  // Use Ecowitt if available, fall back to Met Office
+  const displaySpeed = speedVal ?? metSpeedVal;
+  const isMet = speedVal == null && metSpeedVal != null;
+  const anyAvailable = displaySpeed != null || dirVal != null || gustVal != null;
 
   return (
     <div className="ds-card h-full flex flex-col" style={{ padding: '16px' }}>
@@ -34,9 +39,9 @@ export function WindCard() {
       {anyAvailable ? (
         <div className="flex-1 flex flex-col justify-center gap-3">
           <div>
-            <div className="text-xs text-[var(--ds-text-secondary)]">Speed</div>
-            <div className="text-2xl font-bold" style={{ color: getWindColor(speedVal) }}>
-              {speedVal != null ? `${speedVal.toFixed(1)} km/h` : '--'}
+            <div className="text-xs text-[var(--ds-text-secondary)]">Speed{isMet ? ' (Met Office)' : ''}</div>
+            <div className="text-2xl font-bold" style={{ color: getWindColor(displaySpeed) }}>
+              {displaySpeed != null ? `${displaySpeed.toFixed(1)} ${isMet ? 'mph' : 'km/h'}` : '--'}
             </div>
           </div>
           <div className="flex gap-4">

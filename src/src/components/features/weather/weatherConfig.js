@@ -20,7 +20,10 @@ export const ECOWITT_OUTDOOR = {
 };
 
 export const MET_OFFICE = {
-  feelsLike: 'sensor.met_office_wickford_feels_like_temperature',
+  feelsLike: 'sensor.met_office_wickford_feels_like_temperature_3_hourly',
+  windSpeed: 'sensor.met_office_wickford_wind_speed_3_hourly',
+  uvIndex: 'sensor.met_office_wickford_uv_index_3_hourly',
+  precipProb: 'sensor.met_office_wickford_probability_of_precipitation_3_hourly',
 };
 
 export const WIND = {

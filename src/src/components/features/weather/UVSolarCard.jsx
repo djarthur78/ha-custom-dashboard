@@ -5,7 +5,7 @@
 
 import { Sun } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
-import { UV_SOLAR, getUVColor } from './weatherConfig';
+import { UV_SOLAR, MET_OFFICE, getUVColor } from './weatherConfig';
 
 function getUVLabel(uv) {
   if (uv == null) return '';
@@ -19,11 +19,16 @@ function getUVLabel(uv) {
 export function UVSolarCard() {
   const uv = useEntity(UV_SOLAR.uv);
   const solar = useEntity(UV_SOLAR.solar);
+  const metUV = useEntity(MET_OFFICE.uvIndex);
 
   const uvVal = uv.state && uv.state !== 'unavailable' ? parseFloat(uv.state) : null;
   const solarVal = solar.state && solar.state !== 'unavailable' ? parseFloat(solar.state) : null;
+  const metUVVal = metUV.state && metUV.state !== 'unavailable' ? parseFloat(metUV.state) : null;
 
-  const anyAvailable = uvVal != null || solarVal != null;
+  // Use Ecowitt UV if available, fall back to Met Office
+  const displayUV = uvVal ?? metUVVal;
+  const isMetUV = uvVal == null && metUVVal != null;
+  const anyAvailable = displayUV != null || solarVal != null;
 
   return (
     <div className="ds-card h-full flex flex-col" style={{ padding: '16px' }}>
@@ -35,13 +40,13 @@ export function UVSolarCard() {
       {anyAvailable ? (
         <div className="flex-1 flex flex-col justify-center gap-3">
           <div>
-            <div className="text-xs text-[var(--ds-text-secondary)]">UV Index</div>
+            <div className="text-xs text-[var(--ds-text-secondary)]">UV Index{isMetUV ? ' (Met Office)' : ''}</div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold" style={{ color: getUVColor(uvVal) }}>
-                {uvVal != null ? uvVal.toFixed(1) : '--'}
+              <span className="text-3xl font-bold" style={{ color: getUVColor(displayUV) }}>
+                {displayUV != null ? (Number.isInteger(displayUV) ? displayUV : displayUV.toFixed(1)) : '--'}
               </span>
-              {uvVal != null && (
-                <span className="text-sm font-medium" style={{ color: getUVColor(uvVal) }}>{getUVLabel(uvVal)}</span>
+              {displayUV != null && (
+                <span className="text-sm font-medium" style={{ color: getUVColor(displayUV) }}>{getUVLabel(displayUV)}</span>
               )}
             </div>
           </div>
