@@ -1,16 +1,20 @@
 /**
  * RainCard Component
- * Rain rate, daily, and monthly totals
+ * Rain rate, daily, weekly, and monthly totals + next rain insight
  */
 
-import { CloudRain } from 'lucide-react';
+import { CloudRain, Umbrella } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import { RAIN } from './weatherConfig';
+import { useWeeklyRain } from './hooks/useWeeklyRain';
+import { useWeatherInsights } from './hooks/useWeatherInsights';
 
 export function RainCard() {
   const rate = useEntity(RAIN.rate);
   const daily = useEntity(RAIN.daily);
   const monthly = useEntity(RAIN.monthly);
+  const { weeklyRain } = useWeeklyRain();
+  const { nextRain } = useWeatherInsights();
 
   const rateVal = rate.state && rate.state !== 'unavailable' ? parseFloat(rate.state) : null;
   const dailyVal = daily.state && daily.state !== 'unavailable' ? parseFloat(daily.state) : null;
@@ -33,20 +37,36 @@ export function RainCard() {
               {rateVal != null ? `${rateVal.toFixed(1)} mm/h` : '--'}
             </div>
           </div>
-          <div className="flex gap-4">
-            <div>
+          <div className="flex gap-3">
+            <div className="flex-1">
               <div className="text-xs text-[var(--ds-text-secondary)]">Today</div>
-              <div className="text-lg font-semibold text-[var(--ds-text)]">
+              <div className="text-base font-semibold text-[var(--ds-text)]">
                 {dailyVal != null ? `${dailyVal.toFixed(1)} mm` : '--'}
               </div>
             </div>
-            <div>
+            {weeklyRain != null && (
+              <div className="flex-1">
+                <div className="text-xs text-[var(--ds-text-secondary)]">Weekly</div>
+                <div className="text-base font-semibold text-[var(--ds-text)]">
+                  {`${weeklyRain.toFixed(1)} mm`}
+                </div>
+              </div>
+            )}
+            <div className="flex-1">
               <div className="text-xs text-[var(--ds-text-secondary)]">Monthly</div>
-              <div className="text-lg font-semibold text-[var(--ds-text)]">
+              <div className="text-base font-semibold text-[var(--ds-text)]">
                 {monthlyVal != null ? `${monthlyVal.toFixed(1)} mm` : '--'}
               </div>
             </div>
           </div>
+          {nextRain && (
+            <div className="flex items-center gap-1.5 pt-1" style={{ borderTop: '1px solid var(--ds-border)' }}>
+              <Umbrella size={12} style={{ color: '#5a8fb8' }} />
+              <span className="text-xs" style={{ color: '#5a8fb8' }}>
+                Rain {nextRain.day.toLowerCase()}{nextRain.probability ? ` (${nextRain.probability}%)` : ''}
+              </span>
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center">

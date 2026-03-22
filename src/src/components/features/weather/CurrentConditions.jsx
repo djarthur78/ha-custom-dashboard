@@ -7,7 +7,7 @@ import { Thermometer, Droplets } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import { useWeather } from '../../../hooks/useWeather';
 import { getWeatherIcon } from '../../../utils/weather';
-import { ECOWITT_INDOOR, PRESSURE, getTempColor, getHumidityColor } from './weatherConfig';
+import { ECOWITT_INDOOR, PRESSURE, MET_OFFICE, getTempColor, getHumidityColor } from './weatherConfig';
 
 function SensorValue({ label, value, unit, color }) {
   const isAvailable = value != null && value !== 'unavailable';
@@ -29,6 +29,7 @@ export function CurrentConditions({ compact = false }) {
   const indoorHumidity = useEntity(ECOWITT_INDOOR.humidity);
   const indoorDewpoint = useEntity(ECOWITT_INDOOR.dewpoint);
   const pressure = useEntity(PRESSURE.relative);
+  const feelsLike = useEntity(MET_OFFICE.feelsLike);
 
   const temp = weather.temperature;
   const condition = weather.condition;
@@ -38,6 +39,7 @@ export function CurrentConditions({ compact = false }) {
   const indoorHumVal = indoorHumidity.state && indoorHumidity.state !== 'unavailable' ? parseFloat(indoorHumidity.state) : null;
   const indoorDewVal = indoorDewpoint.state && indoorDewpoint.state !== 'unavailable' ? parseFloat(indoorDewpoint.state) : null;
   const pressureVal = pressure.state && pressure.state !== 'unavailable' ? parseFloat(pressure.state) : null;
+  const feelsLikeVal = feelsLike.state && feelsLike.state !== 'unavailable' ? parseFloat(feelsLike.state) : null;
 
   if (compact) {
     return (
@@ -53,6 +55,12 @@ export function CurrentConditions({ compact = false }) {
             <div className="text-sm text-[var(--ds-text-secondary)] capitalize">{condition?.replace(/-/g, ' ') || 'Unknown'}</div>
           </div>
           <div className="text-right">
+            {feelsLikeVal != null && (
+              <div className="text-sm">
+                <span className="text-[var(--ds-text-secondary)]">Feels </span>
+                <span className="font-semibold" style={{ color: getTempColor(feelsLikeVal) }}>{Math.round(feelsLikeVal)}°</span>
+              </div>
+            )}
             {indoorTempVal != null && (
               <div className="text-sm">
                 <span className="text-[var(--ds-text-secondary)]">Indoor </span>
@@ -88,6 +96,11 @@ export function CurrentConditions({ compact = false }) {
           <div className="flex items-center gap-1 text-sm text-[var(--ds-text-secondary)]">
             <Droplets size={14} />
             <span>{humidity}% humidity</span>
+          </div>
+        )}
+        {feelsLikeVal != null && (
+          <div className="text-sm text-[var(--ds-text-secondary)] mt-1">
+            Feels like <span className="font-semibold" style={{ color: getTempColor(feelsLikeVal) }}>{Math.round(feelsLikeVal)}°</span>
           </div>
         )}
       </div>

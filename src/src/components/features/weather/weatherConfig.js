@@ -15,6 +15,12 @@ export const ECOWITT_OUTDOOR = {
   humidity: 'sensor.gw3000a_outdoor_humidity',
   dewpoint: 'sensor.gw3000a_outdoor_dewpoint',
   feelsLike: 'sensor.gw3000a_outdoor_feels_like',
+  lightningCount: 'sensor.gw3000a_lightning_strike_count',
+  lightningDistance: 'sensor.gw3000a_lightning_distance',
+};
+
+export const MET_OFFICE = {
+  feelsLike: 'sensor.met_office_wickford_feels_like_temperature',
 };
 
 export const WIND = {
@@ -28,6 +34,8 @@ export const RAIN = {
   daily: 'sensor.gw3000a_daily_rain',
   event: 'sensor.gw3000a_event_rain',
   monthly: 'sensor.gw3000a_monthly_rain',
+  weekly: 'sensor.gw3000a_weekly_rain',
+  yearly: 'sensor.gw3000a_yearly_rain',
 };
 
 export const UV_SOLAR = {
@@ -40,17 +48,26 @@ export const PRESSURE = {
   relative: 'sensor.gw3000a_relative_pressure',
 };
 
-// 8 soil moisture probes — update IDs as probes are set up
-export const SOIL_MOISTURE = [
-  { id: 'sensor.gw3000a_soil_moisture_1', label: 'Probe 1' },
-  { id: 'sensor.gw3000a_soil_moisture_2', label: 'Probe 2' },
-  { id: 'sensor.gw3000a_soil_moisture_3', label: 'Probe 3' },
-  { id: 'sensor.gw3000a_soil_moisture_4', label: 'Probe 4' },
-  { id: 'sensor.gw3000a_soil_moisture_5', label: 'Probe 5' },
-  { id: 'sensor.gw3000a_soil_moisture_6', label: 'Probe 6' },
-  { id: 'sensor.gw3000a_soil_moisture_7', label: 'Probe 7' },
-  { id: 'sensor.gw3000a_soil_moisture_8', label: 'Probe 8' },
-];
+// Soil moisture probes grouped by garden area
+// Probes 1-4 = Lawn, Probes 5-8 = Plants
+// To remap: swap entity IDs between positions. Check Ecowitt app for physical probe locations.
+export const SOIL_MOISTURE = {
+  lawn: [
+    { id: 'sensor.gw3000a_soil_moisture_1', label: 'Right-Front' },
+    { id: 'sensor.gw3000a_soil_moisture_2', label: 'Right-Back' },
+    { id: 'sensor.gw3000a_soil_moisture_3', label: 'Left-Back' },
+    { id: 'sensor.gw3000a_soil_moisture_4', label: 'Left-Front' },
+  ],
+  plants: [
+    { id: 'sensor.gw3000a_soil_moisture_5', label: 'Left-Back' },
+    { id: 'sensor.gw3000a_soil_moisture_6', label: 'Left-Front' },
+    { id: 'sensor.gw3000a_soil_moisture_7', label: 'Right-Front' },
+    { id: 'sensor.gw3000a_soil_moisture_8', label: 'Right-Back' },
+  ],
+};
+
+// Flat array for backward compat
+export const SOIL_MOISTURE_ALL = [...SOIL_MOISTURE.lawn, ...SOIL_MOISTURE.plants];
 
 /**
  * Color helpers for weather values
@@ -92,4 +109,24 @@ export function getWindColor(speed) {
   if (speed < 10) return '#4a9a4a';
   if (speed < 25) return '#d4944c';
   return '#b5453a';
+}
+
+/**
+ * UK pollen season calendar (month is 1-indexed)
+ */
+export function getPollenSeason(month) {
+  if (month >= 3 && month <= 5) return { level: 'moderate', label: 'Moderate', types: ['Tree pollen (birch, oak)'], color: '#d4944c' };
+  if (month >= 6 && month <= 7) return { level: 'high', label: 'High', types: ['Grass pollen'], color: '#b5453a' };
+  if (month >= 8 && month <= 9) return { level: 'moderate', label: 'Moderate', types: ['Weed pollen (ragweed, nettle)'], color: '#d4944c' };
+  return { level: 'low', label: 'Low', types: [], color: '#4a9a4a' };
+}
+
+/**
+ * Pressure trend from delta (hPa change over 3h)
+ */
+export function getPressureTrend(delta) {
+  if (delta == null) return { trend: 'unknown', label: 'Unknown', color: '#9ca3af' };
+  if (delta > 1) return { trend: 'rising', label: 'Rising', color: '#4a9a4a' };
+  if (delta < -1) return { trend: 'falling', label: 'Falling', color: '#5a8fb8' };
+  return { trend: 'steady', label: 'Steady', color: '#9ca3af' };
 }

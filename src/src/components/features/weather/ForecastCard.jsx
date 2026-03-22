@@ -4,6 +4,7 @@
  */
 
 import { format, parseISO } from 'date-fns';
+import { Droplets } from 'lucide-react';
 import { useWeather } from '../../../hooks/useWeather';
 import { getWeatherIcon } from '../../../utils/weather';
 import { getTempColor } from './weatherConfig';
@@ -42,6 +43,12 @@ export function ForecastCard({ compact = false }) {
                     {Math.round(day.templow)}°
                   </span>
                 )}
+                {day.precipitation_probability > 0 && (
+                  <span className="flex items-center gap-0.5 text-[9px]" style={{ color: day.precipitation_probability > 50 ? '#5a8fb8' : '#9ca3af' }}>
+                    <Droplets size={8} />
+                    {day.precipitation_probability}%
+                  </span>
+                )}
               </div>
             );
           })}
@@ -78,6 +85,12 @@ export function ForecastCard({ compact = false }) {
               <span className="text-[10px] text-[var(--ds-text-secondary)] capitalize">
                 {day.condition?.replace(/-/g, ' ')}
               </span>
+              {day.precipitation_probability > 0 && (
+                <span className="flex items-center gap-0.5 text-[10px] mt-1" style={{ color: day.precipitation_probability > 50 ? '#5a8fb8' : '#9ca3af' }}>
+                  <Droplets size={10} />
+                  {day.precipitation_probability}%
+                </span>
+              )}
             </div>
           );
         })}

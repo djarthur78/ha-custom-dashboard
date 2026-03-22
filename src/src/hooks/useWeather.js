@@ -42,6 +42,7 @@ export function useWeather() {
                 templow: f.templow,
                 humidity: f.humidity,
                 precipitation: f.precipitation,
+                precipitation_probability: f.precipitation_probability,
                 datetime: f.datetime,
               };
             });

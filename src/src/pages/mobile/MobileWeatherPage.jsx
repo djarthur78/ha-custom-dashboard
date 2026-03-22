@@ -6,6 +6,7 @@
 import { MobilePageContainer } from '../../components/mobile/MobilePageContainer';
 import { CurrentConditions } from '../../components/features/weather/CurrentConditions';
 import { ForecastCard } from '../../components/features/weather/ForecastCard';
+import { WeatherInsightsCard } from '../../components/features/weather/WeatherInsightsCard';
 import { WindCard } from '../../components/features/weather/WindCard';
 import { RainCard } from '../../components/features/weather/RainCard';
 import { UVSolarCard } from '../../components/features/weather/UVSolarCard';
@@ -21,6 +22,9 @@ export function MobileWeatherPage() {
 
         {/* 5-day forecast - horizontal scroll */}
         <ForecastCard compact />
+
+        {/* Insights */}
+        <WeatherInsightsCard compact />
 
         {/* Wind + Rain side by side */}
         <div className="grid grid-cols-2 gap-3">
