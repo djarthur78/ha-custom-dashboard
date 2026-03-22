@@ -30,9 +30,8 @@ echo "🔧 Injecting runtime config loader..."
 sed_inplace 's|<head>|<head>\n    <script src="./config.js"></script>|' family-dashboard/build/index.html
 sed_inplace 's|<head>|<head>\n    <script src="/config.js"></script>|' family-dashboard/build/mobile.html
 
-# Fix relative paths in mobile.html — assets are at /assets/, not /mobile/assets/
-sed_inplace 's|"\./assets/|"/assets/|g' family-dashboard/build/mobile.html
-sed_inplace 's|"\./vite.svg|"/vite.svg|g' family-dashboard/build/mobile.html
+# Keep relative paths in mobile.html — nginx alias at /mobile/assets/ handles resolution
+# for both direct access (/mobile/) and HA ingress paths
 
 # Step 3: Update version in config.json (optional)
 VERSION=$(date +%Y.%m.%d)

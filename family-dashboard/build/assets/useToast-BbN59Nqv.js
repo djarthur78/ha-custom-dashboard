@@ -1,1 +1,0 @@
-import{r as t}from"./ErrorBoundary-CFOVOEbW.js";let s=null,e=0;function r(t,r="info",i=4e3){if(!s)return;const o=++e;s(s=>[...s,{id:o,message:t,type:r}]),setTimeout(()=>{s(t=>t.filter(t=>t.id!==o))},i)}function i(){const[e,r]=t.useState([]);s=r;return{toasts:e,dismissToast:t.useCallback(t=>{r(s=>s.filter(s=>s.id!==t))},[])}}export{r as s,i as u};

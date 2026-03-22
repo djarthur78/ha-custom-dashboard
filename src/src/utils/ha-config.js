@@ -23,12 +23,19 @@ export function getHAConfig({ useProxy = false } = {}) {
   if (window.HA_CONFIG && window.HA_CONFIG.url) {
     const token = window.HA_CONFIG.token || window.HA_CONFIG.supervisorToken;
 
+    // When accessed over HTTPS (e.g., via Cloudflare tunnel + HA ingress),
+    // use the current origin so WebSocket connects to wss://ha.99swanlane.uk
+    // and REST API calls go to https://ha.99swanlane.uk/api/*
+    if (window.location.protocol === 'https:') {
+      return { url: useProxy ? '' : window.location.origin, token };
+    }
+
     // REST API with proxy: return empty URL so requests go to /api/* (proxied by nginx)
     if (useProxy && window.HA_CONFIG.useProxy) {
       return { url: '', token };
     }
 
-    // WebSocket: return supervisor API URL
+    // WebSocket: return configured HA URL (local network)
     return { url: window.HA_CONFIG.url, token };
   }
 
