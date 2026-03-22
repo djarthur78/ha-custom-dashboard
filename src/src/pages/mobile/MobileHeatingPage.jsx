@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { Thermometer, Flame, ArrowDown, ArrowUp } from 'lucide-react';
+import { Thermometer, Flame, ArrowDown, ArrowUp, Warehouse } from 'lucide-react';
 import { MobilePageContainer } from '../../components/mobile/MobilePageContainer';
 import { useEntity } from '../../hooks/useEntity';
 import {
@@ -159,6 +159,24 @@ export function MobileHeatingPage() {
           />
         )}
 
+        {/* Outbuildings (Sensibo) */}
+        <div>
+          <h3 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
+            <Warehouse size={12} className="inline mr-1" />Outbuildings
+          </h3>
+          <div className="space-y-2">
+            {SENSIBO_ROOMS.map(room => (
+              <SensiboCard
+                key={room.id}
+                entityId={room.id}
+                label={room.label}
+                feelsLikeEntity={room.feelsLikeEntity}
+                compact
+              />
+            ))}
+          </div>
+        </div>
+
         {/* Downstairs Rooms */}
         <div>
           <h3 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
@@ -214,23 +232,6 @@ export function MobileHeatingPage() {
           </div>
         </div>
 
-        {/* Sensibo */}
-        <div>
-          <h3 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
-            Sensibo
-          </h3>
-          <div className="space-y-2">
-            {SENSIBO_ROOMS.map(room => (
-              <SensiboCard
-                key={room.id}
-                entityId={room.id}
-                label={room.label}
-                feelsLikeEntity={room.feelsLikeEntity}
-                compact
-              />
-            ))}
-          </div>
-        </div>
       </div>
     </MobilePageContainer>
   );

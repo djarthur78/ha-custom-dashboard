@@ -1,1 +1,0 @@
-import{m as a}from"./ErrorBoundary-YHXDulfn.js";const r=a("arrow-down",[["path",{d:"M12 5v14",key:"s699le"}],["path",{d:"m19 12-7 7-7-7",key:"1idqje"}]]),e=a("arrow-up",[["path",{d:"m5 12 7-7 7 7",key:"hav0vg"}],["path",{d:"M12 19V5",key:"x0mq9r"}]]),o=a("check",[["path",{d:"M20 6 9 17l-5-5",key:"1gmf2c"}]]);export{r as A,o as C,e as a};

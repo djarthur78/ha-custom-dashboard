@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { Thermometer, Flame, ArrowDown, ArrowUp } from 'lucide-react';
+import { Thermometer, Flame, ArrowDown, ArrowUp, Warehouse } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import {
   HEAT_GENIUS_ROOMS,
@@ -244,6 +244,23 @@ export function HeatingDashboard() {
             />
           )}
 
+          {/* Outbuildings (Sensibo) */}
+          <div className="flex-shrink-0">
+            <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
+              <Warehouse size={14} className="inline mr-1" />Outbuildings
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {SENSIBO_ROOMS.map(room => (
+                <SensiboCard
+                  key={room.id}
+                  entityId={room.id}
+                  label={room.label}
+                  feelsLikeEntity={room.feelsLikeEntity}
+                />
+              ))}
+            </div>
+          </div>
+
           {/* Heat Genius Room Grid */}
           <div className="flex-shrink-0">
             <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
@@ -298,22 +315,6 @@ export function HeatingDashboard() {
             </div>
           </div>
 
-          {/* Sensibo Section */}
-          <div className="flex-shrink-0">
-            <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
-              Sensibo
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {SENSIBO_ROOMS.map(room => (
-                <SensiboCard
-                  key={room.id}
-                  entityId={room.id}
-                  label={room.label}
-                  feelsLikeEntity={room.feelsLikeEntity}
-                />
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>
