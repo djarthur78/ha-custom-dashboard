@@ -8,7 +8,7 @@ import { useWeatherInsights } from './hooks/useWeatherInsights';
 
 function InsightRow({ icon: Icon, label, value, color, subtext }) {
   return (
-    <div className="flex items-center gap-3 py-2" style={{ borderBottom: '1px solid var(--ds-border)' }}>
+    <div className="flex items-center gap-3 py-1.5" style={{ borderBottom: '1px solid var(--ds-border)' }}>
       <Icon size={16} style={{ color: color || 'var(--ds-text-secondary)' }} />
       <div className="flex-1 min-w-0">
         <div className="text-xs text-[var(--ds-text-secondary)]">{label}</div>
@@ -48,8 +48,8 @@ export function WeatherInsightsCard({ compact = false }) {
   const pressureValue = pressure != null ? `${pressure.toFixed(0)} hPa` : 'Unavailable';
 
   return (
-    <div className="ds-card" style={{ padding: compact ? '12px' : '16px' }}>
-      <h3 className="text-xs font-semibold text-[var(--ds-text-secondary)] uppercase tracking-wider mb-2">
+    <div className="ds-card" style={{ padding: compact ? '12px' : '12px 16px' }}>
+      <h3 className="text-xs font-semibold text-[var(--ds-text-secondary)] uppercase tracking-wider mb-1">
         Insights
       </h3>
       <div>

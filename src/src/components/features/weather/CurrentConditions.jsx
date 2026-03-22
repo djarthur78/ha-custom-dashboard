@@ -89,6 +89,11 @@ export function CurrentConditions({ compact = false }) {
         <div className="text-[100px] font-bold leading-none mb-1" style={{ color: getTempColor(temp) }}>
           {temp != null ? `${Math.round(temp)}°` : '--'}
         </div>
+        {feelsLikeVal != null && (
+          <div className="text-lg text-[var(--ds-text-secondary)] mb-1">
+            Feels like <span className="text-xl font-bold" style={{ color: getTempColor(feelsLikeVal) }}>{Math.round(feelsLikeVal)}°</span>
+          </div>
+        )}
         <div className="text-xl text-[var(--ds-text-secondary)] capitalize mb-1">
           {condition?.replace(/-/g, ' ') || 'Unknown'}
         </div>
@@ -96,11 +101,6 @@ export function CurrentConditions({ compact = false }) {
           <div className="flex items-center gap-1 text-sm text-[var(--ds-text-secondary)]">
             <Droplets size={14} />
             <span>{humidity}% humidity</span>
-          </div>
-        )}
-        {feelsLikeVal != null && (
-          <div className="text-sm text-[var(--ds-text-secondary)] mt-1">
-            Feels like <span className="font-semibold" style={{ color: getTempColor(feelsLikeVal) }}>{Math.round(feelsLikeVal)}°</span>
           </div>
         )}
       </div>
