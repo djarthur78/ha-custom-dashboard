@@ -348,10 +348,6 @@ Detailed explanation of changes and why.
 Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 ```
 
-### Current Tags
-- `discovery-complete` - Discovery phase done
-- `phase-1-complete` - Foundation complete (current)
-
 ## Security Notes
 
 - `.env` file contains HA access token and is gitignored

@@ -22,6 +22,10 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+*.code-workspace
+
+# Claude Code
+.claude/
 
 # Backups
 *-backup-*/
