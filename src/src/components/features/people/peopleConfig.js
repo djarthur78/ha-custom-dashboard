@@ -28,12 +28,12 @@ export const FAMILY_MEMBERS = [
     avatarFallback: 'D'
   },
   {
-    id: 'cerys',
+    id: 'tom',
     personEntity: 'person.cerys',
-    label: 'Cerys',
+    label: 'Tom',
     sensorPrefix: 'ceryss_iphone',
     color: '#f59e0b', // amber
-    avatarFallback: 'C'
+    avatarFallback: 'T'
   }
 ];
 

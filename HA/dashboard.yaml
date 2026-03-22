@@ -363,7 +363,7 @@ views:
                   color: "#F4A6B8"
                   filter: ${ NICCAL }
                 - entity: calendar.arthurcerys_gmail_com
-                  name: Cerys
+                  name: Tom
                   color: "#9DB8A0"
                   filter: ${ CERYSCAL }
                 - entity: calendar.arthurdexter08_gmail_com

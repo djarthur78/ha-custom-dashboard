@@ -10,7 +10,7 @@
       "main": "calendar.99swanlane_gmail_com",
       "daz": "calendar.arthurdarren_gmail_com",
       "nic": "calendar.nicholaarthur_gmail_com",
-      "cerys": "calendar.arthurcerys_gmail_com",
+      "tom": "calendar.arthurcerys_gmail_com",
       "dex": "calendar.arthurdexter08_gmail_com",
       "birthdays": "calendar.birthdays",
       "holidays": "calendar.holidays_in_the_united_kingdom",
@@ -35,14 +35,14 @@
     "filters": {
       "daz": "input_text.daz_calendar_filter",
       "nic": "input_text.nic_calendar_filter",
-      "cerys": "input_text.cerys_calendar_filter",
+      "tom": "input_text.cerys_calendar_filter",
       "dex": "input_text.dex_calendar_filter",
       "birthdays": "input_text.birthdays_calendar_filter"
     },
     "scripts": {
       "toggleDaz": "script.daz_calendar_visible_filter",
       "toggleNic": "script.nic_calendar_visible_filter",
-      "toggleCerys": "script.cerys_calendar_visible_filter",
+      "toggleTom": "script.cerys_calendar_visible_filter",
       "toggleDex": "script.dex_calendar_visible_filter",
       "navPrev": "script.calendar_nav_prev",
       "navNext": "script.calendar_nav_next",

@@ -13,7 +13,7 @@ input_text:
     name: Nic Filter
     initial: "^$"
   cerys_calendar_filter:
-    name: Cerys Filter
+    name: Tom Filter
     initial: "^$"
   dex_calendar_filter:
     name: Dex Filter
@@ -46,7 +46,7 @@ input_select:
     options:
       - Daz
       - Nic
-      - Cerys
+      - Tom
       - Dex
     initial: Daz
 
@@ -152,7 +152,7 @@ script:
             {% if states('input_text.nic_calendar_filter') == '^$' %}.*{% else %}^${% endif %}
 
   cerys_calendar_visible_filter:
-    alias: Toggle Cerys Calendar
+    alias: Toggle Tom Calendar
     mode: single
     sequence:
       - service: input_text.set_value
@@ -230,7 +230,7 @@ script:
           calendar_map:
             Daz: "calendar.arthurdarren_gmail_com"
             Nic: "calendar.nicholaarthur_gmail_com"
-            Cerys: "calendar.arthurcerys_gmail_com"
+            Tom: "calendar.arthurcerys_gmail_com"
             Dex: "calendar.arthurdexter08_gmail_com"
           target_calendar: "{{ calendar_map.get(states('input_select.calendar_select'), 'calendar.arthurdarren_gmail_com') }}"
       - choose:
