@@ -5,7 +5,7 @@
 
 import { Suspense } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { Calendar, Utensils, Gamepad2, Camera, Home, Music, Users, Heart, Snowflake, ListChecks, CloudSun } from 'lucide-react';
+import { Calendar, Utensils, Gamepad2, Camera, Home, Music, Users, Heart, Snowflake, ListChecks, CloudSun, Flame } from 'lucide-react';
 import { useWeather } from '../../hooks/useWeather';
 import { useHAConnection } from '../../hooks/useHAConnection';
 import { getWeatherIcon } from '../../utils/weather';
@@ -27,6 +27,7 @@ const navItems = [
   { to: '/cameras', icon: Camera, label: 'Cameras' },
   { to: '/cold-plunge', icon: Snowflake, label: 'Cold Plunge' },
   { to: '/todo', icon: ListChecks, label: 'To-Do' },
+  { to: '/heating', icon: Flame, label: 'Heating' },
 ];
 
 export function MainLayout() {
@@ -40,7 +41,7 @@ export function MainLayout() {
   useInactivityTimer(300000, '/calendar');
 
   // Camera, Games Room, Music, and People pages need full viewport - no padding/footer
-  const isFullViewport = ['/cameras', '/games-room', '/music', '/people', '/cold-plunge', '/health', '/weather'].includes(location.pathname);
+  const isFullViewport = ['/cameras', '/games-room', '/music', '/people', '/cold-plunge', '/health', '/weather', '/heating'].includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
