@@ -5,6 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>src</title>
+    <script>
+      // Redirect phones to mobile version (works through HA ingress where
+      // server-side User-Agent detection fails)
+      if (window.innerWidth < 768) {
+        window.location.replace('mobile/');
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
