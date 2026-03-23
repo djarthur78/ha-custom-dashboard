@@ -41,11 +41,24 @@ export function MobileHeatingPage() {
     return entity?.attributes?.temperature > FROST_PROTECTION_TEMP;
   }).length;
 
+  // Overall average
   const temps = ALL_ROOMS
     .map(room => roomStates[room.id]?.attributes?.current_temperature)
     .filter(t => t != null);
   const avgTemp = temps.length > 0 ? temps.reduce((a, b) => a + b, 0) / temps.length : null;
   const avgColor = getHeatingColor(avgTemp);
+
+  // Downstairs average
+  const downTemps = HEAT_GENIUS_ROOMS.downstairs
+    .map(room => roomStates[room.id]?.attributes?.current_temperature)
+    .filter(t => t != null);
+  const downAvg = downTemps.length > 0 ? downTemps.reduce((a, b) => a + b, 0) / downTemps.length : null;
+
+  // Upstairs average
+  const upTemps = HEAT_GENIUS_ROOMS.upstairs
+    .map(room => roomStates[room.id]?.attributes?.current_temperature)
+    .filter(t => t != null);
+  const upAvg = upTemps.length > 0 ? upTemps.reduce((a, b) => a + b, 0) / upTemps.length : null;
 
   const outdoor = outdoorTemp.state && outdoorTemp.state !== 'unavailable'
     ? parseFloat(outdoorTemp.state) : null;
@@ -99,6 +112,15 @@ export function MobileHeatingPage() {
               <Flame size={20} style={{ color: heatingCount > 0 ? '#b5453a' : '#9ca3af' }} />
               <span className="text-lg font-bold" style={{ color: heatingCount > 0 ? '#b5453a' : '#9ca3af' }}>
                 {heatingCount === 0 ? 'All Off' : `${heatingCount} of ${overridableRooms.length} heating`}
+              </span>
+            </div>
+            {/* Floor averages */}
+            <div className="flex gap-3 mt-1">
+              <span className="text-xs font-medium" style={{ color: getHeatingColor(downAvg) }}>
+                <ArrowDown size={10} className="inline mr-0.5" />Down: {downAvg != null ? `${downAvg.toFixed(1)}°` : '--'}
+              </span>
+              <span className="text-xs font-medium" style={{ color: getHeatingColor(upAvg) }}>
+                <ArrowUp size={10} className="inline mr-0.5" />Up: {upAvg != null ? `${upAvg.toFixed(1)}°` : '--'}
               </span>
             </div>
             {outdoor != null && (
@@ -159,24 +181,6 @@ export function MobileHeatingPage() {
           />
         )}
 
-        {/* Outbuildings (Sensibo) */}
-        <div>
-          <h3 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
-            <Warehouse size={12} className="inline mr-1" />Outbuildings
-          </h3>
-          <div className="space-y-2">
-            {SENSIBO_ROOMS.map(room => (
-              <SensiboCard
-                key={room.id}
-                entityId={room.id}
-                label={room.label}
-                feelsLikeEntity={room.feelsLikeEntity}
-                compact
-              />
-            ))}
-          </div>
-        </div>
-
         {/* Downstairs Rooms */}
         <div>
           <h3 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
@@ -213,20 +217,19 @@ export function MobileHeatingPage() {
           </div>
         </div>
 
-        {/* Auto-follow */}
+        {/* Outbuildings (Sensibo) — at the bottom */}
         <div>
           <h3 className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
-            Auto-Follow
+            <Warehouse size={12} className="inline mr-1" />Outbuildings
           </h3>
-          <div className="grid grid-cols-3 gap-2">
-            {HEAT_GENIUS_ROOMS.autoFollow.map(room => (
-              <RoomCard
+          <div className="space-y-2">
+            {SENSIBO_ROOMS.map(room => (
+              <SensiboCard
                 key={room.id}
                 entityId={room.id}
                 label={room.label}
-                selected={false}
-                onSelect={() => {}}
-                isAutoFollow
+                feelsLikeEntity={room.feelsLikeEntity}
+                compact
               />
             ))}
           </div>

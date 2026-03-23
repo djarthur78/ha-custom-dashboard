@@ -4,7 +4,7 @@
  * Mirrors the cold plunge tab layout
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Thermometer, Flame, ArrowDown, ArrowUp, Warehouse } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import {
@@ -14,7 +14,6 @@ import {
   ALL_ROOMS,
   FROST_PROTECTION_TEMP,
   getHeatingColor,
-  isRoomHeating,
 } from './heatingConfig';
 import { RoomCard } from './RoomCard';
 import { SensiboCard } from './SensiboCard';
@@ -35,7 +34,6 @@ export function HeatingDashboard() {
   const outdoorTemp = useEntity(OUTDOOR_TEMP_ENTITY);
   const { activeOverrides, loading, startOverride, cancelOverride, getTimeRemaining } = useHeatingOverride();
 
-  // Get all room states for the hero display
   const roomStates = useRoomStates(ALL_ROOMS);
 
   // Calculate stats
@@ -45,11 +43,24 @@ export function HeatingDashboard() {
     return entity?.attributes?.temperature > FROST_PROTECTION_TEMP;
   }).length;
 
+  // Overall average
   const temps = ALL_ROOMS
     .map(room => roomStates[room.id]?.attributes?.current_temperature)
     .filter(t => t != null);
   const avgTemp = temps.length > 0 ? temps.reduce((a, b) => a + b, 0) / temps.length : null;
   const avgColor = getHeatingColor(avgTemp);
+
+  // Downstairs average
+  const downTemps = HEAT_GENIUS_ROOMS.downstairs
+    .map(room => roomStates[room.id]?.attributes?.current_temperature)
+    .filter(t => t != null);
+  const downAvg = downTemps.length > 0 ? downTemps.reduce((a, b) => a + b, 0) / downTemps.length : null;
+
+  // Upstairs average
+  const upTemps = HEAT_GENIUS_ROOMS.upstairs
+    .map(room => roomStates[room.id]?.attributes?.current_temperature)
+    .filter(t => t != null);
+  const upAvg = upTemps.length > 0 ? upTemps.reduce((a, b) => a + b, 0) / upTemps.length : null;
 
   const outdoor = outdoorTemp.state && outdoorTemp.state !== 'unavailable'
     ? parseFloat(outdoorTemp.state) : null;
@@ -65,7 +76,6 @@ export function HeatingDashboard() {
   }, []);
 
   const handleGroupOverride = useCallback((key, rooms, temp, duration) => {
-    // Store previous targets
     const roomsWithPrev = rooms.map(room => ({
       id: room.id,
       previousTarget: roomStates[room.id]?.attributes?.temperature || FROST_PROTECTION_TEMP,
@@ -85,13 +95,12 @@ export function HeatingDashboard() {
     setShowCustomOverride(false);
   }, [roomStates, startOverride]);
 
-  // Build rooms list for custom override from selection
   const customRooms = overridableRooms.filter(r => selectedRooms.has(r.id));
 
   return (
     <div className="flex gap-3 p-3" style={{ height: 'calc(100vh - 72px)' }}>
-      {/* Left: Hero Display (45%) */}
-      <div className="flex-[45] min-h-0">
+      {/* Left: Hero Display (30%) */}
+      <div className="flex-[30] min-h-0">
         <div
           className="ds-card h-full flex flex-col items-center text-center"
           style={{
@@ -102,20 +111,20 @@ export function HeatingDashboard() {
         >
           {/* Average Temp Hero */}
           <div className="flex-1 flex flex-col items-center justify-center">
-            <Thermometer size={56} style={{ color: avgColor }} className="mb-2" />
-            <div className="text-[120px] font-bold leading-none mb-1" style={{ color: avgColor }}>
+            <Thermometer size={48} style={{ color: avgColor }} className="mb-2" />
+            <div className="text-[96px] font-bold leading-none mb-1" style={{ color: avgColor }}>
               {avgTemp != null ? `${avgTemp.toFixed(1)}°` : '--'}
             </div>
-            <div className="text-xl font-medium text-[var(--color-text-secondary)] mb-4">
-              Average House Temperature
+            <div className="text-lg font-medium text-[var(--color-text-secondary)] mb-4">
+              House Average
             </div>
 
             {/* Status */}
             <div className="flex flex-col items-center gap-3">
               <div className="flex items-center gap-2">
-                <Flame size={22} style={{ color: heatingCount > 0 ? '#b5453a' : '#9ca3af' }} />
-                <span className="text-xl font-bold" style={{ color: heatingCount > 0 ? '#b5453a' : '#9ca3af' }}>
-                  {heatingCount === 0 ? 'All Rooms Off' : `${heatingCount} of ${overridableRooms.length} rooms heating`}
+                <Flame size={20} style={{ color: heatingCount > 0 ? '#b5453a' : '#9ca3af' }} />
+                <span className="text-lg font-bold" style={{ color: heatingCount > 0 ? '#b5453a' : '#9ca3af' }}>
+                  {heatingCount === 0 ? 'All Rooms Off' : `${heatingCount} of ${overridableRooms.length} heating`}
                 </span>
               </div>
 
@@ -138,7 +147,7 @@ export function HeatingDashboard() {
                   >
                     <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#b5453a' }} />
                     <span className="text-sm font-medium" style={{ color: '#b5453a' }}>
-                      {key} override: {override.temp}° — {tr ? `${tr.hours}h ${tr.minutes}m` : 'expiring'}
+                      {key}: {override.temp}° — {tr ? `${tr.hours}h ${tr.minutes}m` : 'expiring'}
                     </span>
                   </div>
                 );
@@ -146,87 +155,66 @@ export function HeatingDashboard() {
             </div>
           </div>
 
-          {/* Bottom stats */}
+          {/* Bottom stats — Downstairs avg, Upstairs avg, Outside */}
           <div className="w-full flex-shrink-0 pt-4 mt-4" style={{ borderTop: '1px solid var(--ds-border)' }}>
-            <div className="flex justify-around px-6 text-sm">
+            <div className="flex justify-around px-4 text-sm">
+              <div className="text-center">
+                <div className="text-xs text-[var(--ds-text-secondary)] uppercase tracking-wider mb-1">
+                  <ArrowDown size={10} className="inline mr-0.5" />Downstairs
+                </div>
+                <div className="text-lg font-bold" style={{ color: getHeatingColor(downAvg) }}>
+                  {downAvg != null ? `${downAvg.toFixed(1)}°` : '--'}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-[var(--ds-text-secondary)] uppercase tracking-wider mb-1">
+                  <ArrowUp size={10} className="inline mr-0.5" />Upstairs
+                </div>
+                <div className="text-lg font-bold" style={{ color: getHeatingColor(upAvg) }}>
+                  {upAvg != null ? `${upAvg.toFixed(1)}°` : '--'}
+                </div>
+              </div>
               {outdoor != null && (
                 <div className="text-center">
                   <div className="text-xs text-[var(--ds-text-secondary)] uppercase tracking-wider mb-1">Outside</div>
-                  <div className="font-medium text-[var(--ds-text)]">{outdoor.toFixed(1)}°C</div>
+                  <div className="text-lg font-bold" style={{ color: '#5a8fb8' }}>
+                    {outdoor.toFixed(1)}°
+                  </div>
                 </div>
               )}
-              <div className="text-center">
-                <div className="text-xs text-[var(--ds-text-secondary)] uppercase tracking-wider mb-1">Rooms Heating</div>
-                <div className="font-medium text-[var(--ds-text)]">{heatingCount} / {overridableRooms.length}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-xs text-[var(--ds-text-secondary)] uppercase tracking-wider mb-1">Avg Temp</div>
-                <div className="font-medium text-[var(--ds-text)]">{avgTemp != null ? `${avgTemp.toFixed(1)}°C` : '--'}</div>
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right: Controls + Grid (55%) */}
-      <div className="flex-[55] min-h-0 overflow-y-auto">
+      {/* Right: Controls + Grid (70%) */}
+      <div className="flex-[70] min-h-0 overflow-y-auto">
         <div className="flex flex-col gap-3 h-full">
           {/* Quick Override Buttons */}
-          <div className="ds-card flex-shrink-0" style={{ padding: '16px' }}>
-            <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-3">
-              Quick Override
-            </h3>
-            <div className="flex gap-3">
-              {!activeOverrides['Downstairs'] ? (
-                <OverrideControls
-                  label="Downstairs"
-                  overrideKey="Downstairs"
-                  rooms={HEAT_GENIUS_ROOMS.downstairs}
-                  activeOverride={null}
-                  timeRemaining={null}
-                  onStart={handleGroupOverride}
-                  onCancel={cancelOverride}
-                  loading={loading}
-                />
-              ) : (
-                <div className="flex-1">
-                  <OverrideControls
-                    label="Downstairs"
-                    overrideKey="Downstairs"
-                    rooms={HEAT_GENIUS_ROOMS.downstairs}
-                    activeOverride={activeOverrides['Downstairs']}
-                    timeRemaining={getTimeRemaining('Downstairs')}
-                    onStart={handleGroupOverride}
-                    onCancel={cancelOverride}
-                    loading={loading}
-                  />
-                </div>
-              )}
-              {!activeOverrides['Upstairs'] ? (
-                <OverrideControls
-                  label="Upstairs"
-                  overrideKey="Upstairs"
-                  rooms={HEAT_GENIUS_ROOMS.upstairs}
-                  activeOverride={null}
-                  timeRemaining={null}
-                  onStart={handleGroupOverride}
-                  onCancel={cancelOverride}
-                  loading={loading}
-                />
-              ) : (
-                <div className="flex-1">
-                  <OverrideControls
-                    label="Upstairs"
-                    overrideKey="Upstairs"
-                    rooms={HEAT_GENIUS_ROOMS.upstairs}
-                    activeOverride={activeOverrides['Upstairs']}
-                    timeRemaining={getTimeRemaining('Upstairs')}
-                    onStart={handleGroupOverride}
-                    onCancel={cancelOverride}
-                    loading={loading}
-                  />
-                </div>
-              )}
+          <div className="flex gap-3 flex-shrink-0">
+            <div className="flex-1">
+              <OverrideControls
+                label="Downstairs"
+                overrideKey="Downstairs"
+                rooms={HEAT_GENIUS_ROOMS.downstairs}
+                activeOverride={activeOverrides['Downstairs']}
+                timeRemaining={getTimeRemaining('Downstairs')}
+                onStart={handleGroupOverride}
+                onCancel={cancelOverride}
+                loading={loading}
+              />
+            </div>
+            <div className="flex-1">
+              <OverrideControls
+                label="Upstairs"
+                overrideKey="Upstairs"
+                rooms={HEAT_GENIUS_ROOMS.upstairs}
+                activeOverride={activeOverrides['Upstairs']}
+                timeRemaining={getTimeRemaining('Upstairs')}
+                onStart={handleGroupOverride}
+                onCancel={cancelOverride}
+                loading={loading}
+              />
             </div>
           </div>
 
@@ -244,24 +232,7 @@ export function HeatingDashboard() {
             />
           )}
 
-          {/* Outbuildings (Sensibo) */}
-          <div className="flex-shrink-0">
-            <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
-              <Warehouse size={14} className="inline mr-1" />Outbuildings
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {SENSIBO_ROOMS.map(room => (
-                <SensiboCard
-                  key={room.id}
-                  entityId={room.id}
-                  label={room.label}
-                  feelsLikeEntity={room.feelsLikeEntity}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Heat Genius Room Grid */}
+          {/* Heat Genius Room Grid — Downstairs */}
           <div className="flex-shrink-0">
             <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
               <ArrowDown size={14} className="inline mr-1" />Downstairs
@@ -279,6 +250,7 @@ export function HeatingDashboard() {
             </div>
           </div>
 
+          {/* Heat Genius Room Grid — Upstairs */}
           <div className="flex-shrink-0">
             <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
               <ArrowUp size={14} className="inline mr-1" />Upstairs
@@ -296,20 +268,18 @@ export function HeatingDashboard() {
             </div>
           </div>
 
-          {/* Auto-follow rooms */}
+          {/* Outbuildings (Sensibo) — at the bottom */}
           <div className="flex-shrink-0">
             <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2 px-1">
-              Auto-Follow
+              <Warehouse size={14} className="inline mr-1" />Outbuildings
             </h3>
-            <div className="grid grid-cols-3 gap-2">
-              {HEAT_GENIUS_ROOMS.autoFollow.map(room => (
-                <RoomCard
+            <div className="grid grid-cols-2 gap-3">
+              {SENSIBO_ROOMS.map(room => (
+                <SensiboCard
                   key={room.id}
                   entityId={room.id}
                   label={room.label}
-                  selected={false}
-                  onSelect={() => {}}
-                  isAutoFollow
+                  feelsLikeEntity={room.feelsLikeEntity}
                 />
               ))}
             </div>
