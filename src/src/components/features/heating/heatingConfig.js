@@ -63,6 +63,14 @@ export function getHeatingColor(temp) {
   return '#b5453a';
 }
 
-export function isRoomHeating(targetTemp) {
+/** Room has a heating schedule set (target above frost protection) */
+export function hasHeatingDemand(targetTemp) {
   return targetTemp != null && targetTemp > FROST_PROTECTION_TEMP;
+}
+
+/** Room is actively calling for heat (target above frost AND current temp below target) */
+export function isRoomHeating(targetTemp, currentTemp) {
+  return targetTemp != null && currentTemp != null
+    && targetTemp > FROST_PROTECTION_TEMP
+    && currentTemp < targetTemp;
 }

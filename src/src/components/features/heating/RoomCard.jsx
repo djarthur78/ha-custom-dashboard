@@ -6,13 +6,14 @@
 
 import { Thermometer } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
-import { getHeatingColor, isRoomHeating } from './heatingConfig';
+import { getHeatingColor, isRoomHeating, hasHeatingDemand } from './heatingConfig';
 
 export function RoomCard({ entityId, label, selected, onSelect, isAutoFollow }) {
   const { state, attributes } = useEntity(entityId);
   const currentTemp = attributes?.current_temperature;
   const targetTemp = attributes?.temperature;
-  const heating = isRoomHeating(targetTemp);
+  const heating = isRoomHeating(targetTemp, currentTemp);
+  const hasDemand = hasHeatingDemand(targetTemp);
   const tempColor = getHeatingColor(currentTemp);
 
   return (
@@ -47,13 +48,17 @@ export function RoomCard({ entityId, label, selected, onSelect, isAutoFollow }) 
         <div className="rounded-full" style={{
           width: 6,
           height: 6,
-          backgroundColor: heating ? 'var(--ds-state-on)' : 'var(--ds-state-off)',
+          backgroundColor: heating ? 'var(--ds-state-on)'
+            : hasDemand ? '#d4944c'
+            : 'var(--ds-state-off)',
           boxShadow: heating ? '0 0 6px rgba(74,154,74,0.4)' : 'none',
         }} />
         <span className="text-[10px] font-medium" style={{
-          color: heating ? 'var(--ds-state-on)' : 'var(--ds-text-secondary)',
+          color: heating ? 'var(--ds-state-on)'
+            : hasDemand ? '#d4944c'
+            : 'var(--ds-text-secondary)',
         }}>
-          {isAutoFollow ? 'Auto' : heating ? `${Math.round(targetTemp)}°` : 'Off'}
+          {isAutoFollow ? 'Auto' : hasDemand ? `${Math.round(targetTemp)}°` : 'Off'}
         </span>
       </div>
     </button>

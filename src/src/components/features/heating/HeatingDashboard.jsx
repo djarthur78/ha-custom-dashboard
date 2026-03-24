@@ -40,7 +40,9 @@ export function HeatingDashboard() {
   const overridableRooms = [...HEAT_GENIUS_ROOMS.downstairs, ...HEAT_GENIUS_ROOMS.upstairs];
   const heatingCount = overridableRooms.filter(room => {
     const entity = roomStates[room.id];
-    return entity?.attributes?.temperature > FROST_PROTECTION_TEMP;
+    const target = entity?.attributes?.temperature;
+    const current = entity?.attributes?.current_temperature;
+    return target > FROST_PROTECTION_TEMP && current != null && current < target;
   }).length;
 
   // Overall average
