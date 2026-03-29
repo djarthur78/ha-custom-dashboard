@@ -107,6 +107,7 @@ export function getMoistureStatus(value) {
   if (value == null) return { label: '--', color: '#9ca3af' };
   if (value < 20) return { label: 'Dry', color: '#b5453a' };
   if (value < MOISTURE_TRIGGER) return { label: 'Low', color: '#d4944c' };
-  if (value < MOISTURE_HARD_STOP) return { label: 'Good', color: '#4a9a4a' };
-  return { label: 'Wet', color: '#5a8fb8' };
+  if (value < 60) return { label: 'Good', color: '#4a9a4a' };
+  if (value < MOISTURE_HARD_STOP) return { label: 'High', color: '#3a8a8a' };
+  return { label: 'Saturated', color: '#b5453a' };
 }
