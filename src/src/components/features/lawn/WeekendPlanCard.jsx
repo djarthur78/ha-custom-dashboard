@@ -20,16 +20,23 @@ const RECOMMENDATION_STYLES = {
   partial: { bg: 'rgba(212,148,76,0.1)', color: '#d4944c', label: 'Partial Watering' },
 };
 
-function TaskList({ tasks, icon: Icon, title }) {
+function TaskList({ tasks, icon: Icon, title, updated }) {
   if (!tasks || tasks.length === 0) return null;
 
   return (
     <div className="mb-3">
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <Icon size={14} style={{ color: 'var(--ds-text-secondary)' }} />
-        <span className="text-xs font-semibold text-[var(--ds-text-secondary)] uppercase tracking-wider">
-          {title}
-        </span>
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-1.5">
+          <Icon size={14} style={{ color: 'var(--ds-text-secondary)' }} />
+          <span className="text-xs font-semibold text-[var(--ds-text-secondary)] uppercase tracking-wider">
+            {title}
+          </span>
+        </div>
+        {updated && (
+          <span className="text-[9px] text-[var(--ds-text-secondary)]">
+            Updated {format(parseISO(updated), 'EEE d MMM, HH:mm')}
+          </span>
+        )}
       </div>
       <div className="space-y-1">
         {tasks.map((item, i) => (
@@ -113,14 +120,14 @@ export function WeekendPlanCard({ compact = false }) {
       )}
 
       {/* Task Lists */}
-      <TaskList tasks={plan.lawn?.tasks} icon={TreePine} title="Lawn" />
+      <TaskList tasks={plan.lawn?.tasks} icon={TreePine} title="Lawn" updated={plan.lawn?.updated} />
       {plan.lawn?.notes && (
         <p className="text-xs italic text-[var(--ds-text-secondary)] mb-3 pl-1">
           {plan.lawn.notes}
         </p>
       )}
 
-      <TaskList tasks={plan.plants?.tasks} icon={Sprout} title="Plants" />
+      <TaskList tasks={plan.plants?.tasks} icon={Sprout} title="Plants" updated={plan.plants?.updated} />
       {plan.plants?.notes && (
         <p className="text-xs italic text-[var(--ds-text-secondary)] pl-1">
           {plan.plants.notes}

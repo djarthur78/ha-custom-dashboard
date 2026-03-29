@@ -1,41 +1,51 @@
 /**
  * AreaCard Component
  * Displays a single irrigation area: zone status, soil moisture, last watered,
- * and manual watering trigger button.
+ * duration picker, and timed watering trigger with countdown.
  */
 
-import { Droplets, Sprout, TreePine, Power, Clock } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Sprout, TreePine, Power, Clock, Timer } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { useServiceCall } from '../../../hooks/useServiceCall';
-import { getSoilMoistureColor, getMoistureStatus } from './lawnConfig';
+import { getSoilMoistureColor, getMoistureStatus, WATERING_DURATIONS, DEFAULT_DURATION } from './lawnConfig';
 
-export function AreaCard({ area, compact = false }) {
-  const { turnOn, turnOff, loading } = useServiceCall();
-  const { label, type, zoneStates, moistureReadings, avgMoisture, isActive, lastWatered, paired } = area;
+export function AreaCard({ area, compact = false, timer }) {
+  const { label, type, key: areaKey, zoneStates, moistureReadings, avgMoisture, isActive, lastWatered, paired } = area;
+  const { startWatering, stopWatering, checkMoistureHardStop, getTimeRemaining, isRunning, loading } = timer;
+
+  const [selectedDuration, setSelectedDuration] = useState(DEFAULT_DURATION[type]);
+  const durations = WATERING_DURATIONS[type];
+
+  const timerActive = isRunning(areaKey);
+  const timeRemaining = getTimeRemaining(areaKey);
 
   const moistureStatus = getMoistureStatus(avgMoisture);
   const Icon = type === 'lawn' ? TreePine : Sprout;
 
-  const handleToggle = async () => {
-    try {
-      if (isActive) {
-        // Stop all zones
-        for (const zone of zoneStates) {
-          if (zone.state === 'on') await turnOff(zone.id);
-        }
-      } else {
-        // Start: for paired lawns, just turn on zone A (alternate manually)
-        // For flowerbeds, turn on the single zone
-        await turnOn(zoneStates[0].id);
-      }
-    } catch (err) {
-      console.error('[AreaCard] Toggle failed:', err);
+  // Check moisture hard stop while running
+  useEffect(() => {
+    if (timerActive) {
+      checkMoistureHardStop(areaKey, avgMoisture);
     }
+  }, [timerActive, areaKey, avgMoisture, checkMoistureHardStop]);
+
+  const handleStart = () => {
+    const zoneIds = zoneStates.map(z => z.id);
+    startWatering(areaKey, zoneIds, selectedDuration, paired);
+  };
+
+  const handleStop = () => {
+    stopWatering(areaKey);
   };
 
   const lastWateredText = lastWatered
     ? formatDistanceToNow(new Date(lastWatered), { addSuffix: true })
     : '--';
+
+  const formatCountdown = (tr) => {
+    if (!tr) return '';
+    return `${tr.minutes}:${String(tr.seconds).padStart(2, '0')}`;
+  };
 
   return (
     <div
@@ -43,7 +53,7 @@ export function AreaCard({ area, compact = false }) {
       style={{
         padding: compact ? '12px' : '16px',
         borderLeft: `3px solid ${moistureStatus.color}`,
-        background: isActive
+        background: (isActive || timerActive)
           ? 'linear-gradient(135deg, rgba(74,154,74,0.06), rgba(74,154,74,0.02))'
           : 'var(--ds-card)',
       }}
@@ -56,12 +66,25 @@ export function AreaCard({ area, compact = false }) {
             {label}
           </span>
         </div>
-        {isActive && (
+        {timerActive && timeRemaining ? (
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#4a9a4a' }} />
-            <span className="text-xs font-medium" style={{ color: '#4a9a4a' }}>Active</span>
+            <Timer size={12} style={{ color: '#4a9a4a' }} />
+            <span className="text-xs font-bold tabular-nums" style={{ color: '#4a9a4a' }}>
+              {formatCountdown(timeRemaining)}
+            </span>
+            {paired && timeRemaining.phase && (
+              <span className="text-[10px] font-medium" style={{ color: '#4a9a4a' }}>
+                Zone {timeRemaining.phase}
+              </span>
+            )}
           </div>
-        )}
+        ) : isActive ? (
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#d4944c' }} />
+            <span className="text-xs font-medium" style={{ color: '#d4944c' }}>Running (no timer)</span>
+          </div>
+        ) : null}
       </div>
 
       {/* Moisture Readings */}
@@ -117,23 +140,56 @@ export function AreaCard({ area, compact = false }) {
         </div>
       </div>
 
-      {/* Manual Trigger Button */}
-      <button
-        onClick={handleToggle}
-        disabled={loading}
-        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors"
-        style={{
-          backgroundColor: isActive ? 'rgba(181,69,58,0.1)' : 'rgba(74,154,74,0.1)',
-          color: isActive ? '#b5453a' : '#4a9a4a',
-          opacity: loading ? 0.6 : 1,
-        }}
-      >
-        <Power size={14} />
-        {isActive ? 'Stop Watering' : 'Start Watering'}
-        {paired && !isActive && (
-          <span className="text-[10px] opacity-70">(Zone A)</span>
-        )}
-      </button>
+      {/* Duration Picker + Trigger */}
+      {timerActive ? (
+        <button
+          onClick={handleStop}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors"
+          style={{
+            backgroundColor: 'rgba(181,69,58,0.1)',
+            color: '#b5453a',
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
+          <Power size={14} />
+          Stop Watering
+        </button>
+      ) : (
+        <div className="flex gap-2">
+          {/* Duration pills */}
+          <div className="flex gap-1 flex-1">
+            {durations.map(d => (
+              <button
+                key={d}
+                onClick={() => setSelectedDuration(d)}
+                className="flex-1 py-1.5 rounded-md text-xs font-medium transition-colors"
+                style={{
+                  backgroundColor: selectedDuration === d ? 'rgba(74,154,74,0.15)' : 'rgba(156,163,175,0.08)',
+                  color: selectedDuration === d ? '#4a9a4a' : 'var(--ds-text-secondary)',
+                  border: selectedDuration === d ? '1px solid rgba(74,154,74,0.3)' : '1px solid transparent',
+                }}
+              >
+                {d}m
+              </button>
+            ))}
+          </div>
+          {/* Start button */}
+          <button
+            onClick={handleStart}
+            disabled={loading || isActive}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            style={{
+              backgroundColor: 'rgba(74,154,74,0.1)',
+              color: '#4a9a4a',
+              opacity: (loading || isActive) ? 0.5 : 1,
+            }}
+          >
+            <Power size={14} />
+            Start
+          </button>
+        </div>
+      )}
     </div>
   );
 }

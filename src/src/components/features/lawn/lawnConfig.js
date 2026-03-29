@@ -88,6 +88,18 @@ export function getPlanUrl() {
   return `${url}/local/lawn-plan.json`;
 }
 
+// Duration options per area type (minutes)
+// Placeholder values — update after tin test results (28 Mar 2026)
+export const WATERING_DURATIONS = {
+  lawn: [10, 15, 20, 30],       // Lawn zones: shorter runs, tin test will refine
+  flowerbed: [15, 30, 45, 60],  // Flowerbeds: +6% per 30 min (calibrated)
+};
+
+export const DEFAULT_DURATION = {
+  lawn: 15,       // default lawn run (minutes)
+  flowerbed: 30,  // default flowerbed run (minutes)
+};
+
 /**
  * Returns moisture status with label and color
  */

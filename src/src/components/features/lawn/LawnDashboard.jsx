@@ -6,6 +6,7 @@
 
 import { Droplets, TreePine, Sprout } from 'lucide-react';
 import { useLawnData } from './hooks/useLawnData';
+import { useWateringTimer } from './hooks/useWateringTimer';
 import { getMoistureStatus, getSoilMoistureColor } from './lawnConfig';
 import { AreaCard } from './AreaCard';
 import { WeekendForecast } from './WeekendForecast';
@@ -21,6 +22,8 @@ export function LawnDashboard() {
     activeZoneCount,
     dryAreaCount,
   } = useLawnData();
+
+  const timer = useWateringTimer();
 
   const moistureStatus = getMoistureStatus(overallAvgMoisture);
   const moistureColor = getSoilMoistureColor(overallAvgMoisture);
@@ -112,7 +115,7 @@ export function LawnDashboard() {
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {lawnAreas.map(area => (
-              <AreaCard key={area.key} area={area} />
+              <AreaCard key={area.key} area={area} timer={timer} />
             ))}
           </div>
 
@@ -122,7 +125,7 @@ export function LawnDashboard() {
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {bedAreas.map(area => (
-              <AreaCard key={area.key} area={area} />
+              <AreaCard key={area.key} area={area} timer={timer} />
             ))}
           </div>
 

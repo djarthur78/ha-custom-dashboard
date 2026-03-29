@@ -6,6 +6,7 @@
 import { Droplets, TreePine, Sprout } from 'lucide-react';
 import { MobilePageContainer } from '../../components/mobile/MobilePageContainer';
 import { useLawnData } from '../../components/features/lawn/hooks/useLawnData';
+import { useWateringTimer } from '../../components/features/lawn/hooks/useWateringTimer';
 import { getMoistureStatus, getSoilMoistureColor } from '../../components/features/lawn/lawnConfig';
 import { AreaCard } from '../../components/features/lawn/AreaCard';
 import { WeekendForecast } from '../../components/features/lawn/WeekendForecast';
@@ -21,6 +22,8 @@ export function MobileLawnPage() {
     activeZoneCount,
     dryAreaCount,
   } = useLawnData();
+
+  const timer = useWateringTimer();
 
   const moistureStatus = getMoistureStatus(overallAvgMoisture);
 
@@ -88,7 +91,7 @@ export function MobileLawnPage() {
           <TreePine size={12} className="inline mr-1" />Lawn
         </h3>
         {lawnAreas.map(area => (
-          <AreaCard key={area.key} area={area} compact />
+          <AreaCard key={area.key} area={area} compact timer={timer} />
         ))}
 
         {/* Flower Bed Areas */}
@@ -96,7 +99,7 @@ export function MobileLawnPage() {
           <Sprout size={12} className="inline mr-1" />Flower Beds
         </h3>
         {bedAreas.map(area => (
-          <AreaCard key={area.key} area={area} compact />
+          <AreaCard key={area.key} area={area} compact timer={timer} />
         ))}
 
         {/* Weekend Plan */}

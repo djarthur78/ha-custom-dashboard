@@ -1,7 +1,7 @@
 /**
  * WeekendForecast Component
  * 3-day weather forecast strip for lawn care planning.
- * Highlights weekend days and shows rain advisory.
+ * Shows precipitation in mm, highlights weekend days, rain advisory with totals.
  */
 
 import { format, parseISO, isSaturday, isSunday } from 'date-fns';
@@ -23,7 +23,10 @@ export function WeekendForecast({ compact = false }) {
     );
   }
 
-  const hasRain = days.some(d => d.precipitation_probability > 50);
+  // Calculate total expected rain across 3 days
+  const totalRainMm = days.reduce((sum, d) => sum + (d.precipitation || 0), 0);
+  const rainyDays = days.filter(d => d.precipitation_probability > 40);
+  const hasSignificantRain = totalRainMm >= 2 || rainyDays.length > 0;
 
   return (
     <div className="ds-card" style={{ padding: compact ? '10px' : '14px' }}>
@@ -35,6 +38,7 @@ export function WeekendForecast({ compact = false }) {
         {days.map(day => {
           const date = parseISO(day.datetime);
           const isWeekend = isSaturday(date) || isSunday(date);
+          const precip = day.precipitation || 0;
 
           return (
             <div
@@ -56,27 +60,42 @@ export function WeekendForecast({ compact = false }) {
                   {Math.round(day.templow)}°
                 </span>
               )}
-              {day.precipitation_probability > 0 && (
-                <span
-                  className="flex items-center gap-0.5 text-[10px] mt-0.5"
-                  style={{ color: day.precipitation_probability > 50 ? '#5a8fb8' : '#9ca3af' }}
-                >
-                  <Droplets size={9} />
-                  {day.precipitation_probability}%
-                </span>
+              {/* Rain: probability + mm */}
+              {(day.precipitation_probability > 0 || precip > 0) && (
+                <div className="flex flex-col items-center mt-0.5">
+                  <span
+                    className="flex items-center gap-0.5 text-[10px]"
+                    style={{ color: day.precipitation_probability > 50 ? '#5a8fb8' : '#9ca3af' }}
+                  >
+                    <Droplets size={9} />
+                    {day.precipitation_probability}%
+                  </span>
+                  {precip > 0 && (
+                    <span className="text-[9px] font-semibold" style={{ color: '#5a8fb8' }}>
+                      {precip.toFixed(1)}mm
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           );
         })}
       </div>
 
-      {hasRain && (
+      {hasSignificantRain && (
         <div
           className="flex items-center gap-1.5 mt-2 px-2 py-1.5 rounded-md text-xs font-medium"
           style={{ backgroundColor: 'rgba(90,143,184,0.1)', color: '#5a8fb8' }}
         >
           <CloudRain size={14} />
-          Rain expected — consider skipping watering
+          <span>
+            Rain expected — {totalRainMm.toFixed(1)}mm over 3 days
+            {rainyDays.length > 0 && (
+              <span className="opacity-80">
+                {' '}({rainyDays.map(d => format(parseISO(d.datetime), 'EEE')).join(', ')})
+              </span>
+            )}
+          </span>
         </div>
       )}
     </div>
