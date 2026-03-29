@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { PLAN_URL } from '../lawnConfig';
+import { getPlanUrl } from '../lawnConfig';
 
 export function useWeekendPlan() {
   const [plan, setPlan] = useState(null);
@@ -20,7 +20,8 @@ export function useWeekendPlan() {
       setError(null);
 
       try {
-        const res = await fetch(PLAN_URL, { cache: 'no-store' });
+        const planUrl = getPlanUrl();
+        const res = await fetch(planUrl, { cache: 'no-store' });
         if (!res.ok) {
           if (res.status === 404) {
             // No plan file yet — not an error

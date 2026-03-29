@@ -81,8 +81,12 @@ export const MOISTURE_HARD_STOP = 70; // Above this → stop watering
 
 // Plan URL — served from HA's /config/www/ directory
 // In production, nginx proxies /local/ to HA. In dev, use full HA URL.
-const HA_URL = import.meta.env.VITE_HA_URL || '';
-export const PLAN_URL = HA_URL ? `${HA_URL}/local/lawn-plan.json` : '/local/lawn-plan.json';
+import { getHAConfig } from '../../../utils/ha-config';
+
+export function getPlanUrl() {
+  const { url } = getHAConfig({ useProxy: true });
+  return `${url}/local/lawn-plan.json`;
+}
 
 /**
  * Returns moisture status with label and color
