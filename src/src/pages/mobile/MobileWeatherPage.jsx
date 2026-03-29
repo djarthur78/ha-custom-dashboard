@@ -11,7 +11,7 @@ import { WindCard } from '../../components/features/weather/WindCard';
 import { RainCard } from '../../components/features/weather/RainCard';
 import { UVSolarCard } from '../../components/features/weather/UVSolarCard';
 import { PressureCard } from '../../components/features/weather/PressureCard';
-import { SoilMoistureCard } from '../../components/features/weather/SoilMoistureCard';
+
 
 export function MobileWeatherPage() {
   return (
@@ -38,8 +38,6 @@ export function MobileWeatherPage() {
           <PressureCard />
         </div>
 
-        {/* Soil moisture */}
-        <SoilMoistureCard />
       </div>
     </MobilePageContainer>
   );

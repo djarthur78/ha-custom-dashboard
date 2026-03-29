@@ -12,7 +12,7 @@ import { WindCard } from './WindCard';
 import { RainCard } from './RainCard';
 import { UVSolarCard } from './UVSolarCard';
 import { PressureCard } from './PressureCard';
-import { SoilMoistureCard } from './SoilMoistureCard';
+
 
 export function WeatherDashboard() {
   return (
@@ -34,7 +34,6 @@ export function WeatherDashboard() {
           <UVSolarCard />
           <PressureCard />
         </div>
-        <SoilMoistureCard compact />
       </div>
     </div>
   );

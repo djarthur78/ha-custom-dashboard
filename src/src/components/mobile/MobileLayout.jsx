@@ -21,6 +21,8 @@ const PAGE_TITLES = {
   '/cold-plunge': 'Cold Plunge',
   '/todo': 'To-Do',
   '/weather': 'Weather',
+  '/heating': 'Heating',
+  '/lawn': 'Lawn',
 };
 
 export function MobileLayout() {

@@ -20,6 +20,7 @@ const ColdPlungePage = lazy(() => import('./pages/ColdPlungePage'));
 const TodoPage = lazy(() => import('./pages/TodoPage'));
 const WeatherPage = lazy(() => import('./pages/WeatherPage'));
 const HeatingPage = lazy(() => import('./pages/HeatingPage'));
+const LawnPage = lazy(() => import('./pages/LawnPage'));
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
         <Route path="cold-plunge" element={<ColdPlungePage />} />
         <Route path="todo" element={<TodoPage />} />
         <Route path="heating" element={<HeatingPage />} />
+        <Route path="lawn" element={<LawnPage />} />
       </Route>
     </Routes>
   );

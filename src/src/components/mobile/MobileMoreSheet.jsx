@@ -4,7 +4,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { Home, Music, Camera, Users, Heart, ListChecks, CloudSun, Flame, X } from 'lucide-react';
+import { Home, Music, Camera, Users, Heart, ListChecks, CloudSun, Flame, Sprout, X } from 'lucide-react';
 
 const moreItems = [
   { to: '/home', icon: Home, label: 'Home' },
@@ -15,6 +15,7 @@ const moreItems = [
   { to: '/people', icon: Users, label: 'People' },
   { to: '/health', icon: Heart, label: 'Health' },
   { to: '/heating', icon: Flame, label: 'Heating' },
+  { to: '/lawn', icon: Sprout, label: 'Lawn' },
 ];
 
 export function MobileMoreSheet({ isOpen, onClose }) {
