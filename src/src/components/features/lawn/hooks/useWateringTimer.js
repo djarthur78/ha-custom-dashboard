@@ -62,9 +62,13 @@ export function useWateringTimer() {
   const switchToZoneB = useCallback(async (key, session) => {
     if (session.zones.length < 2) return;
     try {
-      // Turn off zone A, turn on zone B
+      // Turn off zone A, start zone B with remaining duration
+      const remaining = Math.max(1, Math.round((session.endTime - Date.now()) / 60000));
       await haWebSocket.callService('switch', 'turn_off', { entity_id: session.zones[0] });
-      await haWebSocket.callService('switch', 'turn_on', { entity_id: session.zones[1] });
+      await haWebSocket.callService('rainbird', 'start_irrigation', {
+        entity_id: session.zones[1],
+        duration: remaining,
+      });
       setActiveSessions(prev => {
         if (!prev[key]) return prev;
         return { ...prev, [key]: { ...prev[key], phase: 'B' } };
@@ -104,8 +108,13 @@ export function useWateringTimer() {
       const now = Date.now();
       const endTime = now + durationMinutes * 60 * 1000;
 
-      // Turn on first zone (or only zone for flowerbeds)
-      await haWebSocket.callService('switch', 'turn_on', { entity_id: zoneIds[0] });
+      // Use rainbird.start_irrigation with duration — switch.turn_on only runs
+      // for the controller's default (a few mins), not the requested duration.
+      const zoneDuration = paired ? Math.round(durationMinutes / 2) : durationMinutes;
+      await haWebSocket.callService('rainbird', 'start_irrigation', {
+        entity_id: zoneIds[0],
+        duration: zoneDuration,
+      });
 
       setActiveSessions(prev => ({
         ...prev,
