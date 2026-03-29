@@ -20,8 +20,19 @@ const RECOMMENDATION_STYLES = {
   partial: { bg: 'rgba(212,148,76,0.1)', color: '#d4944c', label: 'Partial Watering' },
 };
 
-function TaskList({ tasks, icon: Icon, title, updated }) {
+function TaskList({ tasks, icon: Icon, title, updated, grouped = false }) {
   if (!tasks || tasks.length === 0) return null;
+
+  // Group tasks by area if any have an area field
+  const hasAreas = grouped && tasks.some(t => t.area);
+  const groups = hasAreas
+    ? tasks.reduce((acc, task) => {
+        const area = task.area || 'General';
+        if (!acc[area]) acc[area] = [];
+        acc[area].push(task);
+        return acc;
+      }, {})
+    : null;
 
   return (
     <div className="mb-3">
@@ -38,17 +49,41 @@ function TaskList({ tasks, icon: Icon, title, updated }) {
           </span>
         )}
       </div>
-      <div className="space-y-1">
-        {tasks.map((item, i) => (
-          <div key={i} className="flex items-start gap-2 pl-1">
-            <div
-              className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
-              style={{ backgroundColor: PRIORITY_COLORS[item.priority] || '#9ca3af' }}
-            />
-            <span className="text-sm text-[var(--ds-text)]">{item.task}</span>
-          </div>
-        ))}
-      </div>
+
+      {hasAreas ? (
+        <div className="space-y-2">
+          {Object.entries(groups).map(([area, areaTasks]) => (
+            <div key={area}>
+              <div className="text-[10px] font-semibold text-[var(--ds-text-secondary)] uppercase tracking-wider pl-1 mb-0.5">
+                {area}
+              </div>
+              <div className="space-y-1">
+                {areaTasks.map((item, i) => (
+                  <div key={i} className="flex items-start gap-2 pl-3">
+                    <div
+                      className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
+                      style={{ backgroundColor: PRIORITY_COLORS[item.priority] || '#9ca3af' }}
+                    />
+                    <span className="text-sm text-[var(--ds-text)]">{item.task}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {tasks.map((item, i) => (
+            <div key={i} className="flex items-start gap-2 pl-1">
+              <div
+                className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
+                style={{ backgroundColor: PRIORITY_COLORS[item.priority] || '#9ca3af' }}
+              />
+              <span className="text-sm text-[var(--ds-text)]">{item.task}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -127,7 +162,7 @@ export function WeekendPlanCard({ compact = false }) {
         </p>
       )}
 
-      <TaskList tasks={plan.plants?.tasks} icon={Sprout} title="Plants" updated={plan.plants?.updated} />
+      <TaskList tasks={plan.plants?.tasks} icon={Sprout} title="Plants" updated={plan.plants?.updated} grouped />
       {plan.plants?.notes && (
         <p className="text-xs italic text-[var(--ds-text-secondary)] pl-1">
           {plan.plants.notes}
