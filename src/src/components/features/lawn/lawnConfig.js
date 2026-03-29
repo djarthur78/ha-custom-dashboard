@@ -80,8 +80,9 @@ export const MOISTURE_TRIGGER = 42;  // Below this → needs watering
 export const MOISTURE_HARD_STOP = 70; // Above this → stop watering
 
 // Plan URL — served from HA's /config/www/ directory
-const HA_URL = import.meta.env.VITE_HA_URL || 'http://192.168.1.2:8123';
-export const PLAN_URL = `${HA_URL}/local/lawn-plan.json`;
+// In production, nginx proxies /local/ to HA. In dev, use full HA URL.
+const HA_URL = import.meta.env.VITE_HA_URL || '';
+export const PLAN_URL = HA_URL ? `${HA_URL}/local/lawn-plan.json` : '/local/lawn-plan.json';
 
 /**
  * Returns moisture status with label and color
