@@ -4,10 +4,22 @@
  * and watering thresholds from the lawn care programme.
  */
 
-import { getSoilMoistureColor } from '../weather/weatherConfig';
+// Watering thresholds (from openclaw irrigation-system.md)
+export const MOISTURE_TRIGGER = 42;  // Below this → needs watering
+export const MOISTURE_HARD_STOP = 70; // Above this → stop watering
 
-// Re-export for convenience
-export { getSoilMoistureColor };
+/**
+ * Soil moisture color for the lawn tab — aligned with getMoistureStatus thresholds.
+ * Overrides the weather tab's version which uses different ranges.
+ */
+export function getSoilMoistureColor(value) {
+  if (value == null) return '#9ca3af';
+  if (value < 20) return '#b5453a';       // Dry — red
+  if (value < MOISTURE_TRIGGER) return '#d4944c'; // Low — orange (trigger at 42%)
+  if (value < 60) return '#4a9a4a';        // Good — green
+  if (value < MOISTURE_HARD_STOP) return '#3a8a8a'; // High — teal (approaching hard stop)
+  return '#b5453a';                         // Saturated — red (>70%)
+}
 
 /**
  * 4 watering areas, each with RainBird zone(s) and 2 soil moisture sensors.
@@ -74,10 +86,6 @@ export const IRRIGATION_AREAS = [
 // All entity IDs flattened for hook initialization
 export const ALL_ZONE_IDS = IRRIGATION_AREAS.flatMap(a => a.zones.map(z => z.id));
 export const ALL_SENSOR_IDS = IRRIGATION_AREAS.flatMap(a => a.sensors.map(s => s.id));
-
-// Watering thresholds (from openclaw irrigation-system.md)
-export const MOISTURE_TRIGGER = 42;  // Below this → needs watering
-export const MOISTURE_HARD_STOP = 70; // Above this → stop watering
 
 // Plan URL — served from HA's /config/www/ directory
 // In production, nginx proxies /local/ to HA. In dev, use full HA URL.
