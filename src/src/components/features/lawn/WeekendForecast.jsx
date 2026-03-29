@@ -26,7 +26,8 @@ export function WeekendForecast({ compact = false }) {
   // Calculate total expected rain across 3 days
   const totalRainMm = days.reduce((sum, d) => sum + (d.precipitation || 0), 0);
   const rainyDays = days.filter(d => d.precipitation_probability > 40);
-  const hasSignificantRain = totalRainMm >= 2 || rainyDays.length > 0;
+  const hasRainMm = totalRainMm >= 0.5;
+  const hasRainProb = rainyDays.length > 0;
 
   return (
     <div className="ds-card" style={{ padding: compact ? '10px' : '14px' }}>
@@ -82,19 +83,17 @@ export function WeekendForecast({ compact = false }) {
         })}
       </div>
 
-      {hasSignificantRain && (
+      {(hasRainMm || hasRainProb) && (
         <div
           className="flex items-center gap-1.5 mt-2 px-2 py-1.5 rounded-md text-xs font-medium"
           style={{ backgroundColor: 'rgba(90,143,184,0.1)', color: '#5a8fb8' }}
         >
           <CloudRain size={14} />
           <span>
-            Rain expected — {totalRainMm.toFixed(1)}mm over 3 days
-            {rainyDays.length > 0 && (
-              <span className="opacity-80">
-                {' '}({rainyDays.map(d => format(parseISO(d.datetime), 'EEE')).join(', ')})
-              </span>
-            )}
+            {hasRainMm
+              ? `${totalRainMm.toFixed(1)}mm expected over 3 days`
+              : `Rain possible — ${rainyDays.map(d => `${format(parseISO(d.datetime), 'EEE')} ${d.precipitation_probability}%`).join(', ')}`
+            }
           </span>
         </div>
       )}
