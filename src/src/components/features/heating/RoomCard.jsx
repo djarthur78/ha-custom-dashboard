@@ -42,7 +42,7 @@ export function RoomCard({ entityId, label, selected, onSelect, isAutoFollow }) 
         {label}
       </span>
       <span className="text-2xl font-bold leading-none" style={{ color: tempColor }}>
-        {currentTemp != null ? `${Math.round(currentTemp)}°` : '--'}
+        {currentTemp != null ? `${parseFloat(currentTemp).toFixed(1)}°` : '--'}
       </span>
       <div className="flex items-center gap-1">
         <div className="rounded-full" style={{
@@ -58,7 +58,7 @@ export function RoomCard({ entityId, label, selected, onSelect, isAutoFollow }) 
             : hasDemand ? '#d4944c'
             : 'var(--ds-text-secondary)',
         }}>
-          {isAutoFollow ? 'Auto' : hasDemand ? `${Math.round(targetTemp)}°` : 'Off'}
+          {isAutoFollow ? 'Auto' : heating ? `→ ${Math.round(targetTemp)}°` : hasDemand ? `${Math.round(targetTemp)}°` : 'Off'}
         </span>
       </div>
     </button>
