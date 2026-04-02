@@ -7,7 +7,7 @@ import { Thermometer, Droplets } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import { useWeather } from '../../../hooks/useWeather';
 import { getWeatherIcon } from '../../../utils/weather';
-import { ECOWITT_INDOOR, PRESSURE, MET_OFFICE, getTempColor, getHumidityColor } from './weatherConfig';
+import { ECOWITT_INDOOR, ECOWITT_OUTDOOR, PRESSURE, getTempColor, getHumidityColor } from './weatherConfig';
 
 function SensorValue({ label, value, unit, color }) {
   const isAvailable = value != null && value !== 'unavailable';
@@ -25,21 +25,26 @@ function SensorValue({ label, value, unit, color }) {
 
 export function CurrentConditions({ compact = false }) {
   const weather = useWeather();
+  const outdoorTemp = useEntity(ECOWITT_OUTDOOR.temperature);
+  const outdoorHumidity = useEntity(ECOWITT_OUTDOOR.humidity);
+  const outdoorFeelsLike = useEntity(ECOWITT_OUTDOOR.feelsLike);
   const indoorTemp = useEntity(ECOWITT_INDOOR.temperature);
   const indoorHumidity = useEntity(ECOWITT_INDOOR.humidity);
   const indoorDewpoint = useEntity(ECOWITT_INDOOR.dewpoint);
   const pressure = useEntity(PRESSURE.relative);
-  const feelsLike = useEntity(MET_OFFICE.feelsLike);
 
-  const temp = weather.temperature;
+  const outdoorTempVal = outdoorTemp.state && outdoorTemp.state !== 'unavailable' ? parseFloat(outdoorTemp.state) : null;
+  const outdoorHumVal = outdoorHumidity.state && outdoorHumidity.state !== 'unavailable' ? parseFloat(outdoorHumidity.state) : null;
+  const feelsLikeVal = outdoorFeelsLike.state && outdoorFeelsLike.state !== 'unavailable' ? parseFloat(outdoorFeelsLike.state) : null;
+  // Use Ecowitt outdoor temp, fall back to Met Office if unavailable
+  const temp = outdoorTempVal ?? weather.temperature;
   const condition = weather.condition;
-  const humidity = weather.humidity;
+  const humidity = outdoorHumVal ?? weather.humidity;
 
   const indoorTempVal = indoorTemp.state && indoorTemp.state !== 'unavailable' ? parseFloat(indoorTemp.state) : null;
   const indoorHumVal = indoorHumidity.state && indoorHumidity.state !== 'unavailable' ? parseFloat(indoorHumidity.state) : null;
   const indoorDewVal = indoorDewpoint.state && indoorDewpoint.state !== 'unavailable' ? parseFloat(indoorDewpoint.state) : null;
   const pressureVal = pressure.state && pressure.state !== 'unavailable' ? parseFloat(pressure.state) : null;
-  const feelsLikeVal = feelsLike.state && feelsLike.state !== 'unavailable' ? parseFloat(feelsLike.state) : null;
 
   if (compact) {
     return (
@@ -87,11 +92,11 @@ export function CurrentConditions({ compact = false }) {
           {getWeatherIcon(condition, 80)}
         </div>
         <div className="text-[100px] font-bold leading-none mb-1" style={{ color: getTempColor(temp) }}>
-          {temp != null ? `${Math.round(temp)}°` : '--'}
+          {temp != null ? `${temp.toFixed(1)}°` : '--'}
         </div>
         {feelsLikeVal != null && (
           <div className="text-lg text-[var(--ds-text-secondary)] mb-1">
-            Feels like <span className="text-xl font-bold" style={{ color: getTempColor(feelsLikeVal) }}>{Math.round(feelsLikeVal)}°</span>
+            Feels like <span className="text-xl font-bold" style={{ color: getTempColor(feelsLikeVal) }}>{feelsLikeVal.toFixed(1)}°</span>
           </div>
         )}
         <div className="text-xl text-[var(--ds-text-secondary)] capitalize mb-1">

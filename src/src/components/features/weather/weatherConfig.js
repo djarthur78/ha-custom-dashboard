@@ -9,14 +9,13 @@ export const ECOWITT_INDOOR = {
   dewpoint: 'sensor.gw3000a_indoor_dewpoint',
 };
 
-// WS69 placeholders — update entity IDs when station is installed
+// WS69 outdoor sensor array (connected via GW3000A gateway)
 export const ECOWITT_OUTDOOR = {
   temperature: 'sensor.gw3000a_outdoor_temperature',
-  humidity: 'sensor.gw3000a_outdoor_humidity',
-  dewpoint: 'sensor.gw3000a_outdoor_dewpoint',
-  feelsLike: 'sensor.gw3000a_outdoor_feels_like',
-  lightningCount: 'sensor.gw3000a_lightning_strike_count',
-  lightningDistance: 'sensor.gw3000a_lightning_distance',
+  humidity: 'sensor.gw3000a_humidity',
+  dewpoint: 'sensor.gw3000a_dewpoint',
+  feelsLike: 'sensor.gw3000a_feels_like_temperature',
+  windchill: 'sensor.gw3000a_windchill',
 };
 
 export const MET_OFFICE = {
