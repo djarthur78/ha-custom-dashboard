@@ -26,18 +26,25 @@ export async function fetchCalendarEvents(calendarId, start, end) {
 
     log.debug(`[Calendar Service] Got ${events.length} events for ${calendarId}`);
 
-    return events.map(event => ({
+    return events.map(event => {
+      // All-day events use date-only strings ("2026-04-18"). new Date("2026-04-18")
+      // parses as UTC midnight, which drifts in BST/local time. Appending T00:00:00
+      // forces parsing as local midnight, preventing events spilling into adjacent days.
+      const startStr = event.start?.dateTime || (event.start?.date + 'T00:00:00');
+      const endStr = event.end?.dateTime || (event.end?.date + 'T00:00:00');
+      return {
       id: `${calendarId}-${event.start?.dateTime || event.start?.date}-${event.summary}`,
       title: event.summary || 'Untitled Event',
-      start: new Date(event.start?.dateTime || event.start?.date),
-      end: new Date(event.end?.dateTime || event.end?.date),
+      start: new Date(startStr),
+      end: new Date(endStr),
       allDay: !!event.start?.date && !event.start?.dateTime,
       calendarId: calendarId,
       description: event.description || '',
       location: event.location || '',
       uid: event.uid,
       recurrence_id: event.recurrence_id,
-    }));
+    };
+    });
   } catch (error) {
     log.error(`[Calendar Service] Failed to fetch events for ${calendarId}:`, error);
     showToast('Failed to load calendar events', 'error');
