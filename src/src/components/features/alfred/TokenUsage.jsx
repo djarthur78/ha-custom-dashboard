@@ -1,6 +1,6 @@
 /**
  * TokenUsage Component
- * Shows OpenAI token usage: today/week totals, model breakdown, per-cron costs
+ * Shows OpenAI token usage: today/week totals, model breakdown, per-cron-job costs
  */
 
 import { Zap, AlertCircle } from 'lucide-react';
