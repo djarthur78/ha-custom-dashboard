@@ -1,11 +1,11 @@
 /**
  * StatusHero Component
- * Left panel: Alfred status, connectivity, memory stats, recovery snapshot
+ * Left panel: Alfred status, Discord connectivity, memory stats
  */
 
-import { Bot, MessageCircle, Send, Database, Brain } from 'lucide-react';
+import { Bot, Database, Brain, RefreshCw } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
-import { ALFRED_GATEWAY, ALFRED_DATA, OURA_SNAPSHOT, getReadinessColor, getTrainingRec, formatRelativeTime } from './alfredConfig';
+import { ALFRED_GATEWAY, ALFRED_DATA } from './alfredConfig';
 
 function ConnBadge({ label, connected }) {
   const isOn = connected === true || connected === 'true';
@@ -36,22 +36,14 @@ function StatBox({ label, value, icon: Icon }) {
   );
 }
 
-export function StatusHero() {
+export function StatusHero({ refreshing, error, onRefresh }) {
   const health = useEntity(ALFRED_GATEWAY.health);
   const status = useEntity(ALFRED_GATEWAY.status);
   const memory = useEntity(ALFRED_DATA.memoryStatus);
-  const readiness = useEntity(OURA_SNAPSHOT.readiness);
-  const hrv = useEntity(OURA_SNAPSHOT.hrv);
 
   const isOnline = health.state && health.state !== 'unavailable' && health.state !== 'unknown' && health.state !== 'offline';
   const attrs = status.attributes || {};
   const memAttrs = memory.attributes || {};
-
-  const readinessScore = readiness.state != null && readiness.state !== 'unavailable'
-    ? parseInt(readiness.state, 10)
-    : null;
-  const hrvValue = hrv.state != null && hrv.state !== 'unavailable' ? hrv.state : null;
-  const rec = getTrainingRec(readinessScore);
 
   return (
     <div
@@ -62,6 +54,24 @@ export function StatusHero() {
           : 'linear-gradient(135deg, rgba(181,69,58,0.06), rgba(181,69,58,0.02))',
       }}
     >
+      {/* Refresh button */}
+      <div className="flex justify-end mb-2">
+        <button
+          onClick={onRefresh}
+          disabled={refreshing}
+          className="p-1.5 rounded-lg transition-colors"
+          style={{
+            color: error ? 'var(--ds-state-off)' : 'var(--ds-text-secondary)',
+            backgroundColor: 'transparent',
+            border: 'none',
+            cursor: refreshing ? 'wait' : 'pointer',
+          }}
+          title={error ? `Refresh failed: ${error}` : 'Refresh data'}
+        >
+          <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+        </button>
+      </div>
+
       {/* Alfred Identity */}
       <div className="flex-1 flex flex-col items-center justify-center text-center">
         <Bot
@@ -87,7 +97,7 @@ export function StatusHero() {
 
         {/* Model + Uptime */}
         <div className="text-sm mb-1" style={{ color: 'var(--ds-text-secondary)' }}>
-          {attrs.model || 'Awaiting data...'}
+          {attrs.model || 'OpenClaw 2026.4.5'}
         </div>
         {attrs.uptime && (
           <div className="text-xs mb-4" style={{ color: 'var(--ds-text-secondary)' }}>
@@ -101,40 +111,9 @@ export function StatusHero() {
           <StatBox label="Chunks" value={memAttrs.total_chunks} icon={Brain} />
         </div>
 
-        {/* Connectivity Badges */}
+        {/* Discord Badge */}
         <div className="flex gap-2 mb-4">
           <ConnBadge label="Discord" connected={attrs.discord_connected} />
-          <ConnBadge label="Telegram" connected={attrs.telegram_connected} />
-        </div>
-      </div>
-
-      {/* Recovery Snapshot */}
-      <div
-        className="mt-auto pt-4"
-        style={{ borderTop: '1px solid var(--ds-border)' }}
-      >
-        <div
-          className="flex items-center gap-1.5 mb-3 text-xs font-semibold uppercase tracking-wider"
-          style={{ color: 'var(--ds-text-secondary)' }}
-        >
-          Recovery
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <div
-              className="text-3xl font-bold leading-none"
-              style={{ color: getReadinessColor(readinessScore) }}
-            >
-              {readinessScore ?? '--'}
-            </div>
-            <div className="text-xs mt-1" style={{ color: 'var(--ds-text-secondary)' }}>Readiness</div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm font-semibold" style={{ color: rec.color }}>{rec.label}</div>
-            <div className="text-xs mt-1" style={{ color: 'var(--ds-text-secondary)' }}>
-              HRV: {hrvValue ?? '--'}ms
-            </div>
-          </div>
         </div>
       </div>
     </div>
