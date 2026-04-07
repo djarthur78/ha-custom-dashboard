@@ -264,7 +264,7 @@ function collectData() {
   data.tokenUsage = collectTokenUsage();
   if (data.tokenUsage) {
     pushToHA('sensor.alfred_token_usage', {
-      state: String(data.tokenUsage.today.totalTokens),
+      state: String(data.tokenUsage.today.totalTokens) + '.' + Date.now() % 1000,
       attributes: {
         friendly_name: 'Alfred Token Usage',
         icon: 'mdi:counter',

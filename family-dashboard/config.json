@@ -1,10 +1,16 @@
 {
   "name": "Family Dashboard",
-  "version": "3.6.0",
+  "version": "3.6.1",
   "slug": "family-dashboard",
   "description": "Modern family calendar and dashboard for Home Assistant",
   "url": "https://github.com/djarthur78/ha-custom-dashboard",
-  "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
+  "arch": [
+    "armhf",
+    "armv7",
+    "aarch64",
+    "amd64",
+    "i386"
+  ],
   "startup": "application",
   "boot": "auto",
   "init": false,
