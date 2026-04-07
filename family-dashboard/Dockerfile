@@ -12,7 +12,7 @@ RUN mkdir -p /var/lib/nginx/tmp /var/log/nginx /run/nginx \
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy the built React app
+# Copy the built React app (cache bust: 3.6.1)
 COPY build /usr/share/nginx/html
 RUN chown -R nginx:nginx /usr/share/nginx/html
 
