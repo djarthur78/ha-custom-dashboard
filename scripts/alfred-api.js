@@ -61,15 +61,20 @@ function collectTokenUsage() {
 
     const files = fs.readdirSync(sessionsDir).filter(f => f.endsWith('.jsonl'));
 
+    // Last cycle = previous Mon-Sun
+    const lastCycleStart = weekStart - (7 * 86400000);
+    const lastCycleEnd = weekStart;
+
     const today = { totalTokens: 0, input: 0, output: 0, cost: 0, requests: 0 };
-    const week = { totalTokens: 0, input: 0, output: 0, cost: 0, requests: 0 };
+    const thisCycle = { totalTokens: 0, input: 0, output: 0, cost: 0, requests: 0 };
+    const lastCycle = { totalTokens: 0, input: 0, output: 0, cost: 0, requests: 0 };
     const byModel = {};   // { "openai-codex/gpt-5.4": { tokens, cost, requests } }
     const byCron = {};     // { "Morning Brief": { tokens, cost, runs } }
 
     for (const file of files) {
       const filePath = path.join(sessionsDir, file);
       const stat = fs.statSync(filePath);
-      if (stat.mtimeMs < weekStart) continue;
+      if (stat.mtimeMs < lastCycleStart) continue;
 
       const content = fs.readFileSync(filePath, 'utf8');
       const lines = content.split('\n');
@@ -108,15 +113,22 @@ function collectTokenUsage() {
 
           // Per-model tracking
           if (!byModel[modelKey]) byModel[modelKey] = { tokens: 0, cost: 0, requests: 0 };
+          if (ts >= lastCycleStart && ts < lastCycleEnd) {
+            lastCycle.totalTokens += tokens;
+            lastCycle.input += usage.input || 0;
+            lastCycle.output += usage.output || 0;
+            lastCycle.cost += cost;
+            lastCycle.requests++;
+          }
           if (ts >= weekStart) {
             byModel[modelKey].tokens += tokens;
             byModel[modelKey].cost += cost;
             byModel[modelKey].requests++;
-            week.totalTokens += tokens;
-            week.input += usage.input || 0;
-            week.output += usage.output || 0;
-            week.cost += cost;
-            week.requests++;
+            thisCycle.totalTokens += tokens;
+            thisCycle.input += usage.input || 0;
+            thisCycle.output += usage.output || 0;
+            thisCycle.cost += cost;
+            thisCycle.requests++;
           }
           if (ts >= todayStart) {
             today.totalTokens += tokens;
@@ -142,7 +154,8 @@ function collectTokenUsage() {
 
     // Round costs
     today.cost = Math.round(today.cost * 100) / 100;
-    week.cost = Math.round(week.cost * 100) / 100;
+    thisCycle.cost = Math.round(thisCycle.cost * 100) / 100;
+    lastCycle.cost = Math.round(lastCycle.cost * 100) / 100;
 
     // Sort models by cost desc
     const models = Object.entries(byModel)
@@ -155,7 +168,7 @@ function collectTokenUsage() {
       .map(([name, v]) => ({ name, ...v, cost: Math.round(v.cost * 100) / 100 }))
       .sort((a, b) => b.cost - a.cost);
 
-    return { today, week, models, cronJobs };
+    return { today, thisCycle, lastCycle, models, cronJobs };
   } catch {
     return null;
   }
@@ -179,10 +192,7 @@ function collectData() {
       consecutive_errors: j.state?.consecutiveErrors || 0,
     }));
     data.cron = { count: jobs.length, jobs };
-    pushToHA('sensor.alfred_cron_list', {
-      state: String(jobs.length),
-      attributes: { friendly_name: 'Alfred Cron List', icon: 'mdi:clock-outline', jobs }
-    });
+    // pushToHA for cron is deferred until after tokenUsage is collected (see below)
   }
 
   // Memory status
@@ -222,15 +232,12 @@ function collectData() {
   const gwUp = !!run('curl -s --connect-timeout 2 http://localhost:18789/health');
   const ollamaUp = !!run('curl -s --connect-timeout 2 http://localhost:11434/api/tags');
   const locBridgeUp = !!run('curl -s --connect-timeout 2 http://localhost:18790/health');
-  const piholeUp = !!run('ping -c 1 -W 2 192.168.1.3');
 
-  data.services = { gateway: gwUp, ollama: ollamaUp, location_bridge: locBridgeUp, ha: true, pihole: piholeUp };
+  data.services = { gateway: gwUp, ollama: ollamaUp, location_bridge: locBridgeUp };
 
   pushToHA('binary_sensor.alfred_gateway', { state: gwUp ? 'on' : 'off', attributes: { friendly_name: 'Alfred Gateway', device_class: 'connectivity' } });
   pushToHA('binary_sensor.alfred_ollama', { state: ollamaUp ? 'on' : 'off', attributes: { friendly_name: 'Alfred Ollama', device_class: 'connectivity' } });
   pushToHA('binary_sensor.alfred_location_bridge', { state: locBridgeUp ? 'on' : 'off', attributes: { friendly_name: 'Alfred Location Bridge', device_class: 'connectivity' } });
-  pushToHA('binary_sensor.alfred_ha_check', { state: 'on', attributes: { friendly_name: 'Home Assistant', device_class: 'connectivity' } });
-  pushToHA('binary_sensor.alfred_pihole', { state: piholeUp ? 'on' : 'off', attributes: { friendly_name: 'Pi-hole', device_class: 'connectivity' } });
 
   // Gateway health + channel connectivity
   const statusRaw = gwUp ? run('curl -s --connect-timeout 2 http://localhost:18789/api/status') : null;
@@ -297,6 +304,21 @@ function collectData() {
         unit_of_measurement: 'tokens',
         ...data.tokenUsage
       }
+    });
+  }
+
+  // Enrich cron jobs with per-cron costs from token usage, then push
+  if (data.cron && data.tokenUsage?.cronJobs) {
+    const costMap = {};
+    for (const c of data.tokenUsage.cronJobs) costMap[c.name] = c.cost;
+    for (const job of data.cron.jobs) {
+      job.cost = costMap[job.name] || 0;
+    }
+  }
+  if (data.cron) {
+    pushToHA('sensor.alfred_cron_list', {
+      state: String(data.cron.jobs.length),
+      attributes: { friendly_name: 'Alfred Cron List', icon: 'mdi:clock-outline', jobs: data.cron.jobs }
     });
   }
 

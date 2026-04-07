@@ -42,15 +42,28 @@ function UsageBar({ label, value, max, color }) {
   );
 }
 
+function PeriodBlock({ label, data }) {
+  if (!data) return null;
+  return (
+    <div className="flex-1 min-w-0">
+      <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--ds-text-secondary)' }}>{label}</div>
+      <div className="text-xl font-bold" style={{ color: 'var(--ds-text)' }}>{formatTokens(data.totalTokens)}</div>
+      <div className="text-sm font-semibold" style={{ color: 'var(--ds-accent)' }}>${data.cost?.toFixed(2)}</div>
+      <div className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>{data.requests} reqs</div>
+    </div>
+  );
+}
+
 export function TokenUsage() {
   const entity = useEntity('sensor.alfred_token_usage');
   const attrs = entity.attributes || {};
   const today = attrs.today || null;
-  const week = attrs.week || null;
+  const thisCycle = attrs.thisCycle || null;
+  const lastCycle = attrs.lastCycle || null;
   const models = attrs.models || [];
   const cronJobs = attrs.cronJobs || [];
 
-  if (!today && !week) {
+  if (!today && !thisCycle) {
     return (
       <div className="ds-card h-full flex flex-col items-center justify-center gap-3">
         <AlertCircle size={32} style={{ color: 'var(--ds-text-secondary)' }} />
@@ -60,6 +73,16 @@ export function TokenUsage() {
       </div>
     );
   }
+
+  const BUDGET = 20.00;
+  const used = thisCycle?.cost || 0;
+  const remaining = BUDGET - used;
+  const budgetPct = Math.min((used / BUDGET) * 100, 100);
+  const budgetColor = remaining < 0
+    ? 'var(--ds-state-off)'
+    : remaining < 5
+      ? 'var(--ds-health-warn)'
+      : 'var(--ds-state-on)';
 
   const maxCronCost = cronJobs.length > 0 ? cronJobs[0].cost : 1;
 
@@ -76,52 +99,14 @@ export function TokenUsage() {
         </span>
       </div>
 
-      {/* ChatGPT Plus plan context */}
-      {week && (
-        <div
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg mb-3 text-xs"
-          style={{ backgroundColor: 'var(--ds-warm-inactive-bg)' }}
-        >
-          <span style={{ color: 'var(--ds-text-secondary)' }}>
-            Plan: <span style={{ color: 'var(--ds-text)' }}>Plus ($20/mo flat)</span> — API equiv: <span style={{ color: 'var(--ds-text)' }}>${(week.cost || 0).toFixed(2)}/wk</span>
-          </span>
-          {week.cost > 20 ? (
-            <span style={{ color: 'var(--ds-state-off)', fontWeight: 600 }}>
-              {'\u26A0'} Exceeding plan equivalent
-            </span>
-          ) : week.cost < 15 ? (
-            <span style={{ color: 'var(--ds-state-on)', fontWeight: 600 }}>
-              Within budget
-            </span>
-          ) : (
-            <span style={{ color: 'var(--ds-health-warn)', fontWeight: 600 }}>
-              Approaching limit
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Today vs Week headline */}
-      <div className="flex gap-6 mb-4">
-        {today && (
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--ds-text-secondary)' }}>Today</div>
-            <div className="text-2xl font-bold" style={{ color: 'var(--ds-text)' }}>{formatTokens(today.totalTokens)}</div>
-            <div className="text-sm font-semibold" style={{ color: 'var(--ds-accent)' }}>${today.cost?.toFixed(2)}</div>
-            <div className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>{today.requests} reqs</div>
-          </div>
-        )}
-        {week && (
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--ds-text-secondary)' }}>This Week</div>
-            <div className="text-2xl font-bold" style={{ color: 'var(--ds-text)' }}>{formatTokens(week.totalTokens)}</div>
-            <div className="text-sm font-semibold" style={{ color: 'var(--ds-accent)' }}>${week.cost?.toFixed(2)}</div>
-            <div className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>{week.requests} reqs</div>
-          </div>
-        )}
+      {/* Three period headline */}
+      <div className="flex gap-4 mb-2">
+        <PeriodBlock label="Last Cycle" data={lastCycle} />
+        <PeriodBlock label="This Cycle" data={thisCycle} />
+        <PeriodBlock label="Today" data={today} />
         {/* Model breakdown */}
         {models.length > 0 && (
-          <div className="ml-auto text-right">
+          <div className="ml-auto text-right flex-shrink-0">
             <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--ds-text-secondary)' }}>Models</div>
             {models.slice(0, 3).map(m => (
               <div key={m.name} className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>
@@ -133,6 +118,41 @@ export function TokenUsage() {
         )}
       </div>
 
+      {/* Cycle reset + Budget bar */}
+      <div className="mb-4">
+        <div className="text-xs mb-2" style={{ color: 'var(--ds-text-secondary)' }}>
+          Cycle resets: Monday
+        </div>
+        <div className="flex items-center gap-2 text-xs mb-1">
+          <span style={{ color: 'var(--ds-text-secondary)' }}>
+            $20.00 plan
+          </span>
+          <span style={{ color: 'var(--ds-text)' }}>
+            — ${used.toFixed(2)} used
+          </span>
+          <span style={{ color: budgetColor, fontWeight: 600 }}>
+            {remaining < 0
+              ? `— Over budget by $${Math.abs(remaining).toFixed(2)}`
+              : `— $${remaining.toFixed(2)} remaining`
+            }
+          </span>
+        </div>
+        <div
+          className="w-full h-2.5 rounded-full overflow-hidden"
+          style={{ backgroundColor: 'var(--ds-warm-inactive-bg)' }}
+        >
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${budgetPct}%`,
+              backgroundColor: budgetColor,
+              transition: 'width 0.7s ease-out',
+              minWidth: used > 0 ? '4px' : '0',
+            }}
+          />
+        </div>
+      </div>
+
       {/* Per-cron cost bars */}
       {cronJobs.length > 0 && (
         <>
@@ -140,7 +160,7 @@ export function TokenUsage() {
             className="text-xs font-semibold uppercase tracking-wider mb-2 pt-2"
             style={{ color: 'var(--ds-text-secondary)', borderTop: '1px solid var(--ds-border)' }}
           >
-            Cost by Cron Job (this week)
+            Cost by Cron Job (this cycle)
           </div>
           <div className="flex-1 overflow-y-auto flex flex-col gap-0.5">
             {cronJobs.map(job => (

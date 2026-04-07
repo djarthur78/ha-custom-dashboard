@@ -78,7 +78,7 @@ export function SystemHealth() {
           className="text-xs font-semibold uppercase tracking-wider"
           style={{ color: 'var(--ds-text-secondary)' }}
         >
-          System Health
+          Alfred Services
         </span>
       </div>
 

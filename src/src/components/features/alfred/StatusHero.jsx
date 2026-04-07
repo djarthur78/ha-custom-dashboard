@@ -37,15 +37,6 @@ function StatBox({ label, value, icon: Icon }) {
   );
 }
 
-function TaskStat({ label, value, color }) {
-  return (
-    <div className="flex flex-col items-center">
-      <div className="text-xl font-bold" style={{ color }}>{value ?? '--'}</div>
-      <div className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--ds-text-secondary)' }}>{label}</div>
-    </div>
-  );
-}
-
 export function StatusHero({ refreshing, error, onRefresh }) {
   const health = useEntity(ALFRED_GATEWAY.health);
   const status = useEntity(ALFRED_GATEWAY.status);
@@ -136,32 +127,32 @@ export function StatusHero({ refreshing, error, onRefresh }) {
         )}
 
         {/* Task Stats */}
-        <div
-          className="w-full rounded-lg px-3 py-2.5 mb-4"
-          style={{ backgroundColor: 'var(--ds-warm-inactive-bg)' }}
-        >
-          <div
-            className="text-[10px] font-semibold uppercase tracking-wider mb-2"
-            style={{ color: 'var(--ds-text-secondary)' }}
-          >
-            Tasks
-          </div>
-          <div className="grid grid-cols-4 gap-1 mb-2">
-            <TaskStat label="Succeeded" value={tasks.succeeded} color="var(--ds-state-on)" />
-            <TaskStat label="Failed" value={tasks.failed} color="var(--ds-state-off)" />
-            <TaskStat label="Timed Out" value={tasks.timed_out} color="var(--ds-health-warn)" />
-            <TaskStat
-              label="Active"
-              value={tasks.active > 0 || tasks.running > 0 ? (tasks.active || 0) + (tasks.running || 0) : '--'}
-              color="var(--ds-health-info)"
-            />
-          </div>
-          {tasks.sessions_count != null && (
-            <div className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>
-              {tasks.sessions_count} sessions · {tasks.total || 0} total tasks
+        {(() => {
+          const succeeded = tasks.succeeded || 0;
+          const failed = tasks.failed || 0;
+          const timedOut = tasks.timed_out || 0;
+          const total = succeeded + failed + timedOut;
+          const rate = total > 0 ? Math.round(succeeded / total * 100) : null;
+          const activeCount = (tasks.active || 0) + (tasks.running || 0);
+          return (
+            <div className="mb-4 text-center">
+              {rate != null && (
+                <div className="text-3xl font-bold" style={{ color: rate >= 80 ? 'var(--ds-state-on)' : rate >= 50 ? 'var(--ds-health-warn)' : 'var(--ds-state-off)' }}>
+                  {rate}%
+                  <span className="text-xs font-medium ml-1" style={{ color: 'var(--ds-text-secondary)' }}>success</span>
+                </div>
+              )}
+              {activeCount > 0 && (
+                <div className="text-sm font-medium" style={{ color: 'var(--ds-health-info)' }}>
+                  {activeCount} active now
+                </div>
+              )}
+              <div className="text-xs mt-1" style={{ color: 'var(--ds-text-secondary)' }}>
+                {succeeded} succeeded · {failed} failed · {timedOut} timed out (all time)
+              </div>
             </div>
-          )}
-        </div>
+          );
+        })()}
 
         {/* Memory Stats */}
         <div className="flex gap-4 mb-4 w-full justify-center">

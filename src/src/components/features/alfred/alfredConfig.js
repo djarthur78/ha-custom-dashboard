@@ -27,8 +27,6 @@ export const ALFRED_SERVICES = [
   { key: 'gateway', label: 'Gateway', port: 18789, entityId: 'binary_sensor.alfred_gateway' },
   { key: 'locationBridge', label: 'Location Bridge', port: 18790, entityId: 'binary_sensor.alfred_location_bridge' },
   { key: 'ollama', label: 'Ollama', port: 11434, entityId: 'binary_sensor.alfred_ollama' },
-  { key: 'ha', label: 'Home Assistant', port: 8123, entityId: 'binary_sensor.alfred_ha_check' },
-  { key: 'pihole', label: 'Pi-hole', port: null, entityId: 'binary_sensor.alfred_pihole' },
 ];
 
 // Oura recovery snapshot (reuses existing entities from healthConfig)

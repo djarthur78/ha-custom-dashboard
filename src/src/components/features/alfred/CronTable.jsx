@@ -72,6 +72,7 @@ export function CronTable() {
               <th className="text-left py-1.5 px-2 font-semibold">Name</th>
               <th className="text-left py-1.5 px-2 font-semibold">Next</th>
               <th className="text-left py-1.5 px-2 font-semibold">Last Run</th>
+              <th className="text-right py-1.5 px-2 font-semibold">Cost</th>
               <th className="text-center py-1.5 px-2 font-semibold w-10">Status</th>
             </tr>
           </thead>
@@ -93,6 +94,12 @@ export function CronTable() {
                 </td>
                 <td className="py-1.5 px-2" style={{ color: 'var(--ds-text-secondary)' }}>
                   {formatRelativeTime(job.last_run)}
+                </td>
+                <td
+                  className="py-1.5 px-2 text-right text-xs font-medium"
+                  style={{ color: job.cost > 1 ? 'var(--ds-accent)' : 'var(--ds-text-secondary)' }}
+                >
+                  {job.cost ? `$${job.cost.toFixed(2)}` : '--'}
                 </td>
                 <td className="py-1.5 px-2 flex justify-center items-center" style={{ height: '36px' }}>
                   <StatusDot status={job.status} />
