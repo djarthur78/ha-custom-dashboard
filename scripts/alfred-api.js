@@ -40,8 +40,9 @@ function parseOpenclawJson(raw) {
 function pushToHA(entityId, payload) {
   try {
     const body = JSON.stringify(payload);
-    const url = `${HA_URL}/api/states/${entityId}`;
-    execSync(`curl -s -X POST '${url}' -H 'Authorization: Bearer ${HA_TOKEN}' -H 'Content-Type: application/json' -d '${body.replace(/'/g, "'\\''")}'`, {
+    const tmpFile = `/tmp/ha-push-${entityId.replace(/\./g, '-')}.json`;
+    fs.writeFileSync(tmpFile, body);
+    execSync(`curl -s -X POST '${HA_URL}/api/states/${entityId}' -H 'Authorization: Bearer ${HA_TOKEN}' -H 'Content-Type: application/json' -d @${tmpFile}`, {
       timeout: 5000, stdio: ['pipe', 'pipe', 'pipe']
     });
   } catch { /* best effort */ }
@@ -218,7 +219,7 @@ function collectData() {
   if (data.system.disk != null) pushToHA('sensor.mac_mini_disk_usage', { state: String(data.system.disk), attributes: { friendly_name: 'Mac Mini Disk Usage', unit_of_measurement: '%', icon: 'mdi:harddisk' } });
 
   // Service checks
-  const gwUp = !!run('curl -s --connect-timeout 2 http://localhost:18789/api/health');
+  const gwUp = !!run('curl -s --connect-timeout 2 http://localhost:18789/health');
   const ollamaUp = !!run('curl -s --connect-timeout 2 http://localhost:11434/api/tags');
   const locBridgeUp = !!run('curl -s --connect-timeout 2 http://localhost:18790/health');
   const piholeUp = !!run('ping -c 1 -W 2 192.168.1.3');
@@ -237,7 +238,10 @@ function collectData() {
   let statusAttrs = { friendly_name: 'Alfred Gateway Status', icon: 'mdi:robot' };
 
   // Check Discord/channel connectivity from gateway or openclaw status
-  const ocStatusRaw = run(`${OPENCLAW} status --json`, 30000);
+  let ocStatusRaw;
+  try {
+    ocStatusRaw = execSync(`${OPENCLAW} status --json`, { timeout: 30000, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, PATH: `${process.env.HOME}/.npm-global/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin` } });
+  } catch { ocStatusRaw = null; }
   const ocStatus = parseOpenclawJson(ocStatusRaw);
   if (ocStatus) {
     const channels = ocStatus.channelSummary || [];
