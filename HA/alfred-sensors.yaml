@@ -1,0 +1,103 @@
+# Alfred Command Centre — HA Sensor Configuration
+# Add these to your Home Assistant configuration.yaml
+#
+# Prerequisites:
+# 1. SSH key from HA host → Mac Mini (passwordless: ssh darrenbrain@192.168.1.150)
+# 2. Gateway auth token in secrets.yaml: openclaw_token: "Bearer <token>"
+# 3. System Monitor integration enabled (or Glances on Mac Mini)
+
+# ── REST Sensors (Gateway API) ──────────────────────────────────
+
+rest:
+  - resource: http://192.168.1.150:18789/api/health
+    name: Alfred Gateway Health
+    headers:
+      Authorization: !secret openclaw_token
+    scan_interval: 60
+    value_template: "{{ value_json.status | default('unknown') }}"
+    json_attributes:
+      - status
+      - uptime
+      - version
+
+  - resource: http://192.168.1.150:18789/api/status
+    name: Alfred Gateway Status
+    headers:
+      Authorization: !secret openclaw_token
+    scan_interval: 60
+    value_template: "{{ value_json.status | default('unknown') }}"
+    json_attributes:
+      - channels
+      - model
+      - uptime
+      - discord_connected
+      - telegram_connected
+
+# ── Command Line Sensors (SSH) ──────────────────────────────────
+
+command_line:
+  - sensor:
+      name: Alfred Cron List
+      command: "ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no darrenbrain@192.168.1.150 'openclaw cron list --json 2>/dev/null'"
+      value_template: "{{ value_json | length }}"
+      json_attributes_path: "$"
+      scan_interval: 300
+
+  - sensor:
+      name: Alfred Memory Status
+      command: "ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no darrenbrain@192.168.1.150 'openclaw memory status --json 2>/dev/null'"
+      value_template: "{{ value_json.total_files | default(0) }}"
+      json_attributes:
+        - total_files
+        - total_chunks
+      scan_interval: 600
+
+# ── Mac Mini System Monitoring ──────────────────────────────────
+# Option A: SSH command sensors (simple)
+# Option B: Install Glances on Mac Mini and use the Glances integration (cleaner)
+
+  - sensor:
+      name: Mac Mini CPU Usage
+      command: "ssh -o ConnectTimeout=5 darrenbrain@192.168.1.150 'top -l 1 | grep \"CPU usage\" | awk \"{print 100 - \\$7}\"'"
+      value_template: "{{ value | float(0) | round(1) }}"
+      unit_of_measurement: "%"
+      scan_interval: 60
+
+  - sensor:
+      name: Mac Mini RAM Usage
+      command: "ssh -o ConnectTimeout=5 darrenbrain@192.168.1.150 'memory_pressure | grep percentage | awk \"{print \\$5}\" | tr -d \"%\"'"
+      value_template: "{{ value | float(0) | round(1) }}"
+      unit_of_measurement: "%"
+      scan_interval: 60
+
+  - sensor:
+      name: Mac Mini Disk Usage
+      command: "ssh -o ConnectTimeout=5 darrenbrain@192.168.1.150 'df -h / | tail -1 | awk \"{print \\$5}\" | tr -d \"%\"'"
+      value_template: "{{ value | float(0) | round(1) }}"
+      unit_of_measurement: "%"
+      scan_interval: 300
+
+# ── Template Binary Sensors (Service Health) ────────────────────
+
+template:
+  - binary_sensor:
+      - name: Alfred Gateway
+        state: "{{ states('sensor.alfred_gateway_health') not in ['unavailable', 'unknown'] }}"
+        device_class: connectivity
+
+      - name: Alfred Location Bridge
+        state: "{{ is_state('binary_sensor.ping_192_168_1_150', 'on') }}"
+        device_class: connectivity
+
+      - name: Alfred Ollama
+        # Requires a ping or REST check to 192.168.1.150:11434
+        state: "{{ states('sensor.alfred_gateway_health') not in ['unavailable', 'unknown'] }}"
+        device_class: connectivity
+
+      - name: Alfred HA Check
+        state: "{{ true }}"
+        device_class: connectivity
+
+      - name: Alfred Pihole
+        state: "{{ is_state('binary_sensor.ping_192_168_1_3', 'on') }}"
+        device_class: connectivity

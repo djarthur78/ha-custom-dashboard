@@ -103,7 +103,7 @@ export function getSensorId(prefix, type) {
 }
 
 // Map configuration
-export const MAP_TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+export const MAP_TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 export const MAP_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 export const MAP_DEFAULT_ZOOM = 15;
 export const MAP_MAX_ZOOM = 18;
