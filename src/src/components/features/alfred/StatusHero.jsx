@@ -43,7 +43,7 @@ export function StatusHero() {
   const readiness = useEntity(OURA_SNAPSHOT.readiness);
   const hrv = useEntity(OURA_SNAPSHOT.hrv);
 
-  const isOnline = health.state && health.state !== 'unavailable' && health.state !== 'unknown';
+  const isOnline = health.state && health.state !== 'unavailable' && health.state !== 'unknown' && health.state !== 'offline';
   const attrs = status.attributes || {};
   const memAttrs = memory.attributes || {};
 

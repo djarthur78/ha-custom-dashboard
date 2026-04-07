@@ -70,18 +70,21 @@ export function getTrainingRec(score) {
 }
 
 /**
- * Format relative time from ISO date string
+ * Format relative time from epoch ms or ISO date string
  */
-export function formatRelativeTime(dateStr) {
-  if (!dateStr) return '--';
-  const now = new Date();
-  const date = new Date(dateStr);
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays}d ago`;
+export function formatRelativeTime(value) {
+  if (!value) return '--';
+  const now = Date.now();
+  const ts = typeof value === 'number' ? value : new Date(value).getTime();
+  if (isNaN(ts)) return '--';
+  const diffMs = now - ts;
+  const isFuture = diffMs < 0;
+  const absDiff = Math.abs(diffMs);
+  const mins = Math.floor(absDiff / 60000);
+  if (mins < 1) return isFuture ? 'now' : 'just now';
+  if (mins < 60) return isFuture ? `in ${mins}m` : `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return isFuture ? `in ${hours}h` : `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return isFuture ? `in ${days}d` : `${days}d ago`;
 }

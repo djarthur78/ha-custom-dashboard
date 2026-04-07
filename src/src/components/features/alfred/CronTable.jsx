@@ -89,7 +89,7 @@ export function CronTable() {
                   {job.name || job.label || `Job ${i + 1}`}
                 </td>
                 <td className="py-1.5 px-2" style={{ color: 'var(--ds-text-secondary)' }}>
-                  {job.next_run || job.schedule || '--'}
+                  {formatRelativeTime(job.next_run)}
                 </td>
                 <td className="py-1.5 px-2" style={{ color: 'var(--ds-text-secondary)' }}>
                   {formatRelativeTime(job.last_run)}
