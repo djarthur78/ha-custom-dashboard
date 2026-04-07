@@ -1,9 +1,10 @@
 /**
  * StatusHero Component
- * Left panel: Alfred status, Discord connectivity, memory stats
+ * Left panel: Alfred status, task stats, memory, Discord, restart button
  */
 
-import { Bot, Database, Brain, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { Bot, Database, Brain, RefreshCw, RotateCcw, Loader2 } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import { ALFRED_GATEWAY, ALFRED_DATA } from './alfredConfig';
 
@@ -36,14 +37,43 @@ function StatBox({ label, value, icon: Icon }) {
   );
 }
 
+function TaskStat({ label, value, color }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="text-xl font-bold" style={{ color }}>{value ?? '--'}</div>
+      <div className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--ds-text-secondary)' }}>{label}</div>
+    </div>
+  );
+}
+
 export function StatusHero({ refreshing, error, onRefresh }) {
   const health = useEntity(ALFRED_GATEWAY.health);
   const status = useEntity(ALFRED_GATEWAY.status);
   const memory = useEntity(ALFRED_DATA.memoryStatus);
+  const taskStats = useEntity('sensor.alfred_task_stats');
+
+  const [restarting, setRestarting] = useState(false);
+  const [restartResult, setRestartResult] = useState(null); // 'ok' | 'error' | null
 
   const isOnline = health.state && health.state !== 'unavailable' && health.state !== 'unknown' && health.state !== 'offline';
   const attrs = status.attributes || {};
   const memAttrs = memory.attributes || {};
+  const tasks = taskStats.attributes || {};
+
+  async function handleRestart() {
+    setRestarting(true);
+    setRestartResult(null);
+    try {
+      const resp = await fetch('http://192.168.1.150:18800/alfred/restart');
+      const data = await resp.json();
+      setRestartResult(data.ok ? 'ok' : 'error');
+    } catch {
+      setRestartResult('error');
+    } finally {
+      setRestarting(false);
+      setTimeout(() => setRestartResult(null), 4000);
+    }
+  }
 
   return (
     <div
@@ -82,7 +112,7 @@ export function StatusHero({ refreshing, error, onRefresh }) {
         <div className="text-2xl font-bold mb-1" style={{ color: 'var(--ds-text)' }}>Alfred</div>
 
         {/* Online status */}
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-3">
           <div
             className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'animate-pulse' : ''}`}
             style={{ backgroundColor: isOnline ? 'var(--ds-state-on)' : 'var(--ds-state-off)' }}
@@ -105,8 +135,36 @@ export function StatusHero({ refreshing, error, onRefresh }) {
           </div>
         )}
 
+        {/* Task Stats */}
+        <div
+          className="w-full rounded-lg px-3 py-2.5 mb-4"
+          style={{ backgroundColor: 'var(--ds-warm-inactive-bg)' }}
+        >
+          <div
+            className="text-[10px] font-semibold uppercase tracking-wider mb-2"
+            style={{ color: 'var(--ds-text-secondary)' }}
+          >
+            Tasks
+          </div>
+          <div className="grid grid-cols-4 gap-1 mb-2">
+            <TaskStat label="Succeeded" value={tasks.succeeded} color="var(--ds-state-on)" />
+            <TaskStat label="Failed" value={tasks.failed} color="var(--ds-state-off)" />
+            <TaskStat label="Timed Out" value={tasks.timed_out} color="var(--ds-health-warn)" />
+            <TaskStat
+              label="Active"
+              value={tasks.active > 0 || tasks.running > 0 ? (tasks.active || 0) + (tasks.running || 0) : '--'}
+              color="var(--ds-health-info)"
+            />
+          </div>
+          {tasks.sessions_count != null && (
+            <div className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>
+              {tasks.sessions_count} sessions · {tasks.total || 0} total tasks
+            </div>
+          )}
+        </div>
+
         {/* Memory Stats */}
-        <div className="flex gap-4 mb-6 w-full justify-center">
+        <div className="flex gap-4 mb-4 w-full justify-center">
           <StatBox label="Files" value={memAttrs.total_files} icon={Database} />
           <StatBox label="Chunks" value={memAttrs.total_chunks} icon={Brain} />
         </div>
@@ -116,6 +174,44 @@ export function StatusHero({ refreshing, error, onRefresh }) {
           <ConnBadge label="Discord" connected={attrs.discord_connected} />
         </div>
       </div>
+
+      {/* Restart Button */}
+      <button
+        onClick={handleRestart}
+        disabled={restarting}
+        className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        style={{
+          backgroundColor: restartResult === 'ok'
+            ? 'var(--ds-state-on-bg)'
+            : restartResult === 'error'
+              ? 'var(--ds-state-off-bg)'
+              : 'transparent',
+          color: restartResult === 'ok'
+            ? 'var(--ds-state-on)'
+            : restartResult === 'error'
+              ? 'var(--ds-state-off)'
+              : 'var(--ds-text-secondary)',
+          border: `1px solid ${restartResult === 'ok' ? 'var(--ds-state-on)' : restartResult === 'error' ? 'var(--ds-state-off)' : 'var(--ds-accent)'}`,
+          cursor: restarting ? 'wait' : 'pointer',
+          opacity: restarting ? 0.7 : 1,
+        }}
+      >
+        {restarting ? (
+          <>
+            <Loader2 size={14} className="animate-spin" />
+            Running doctor...
+          </>
+        ) : restartResult === 'ok' ? (
+          'Doctor completed'
+        ) : restartResult === 'error' ? (
+          'Doctor failed'
+        ) : (
+          <>
+            <RotateCcw size={14} />
+            Restart Alfred
+          </>
+        )}
+      </button>
     </div>
   );
 }

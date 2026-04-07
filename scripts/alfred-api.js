@@ -260,6 +260,32 @@ function collectData() {
   pushToHA('sensor.alfred_gateway_health', { state: gwUp ? 'ok' : 'offline', attributes: gwAttrs });
   pushToHA('sensor.alfred_gateway_status', { state: gwUp ? 'online' : 'offline', attributes: statusAttrs });
 
+  // Task stats from openclaw status
+  if (ocStatus?.tasks) {
+    const t = ocStatus.tasks;
+    const sessionsCount = ocStatus.sessions?.count ?? ocStatus.agents?.totalSessions ?? null;
+    pushToHA('sensor.alfred_task_stats', {
+      state: String(t.total || 0),
+      attributes: {
+        friendly_name: 'Alfred Task Stats',
+        icon: 'mdi:clipboard-check-outline',
+        unit_of_measurement: 'tasks',
+        total: t.total || 0,
+        active: t.active || 0,
+        terminal: t.terminal || 0,
+        failures: t.failures || 0,
+        succeeded: t.byStatus?.succeeded || 0,
+        failed: t.byStatus?.failed || 0,
+        timed_out: t.byStatus?.timed_out || 0,
+        running: t.byStatus?.running || 0,
+        queued: t.byStatus?.queued || 0,
+        cancelled: t.byStatus?.cancelled || 0,
+        lost: t.byStatus?.lost || 0,
+        sessions_count: sessionsCount,
+      }
+    });
+  }
+
   // Token usage from session JSONL files
   data.tokenUsage = collectTokenUsage();
   if (data.tokenUsage) {
@@ -283,6 +309,23 @@ const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  if (req.url === '/alfred/restart') {
+    try {
+      const output = execSync(`${OPENCLAW} doctor --fix --non-interactive`, {
+        timeout: 60000,
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: { ...process.env, PATH: `${process.env.HOME}/.npm-global/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin` },
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, output: output.trim() }));
+    } catch (err) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, output: (err.stdout || '') + (err.stderr || '') }));
+    }
+    return;
+  }
 
   if (req.url === '/alfred' || req.url === '/alfred/refresh') {
     try {

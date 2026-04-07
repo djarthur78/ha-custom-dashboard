@@ -76,6 +76,31 @@ export function TokenUsage() {
         </span>
       </div>
 
+      {/* ChatGPT Plus plan context */}
+      {week && (
+        <div
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg mb-3 text-xs"
+          style={{ backgroundColor: 'var(--ds-warm-inactive-bg)' }}
+        >
+          <span style={{ color: 'var(--ds-text-secondary)' }}>
+            Plan: <span style={{ color: 'var(--ds-text)' }}>Plus ($20/mo flat)</span> — API equiv: <span style={{ color: 'var(--ds-text)' }}>${(week.cost || 0).toFixed(2)}/wk</span>
+          </span>
+          {week.cost > 20 ? (
+            <span style={{ color: 'var(--ds-state-off)', fontWeight: 600 }}>
+              {'\u26A0'} Exceeding plan equivalent
+            </span>
+          ) : week.cost < 15 ? (
+            <span style={{ color: 'var(--ds-state-on)', fontWeight: 600 }}>
+              Within budget
+            </span>
+          ) : (
+            <span style={{ color: 'var(--ds-health-warn)', fontWeight: 600 }}>
+              Approaching limit
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Today vs Week headline */}
       <div className="flex gap-6 mb-4">
         {today && (
