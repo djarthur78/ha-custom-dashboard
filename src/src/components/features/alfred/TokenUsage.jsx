@@ -72,7 +72,7 @@ export function TokenUsage() {
           className="text-xs font-semibold uppercase tracking-wider"
           style={{ color: 'var(--ds-text-secondary)' }}
         >
-          Token Usage
+          Token Usage (OpenAI)
         </span>
       </div>
 
