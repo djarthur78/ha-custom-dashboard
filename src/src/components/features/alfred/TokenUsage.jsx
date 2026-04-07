@@ -13,6 +13,11 @@ function formatTokens(n) {
   return String(n);
 }
 
+function formatNumber(n) {
+  if (n == null) return '--';
+  return n.toLocaleString();
+}
+
 function UsageBar({ label, value, max, color }) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   return (
@@ -47,9 +52,8 @@ function PeriodBlock({ label, data }) {
   return (
     <div className="flex-1 min-w-0">
       <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--ds-text-secondary)' }}>{label}</div>
-      <div className="text-xl font-bold" style={{ color: 'var(--ds-text)' }}>{formatTokens(data.totalTokens)}</div>
-      <div className="text-sm font-semibold" style={{ color: 'var(--ds-accent)' }}>${data.cost?.toFixed(2)}</div>
-      <div className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>{data.requests} reqs</div>
+      <div className="text-xl font-bold" style={{ color: 'var(--ds-text)' }}>{formatNumber(data.requests)} <span className="text-sm font-medium" style={{ color: 'var(--ds-text-secondary)' }}>reqs</span></div>
+      <div className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>{formatTokens(data.totalTokens)} tokens · ${data.cost?.toFixed(2)}</div>
     </div>
   );
 }
@@ -74,22 +78,12 @@ export function TokenUsage() {
     );
   }
 
-  const BUDGET = 20.00;
-  const used = thisCycle?.cost || 0;
-  const remaining = BUDGET - used;
-  const budgetPct = Math.min((used / BUDGET) * 100, 100);
-  const budgetColor = remaining < 0
-    ? 'var(--ds-state-off)'
-    : remaining < 5
-      ? 'var(--ds-health-warn)'
-      : 'var(--ds-state-on)';
-
   const maxCronCost = cronJobs.length > 0 ? cronJobs[0].cost : 1;
 
   return (
     <div className="ds-card h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-1">
         <Zap size={16} style={{ color: 'var(--ds-accent)' }} />
         <span
           className="text-xs font-semibold uppercase tracking-wider"
@@ -98,60 +92,31 @@ export function TokenUsage() {
           Token Usage (OpenAI)
         </span>
       </div>
+      <div className="text-xs mb-3" style={{ color: 'var(--ds-text-secondary)' }}>
+        Plus plan · No token limits · Cycle resets Monday
+      </div>
 
       {/* Three period headline */}
-      <div className="flex gap-4 mb-2">
+      <div className="flex gap-4 mb-3">
         <PeriodBlock label="Last Cycle" data={lastCycle} />
         <PeriodBlock label="This Cycle" data={thisCycle} />
         <PeriodBlock label="Today" data={today} />
-        {/* Model breakdown */}
-        {models.length > 0 && (
-          <div className="ml-auto text-right flex-shrink-0">
-            <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--ds-text-secondary)' }}>Models</div>
-            {models.slice(0, 3).map(m => (
+      </div>
+
+      {/* Model breakdown */}
+      {models.length > 0 && (
+        <div className="mb-3">
+          <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--ds-text-secondary)' }}>Models</div>
+          <div className="flex flex-wrap gap-x-4 gap-y-0.5">
+            {models.slice(0, 4).map(m => (
               <div key={m.name} className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>
                 <span style={{ color: 'var(--ds-text)' }}>{m.name.split('/').pop()}</span>
                 {' '}{formatTokens(m.tokens)} · ${m.cost.toFixed(2)}
               </div>
             ))}
           </div>
-        )}
-      </div>
-
-      {/* Cycle reset + Budget bar */}
-      <div className="mb-4">
-        <div className="text-xs mb-2" style={{ color: 'var(--ds-text-secondary)' }}>
-          Cycle resets: Monday
         </div>
-        <div className="flex items-center gap-2 text-xs mb-1">
-          <span style={{ color: 'var(--ds-text-secondary)' }}>
-            $20.00 plan
-          </span>
-          <span style={{ color: 'var(--ds-text)' }}>
-            — ${used.toFixed(2)} used
-          </span>
-          <span style={{ color: budgetColor, fontWeight: 600 }}>
-            {remaining < 0
-              ? `— Over budget by $${Math.abs(remaining).toFixed(2)}`
-              : `— $${remaining.toFixed(2)} remaining`
-            }
-          </span>
-        </div>
-        <div
-          className="w-full h-2.5 rounded-full overflow-hidden"
-          style={{ backgroundColor: 'var(--ds-warm-inactive-bg)' }}
-        >
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${budgetPct}%`,
-              backgroundColor: budgetColor,
-              transition: 'width 0.7s ease-out',
-              minWidth: used > 0 ? '4px' : '0',
-            }}
-          />
-        </div>
-      </div>
+      )}
 
       {/* Per-cron cost bars */}
       {cronJobs.length > 0 && (

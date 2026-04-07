@@ -168,7 +168,56 @@ function collectTokenUsage() {
       .map(([name, v]) => ({ name, ...v, cost: Math.round(v.cost * 100) / 100 }))
       .sort((a, b) => b.cost - a.cost);
 
-    return { today, thisCycle, lastCycle, models, cronJobs };
+    // Rolling 14-day stats
+    const fourteenDaysAgo = now.getTime() - (14 * 86400000);
+    let r14Sessions = 0, r14Succeeded = 0, r14Failed = 0, r14RateLimitHits = 0, r14Requests = 0;
+
+    for (const file of files) {
+      const filePath = path.join(sessionsDir, file);
+      const stat = fs.statSync(filePath);
+      if (stat.mtimeMs < fourteenDaysAgo) continue;
+
+      r14Sessions++;
+      const content = fs.readFileSync(filePath, 'utf8');
+      const lines = content.split('\n');
+      let hasUsage = false;
+
+      for (const line of lines) {
+        if (!line) continue;
+        try {
+          const entry = JSON.parse(line);
+
+          // Count requests with usage data
+          if (line.includes('"usage"') && entry?.message?.usage) {
+            hasUsage = true;
+            const ts = entry.timestamp ? new Date(entry.timestamp).getTime() : 0;
+            if (ts >= fourteenDaysAgo) r14Requests++;
+          }
+
+          // Check for rate limit hits in custom events
+          if (entry?.type === 'custom' || entry?.type === 'event') {
+            const eventStr = JSON.stringify(entry).toLowerCase();
+            if (eventStr.includes('429') || eventStr.includes('rate_limit') || eventStr.includes('rate limit')) {
+              r14RateLimitHits++;
+            }
+          }
+        } catch { /* skip */ }
+      }
+
+      if (hasUsage) r14Succeeded++;
+    }
+
+    const r14Total = r14Sessions;
+    const rolling14d = {
+      sessions: r14Sessions,
+      succeeded: r14Succeeded,
+      failed: r14Total - r14Succeeded,
+      rateLimitHits: r14RateLimitHits,
+      successRate: r14Total > 0 ? Math.round(r14Succeeded / r14Total * 100) : 0,
+      avgRequestsPerDay: Math.round(r14Requests / 14),
+    };
+
+    return { today, thisCycle, lastCycle, models, cronJobs, rolling14d };
   } catch {
     return null;
   }
@@ -267,7 +316,7 @@ function collectData() {
   pushToHA('sensor.alfred_gateway_health', { state: gwUp ? 'ok' : 'offline', attributes: gwAttrs });
   pushToHA('sensor.alfred_gateway_status', { state: gwUp ? 'online' : 'offline', attributes: statusAttrs });
 
-  // Task stats from openclaw status
+  // Task stats from openclaw status + rolling 14d health
   if (ocStatus?.tasks) {
     const t = ocStatus.tasks;
     const sessionsCount = ocStatus.sessions?.count ?? ocStatus.agents?.totalSessions ?? null;
@@ -279,15 +328,8 @@ function collectData() {
         unit_of_measurement: 'tasks',
         total: t.total || 0,
         active: t.active || 0,
-        terminal: t.terminal || 0,
-        failures: t.failures || 0,
-        succeeded: t.byStatus?.succeeded || 0,
-        failed: t.byStatus?.failed || 0,
-        timed_out: t.byStatus?.timed_out || 0,
         running: t.byStatus?.running || 0,
         queued: t.byStatus?.queued || 0,
-        cancelled: t.byStatus?.cancelled || 0,
-        lost: t.byStatus?.lost || 0,
         sessions_count: sessionsCount,
       }
     });

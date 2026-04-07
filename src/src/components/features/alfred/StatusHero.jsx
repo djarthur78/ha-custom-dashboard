@@ -50,6 +50,8 @@ export function StatusHero({ refreshing, error, onRefresh }) {
   const attrs = status.attributes || {};
   const memAttrs = memory.attributes || {};
   const tasks = taskStats.attributes || {};
+  const tokenEntity = useEntity('sensor.alfred_token_usage');
+  const rolling14d = tokenEntity.attributes?.rolling14d || {};
 
   async function handleRestart() {
     setRestarting(true);
@@ -126,18 +128,16 @@ export function StatusHero({ refreshing, error, onRefresh }) {
           </div>
         )}
 
-        {/* Task Stats */}
+        {/* 14-Day Health */}
         {(() => {
-          const succeeded = tasks.succeeded || 0;
-          const failed = tasks.failed || 0;
-          const timedOut = tasks.timed_out || 0;
-          const total = succeeded + failed + timedOut;
-          const rate = total > 0 ? Math.round(succeeded / total * 100) : null;
+          const rate = rolling14d.successRate ?? null;
           const activeCount = (tasks.active || 0) + (tasks.running || 0);
+          const rateLimitHits = rolling14d.rateLimitHits ?? 0;
+          const avgReqs = rolling14d.avgRequestsPerDay ?? 0;
           return (
             <div className="mb-4 text-center">
               {rate != null && (
-                <div className="text-3xl font-bold" style={{ color: rate >= 80 ? 'var(--ds-state-on)' : rate >= 50 ? 'var(--ds-health-warn)' : 'var(--ds-state-off)' }}>
+                <div className="text-3xl font-bold" style={{ color: rate >= 95 ? 'var(--ds-state-on)' : rate >= 80 ? 'var(--ds-health-warn)' : 'var(--ds-state-off)' }}>
                   {rate}%
                   <span className="text-xs font-medium ml-1" style={{ color: 'var(--ds-text-secondary)' }}>success</span>
                 </div>
@@ -148,7 +148,7 @@ export function StatusHero({ refreshing, error, onRefresh }) {
                 </div>
               )}
               <div className="text-xs mt-1" style={{ color: 'var(--ds-text-secondary)' }}>
-                {succeeded} succeeded · {failed} failed · {timedOut} timed out (all time)
+                {rateLimitHits} rate limit hits · ~{avgReqs} req/day (14d)
               </div>
             </div>
           );
