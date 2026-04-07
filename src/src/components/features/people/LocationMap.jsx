@@ -121,15 +121,15 @@ function MapBoundsUpdater({ people, selectedPersonId }) {
       [0, 0]
     );
 
-    if (peopleBounds.length === 1 || maxSpreadKm < 1) {
-      // All people within 1km: center on midpoint, zoom 15
-      map.setView(centroid, 15, { animate: true, duration: 0.5 });
-    } else if (maxSpreadKm > 50) {
-      // Very spread: fitBounds with generous padding
-      map.fitBounds(peopleBounds, { padding: [80, 80], maxZoom: 16 });
+    // Always fitBounds to show all people — zooms to street level when close,
+    // zooms out when spread across cities
+    if (peopleBounds.length === 1) {
+      // Single person: center on them at street level
+      map.setView(peopleBounds[0], 16, { animate: true, duration: 0.5 });
     } else {
-      // Moderate spread: fitBounds with padding
-      map.fitBounds(peopleBounds, { padding: [60, 60], maxZoom: 16 });
+      // Multiple people: fit all in view with appropriate padding
+      const padding = maxSpreadKm > 50 ? [80, 80] : [60, 60];
+      map.fitBounds(peopleBounds, { padding, maxZoom: 17 });
     }
   }, [people, selectedPersonId, map]);
 
