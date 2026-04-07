@@ -54,32 +54,63 @@ function collectTokenUsage() {
 
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const weekStart = todayStart - (now.getDay() * 86400000); // Start of week (Sunday)
+    // Monday-based week
+    const dayOfWeek = now.getDay() === 0 ? 6 : now.getDay() - 1;
+    const weekStart = todayStart - (dayOfWeek * 86400000);
 
     const files = fs.readdirSync(sessionsDir).filter(f => f.endsWith('.jsonl'));
 
-    let today = { totalTokens: 0, input: 0, output: 0, cost: 0, requests: 0 };
-    let week = { totalTokens: 0, input: 0, output: 0, cost: 0, requests: 0 };
+    const today = { totalTokens: 0, input: 0, output: 0, cost: 0, requests: 0 };
+    const week = { totalTokens: 0, input: 0, output: 0, cost: 0, requests: 0 };
+    const byModel = {};   // { "openai-codex/gpt-5.4": { tokens, cost, requests } }
+    const byCron = {};     // { "Morning Brief": { tokens, cost, runs } }
 
     for (const file of files) {
       const filePath = path.join(sessionsDir, file);
       const stat = fs.statSync(filePath);
-      // Skip files older than 7 days
       if (stat.mtimeMs < weekStart) continue;
 
       const content = fs.readFileSync(filePath, 'utf8');
-      for (const line of content.split('\n')) {
-        if (!line.includes('"usage"')) continue;
+      const lines = content.split('\n');
+
+      // Detect cron job name from first user message: [cron:<id> <name>]
+      let cronName = null;
+      let sessionTokens = 0;
+      let sessionCost = 0;
+
+      for (const line of lines) {
+        if (!line) continue;
         try {
           const entry = JSON.parse(line);
+
+          // Detect cron session from first user message
+          if (!cronName && entry?.type === 'message' && entry?.message?.role === 'user') {
+            const text = typeof entry.message.content === 'string'
+              ? entry.message.content
+              : Array.isArray(entry.message.content)
+                ? entry.message.content.find(c => c.type === 'text')?.text || ''
+                : '';
+            const match = text.match(/^\[cron:[a-f0-9-]+\s+([^\]]+)\]/);
+            if (match) cronName = match[1];
+          }
+
+          if (!line.includes('"usage"')) continue;
           const usage = entry?.message?.usage;
           if (!usage) continue;
 
           const ts = entry.timestamp ? new Date(entry.timestamp).getTime() : 0;
-          const tokens = (usage.input || 0) + (usage.output || 0) + (usage.cacheRead || 0);
+          const tokens = (usage.input || 0) + (usage.output || 0);
           const cost = usage.cost?.total || 0;
+          const provider = entry.message?.provider || 'unknown';
+          const model = entry.message?.model || 'unknown';
+          const modelKey = `${provider}/${model}`;
 
+          // Per-model tracking
+          if (!byModel[modelKey]) byModel[modelKey] = { tokens: 0, cost: 0, requests: 0 };
           if (ts >= weekStart) {
+            byModel[modelKey].tokens += tokens;
+            byModel[modelKey].cost += cost;
+            byModel[modelKey].requests++;
             week.totalTokens += tokens;
             week.input += usage.input || 0;
             week.output += usage.output || 0;
@@ -93,7 +124,18 @@ function collectTokenUsage() {
             today.cost += cost;
             today.requests++;
           }
-        } catch { /* skip malformed lines */ }
+
+          sessionTokens += tokens;
+          sessionCost += cost;
+        } catch { /* skip */ }
+      }
+
+      // Attribute session to cron job
+      if (cronName && sessionTokens > 0) {
+        if (!byCron[cronName]) byCron[cronName] = { tokens: 0, cost: 0, runs: 0 };
+        byCron[cronName].tokens += sessionTokens;
+        byCron[cronName].cost += sessionCost;
+        byCron[cronName].runs++;
       }
     }
 
@@ -101,7 +143,18 @@ function collectTokenUsage() {
     today.cost = Math.round(today.cost * 100) / 100;
     week.cost = Math.round(week.cost * 100) / 100;
 
-    return { today, week };
+    // Sort models by cost desc
+    const models = Object.entries(byModel)
+      .filter(([, v]) => v.tokens > 0)
+      .map(([name, v]) => ({ name, ...v, cost: Math.round(v.cost * 100) / 100 }))
+      .sort((a, b) => b.cost - a.cost);
+
+    // Sort cron jobs by cost desc
+    const cronJobs = Object.entries(byCron)
+      .map(([name, v]) => ({ name, ...v, cost: Math.round(v.cost * 100) / 100 }))
+      .sort((a, b) => b.cost - a.cost);
+
+    return { today, week, models, cronJobs };
   } catch {
     return null;
   }
@@ -178,11 +231,30 @@ function collectData() {
   pushToHA('binary_sensor.alfred_ha_check', { state: 'on', attributes: { friendly_name: 'Home Assistant', device_class: 'connectivity' } });
   pushToHA('binary_sensor.alfred_pihole', { state: piholeUp ? 'on' : 'off', attributes: { friendly_name: 'Pi-hole', device_class: 'connectivity' } });
 
-  // Gateway health
-  pushToHA('sensor.alfred_gateway_health', {
-    state: gwUp ? 'ok' : 'offline',
-    attributes: { friendly_name: 'Alfred Gateway Health', icon: gwUp ? 'mdi:server' : 'mdi:server-off' }
-  });
+  // Gateway health + channel connectivity
+  const statusRaw = gwUp ? run('curl -s --connect-timeout 2 http://localhost:18789/api/status') : null;
+  let gwAttrs = { friendly_name: 'Alfred Gateway Health', icon: gwUp ? 'mdi:server' : 'mdi:server-off' };
+  let statusAttrs = { friendly_name: 'Alfred Gateway Status', icon: 'mdi:robot' };
+
+  // Check Discord/channel connectivity from gateway or openclaw status
+  const ocStatusRaw = run(`${OPENCLAW} status --json`, 30000);
+  const ocStatus = parseOpenclawJson(ocStatusRaw);
+  if (ocStatus) {
+    const channels = ocStatus.channelSummary || [];
+    const discordUp = channels.some(c => typeof c === 'string' && c.toLowerCase().includes('discord') && c.toLowerCase().includes('configured'));
+    statusAttrs.discord_connected = discordUp;
+    statusAttrs.model = `Codex ${ocStatus.runtimeVersion || ''}`;
+    if (ocStatus.gateway?.self) {
+      gwAttrs.version = ocStatus.runtimeVersion;
+      gwAttrs.host = ocStatus.gateway.self.host;
+    }
+    if (ocStatus.gatewayService) {
+      statusAttrs.uptime = ocStatus.gatewayService.runtimeShort;
+    }
+  }
+
+  pushToHA('sensor.alfred_gateway_health', { state: gwUp ? 'ok' : 'offline', attributes: gwAttrs });
+  pushToHA('sensor.alfred_gateway_status', { state: gwUp ? 'online' : 'offline', attributes: statusAttrs });
 
   // Token usage from session JSONL files
   data.tokenUsage = collectTokenUsage();

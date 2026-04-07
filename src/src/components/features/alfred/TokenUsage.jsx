@@ -1,48 +1,29 @@
 /**
  * TokenUsage Component
- * Shows OpenAI token usage for today and this week
+ * Shows OpenAI token usage: today/week totals, model breakdown, per-cron costs
  */
 
 import { Zap, AlertCircle } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 
-function UsageStat({ label, tokens, cost, requests }) {
-  const formattedTokens = tokens != null
-    ? tokens > 1000000 ? `${(tokens / 1000000).toFixed(1)}M`
-    : tokens > 1000 ? `${(tokens / 1000).toFixed(0)}K`
-    : String(tokens)
-    : '--';
-
-  return (
-    <div className="flex-1">
-      <div className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--ds-text-secondary)' }}>
-        {label}
-      </div>
-      <div className="text-2xl font-bold" style={{ color: 'var(--ds-text)' }}>
-        {formattedTokens}
-      </div>
-      <div className="text-xs mt-1" style={{ color: 'var(--ds-text-secondary)' }}>tokens</div>
-      {cost != null && (
-        <div className="text-sm font-semibold mt-2" style={{ color: 'var(--ds-accent)' }}>
-          ${cost.toFixed(2)}
-        </div>
-      )}
-      {requests != null && (
-        <div className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>
-          {requests} requests
-        </div>
-      )}
-    </div>
-  );
+function formatTokens(n) {
+  if (n == null) return '--';
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(0)}K`;
+  return String(n);
 }
 
 function UsageBar({ label, value, max, color }) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
-  const formatted = value > 1000 ? `${(value / 1000).toFixed(0)}K` : String(value || 0);
-
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-12 text-xs" style={{ color: 'var(--ds-text-secondary)' }}>{label}</div>
+    <div className="flex items-center gap-2" style={{ height: '24px' }}>
+      <div
+        className="w-28 text-xs font-medium truncate text-right"
+        style={{ color: 'var(--ds-text-secondary)' }}
+        title={label}
+      >
+        {label}
+      </div>
       <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--ds-warm-inactive-bg)' }}>
         <div
           className="h-full rounded-full"
@@ -54,8 +35,8 @@ function UsageBar({ label, value, max, color }) {
           }}
         />
       </div>
-      <div className="w-12 text-xs font-semibold text-right" style={{ color: 'var(--ds-text)' }}>
-        {formatted}
+      <div className="w-16 text-xs font-semibold text-right" style={{ color: 'var(--ds-text)' }}>
+        ${typeof value === 'number' ? value.toFixed(2) : value}
       </div>
     </div>
   );
@@ -66,6 +47,8 @@ export function TokenUsage() {
   const attrs = entity.attributes || {};
   const today = attrs.today || null;
   const week = attrs.week || null;
+  const models = attrs.models || [];
+  const cronJobs = attrs.cronJobs || [];
 
   if (!today && !week) {
     return (
@@ -78,7 +61,7 @@ export function TokenUsage() {
     );
   }
 
-  const maxTokens = Math.max(today?.totalTokens || 0, week?.totalTokens || 0, 1);
+  const maxCronCost = cronJobs.length > 0 ? cronJobs[0].cost : 1;
 
   return (
     <div className="ds-card h-full flex flex-col overflow-hidden">
@@ -93,18 +76,59 @@ export function TokenUsage() {
         </span>
       </div>
 
-      {/* Today vs Week */}
-      <div className="flex gap-4 mb-4">
-        {today && <UsageStat label="Today" tokens={today.totalTokens} cost={today.cost} requests={today.requests} />}
-        {week && <UsageStat label="This Week" tokens={week.totalTokens} cost={week.cost} requests={week.requests} />}
+      {/* Today vs Week headline */}
+      <div className="flex gap-6 mb-4">
+        {today && (
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--ds-text-secondary)' }}>Today</div>
+            <div className="text-2xl font-bold" style={{ color: 'var(--ds-text)' }}>{formatTokens(today.totalTokens)}</div>
+            <div className="text-sm font-semibold" style={{ color: 'var(--ds-accent)' }}>${today.cost?.toFixed(2)}</div>
+            <div className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>{today.requests} reqs</div>
+          </div>
+        )}
+        {week && (
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--ds-text-secondary)' }}>This Week</div>
+            <div className="text-2xl font-bold" style={{ color: 'var(--ds-text)' }}>{formatTokens(week.totalTokens)}</div>
+            <div className="text-sm font-semibold" style={{ color: 'var(--ds-accent)' }}>${week.cost?.toFixed(2)}</div>
+            <div className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>{week.requests} reqs</div>
+          </div>
+        )}
+        {/* Model breakdown */}
+        {models.length > 0 && (
+          <div className="ml-auto text-right">
+            <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--ds-text-secondary)' }}>Models</div>
+            {models.slice(0, 3).map(m => (
+              <div key={m.name} className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>
+                <span style={{ color: 'var(--ds-text)' }}>{m.name.split('/').pop()}</span>
+                {' '}{formatTokens(m.tokens)} · ${m.cost.toFixed(2)}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Breakdown bars */}
-      {today && (
-        <div className="flex flex-col gap-2">
-          <UsageBar label="Input" value={today.input} max={maxTokens} color="var(--ds-health-info)" />
-          <UsageBar label="Output" value={today.output} max={maxTokens} color="var(--ds-health-accent)" />
-        </div>
+      {/* Per-cron cost bars */}
+      {cronJobs.length > 0 && (
+        <>
+          <div
+            className="text-xs font-semibold uppercase tracking-wider mb-2 pt-2"
+            style={{ color: 'var(--ds-text-secondary)', borderTop: '1px solid var(--ds-border)' }}
+          >
+            Cost by Cron Job (this week)
+          </div>
+          <div className="flex-1 overflow-y-auto flex flex-col gap-0.5">
+            {cronJobs.map(job => (
+              <UsageBar
+                key={job.name}
+                label={job.name}
+                value={job.cost}
+                max={maxCronCost}
+                color="var(--ds-health-info)"
+              />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
