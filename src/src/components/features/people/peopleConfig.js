@@ -15,7 +15,7 @@ export const FAMILY_MEMBERS = [
     id: 'nic',
     personEntity: 'person.nic',
     label: 'Nic',
-    sensorPrefix: 'nicholas_iphone_2',
+    sensorPrefix: 'nicholas_iphone',
     color: '#ec4899', // pink
     avatarFallback: 'N'
   },
