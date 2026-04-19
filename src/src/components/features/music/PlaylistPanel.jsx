@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Music, ChevronLeft, ListMusic, Library, RefreshCw, SkipForward, Play, FolderOpen } from 'lucide-react';
+import { Music, ChevronLeft, ListMusic, Library, RefreshCw, SkipForward, Play, FolderOpen, Plus } from 'lucide-react';
 import { useBrowseMedia } from './hooks/useBrowseMedia';
 import { SPOTIFY_ACCOUNTS } from './musicConfig';
 import haWebSocket from '../../../services/ha-websocket';
@@ -219,6 +219,26 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     console.log(`[PlaylistPanel] Queue complete: ${enqueued} enqueued, ${failed} failed, out of ${tracks.length - 1} tracks`);
   };
 
+  // Append a single playlist/album/track to the current Sonos queue without
+  // disturbing what's playing. Used by the "+" button on every row.
+  const [addFeedback, setAddFeedback] = useState(null); // { id, status: 'ok'|'err' }
+  const handleAddToQueue = async (mediaContentId, mediaContentType) => {
+    if (!activeSpeaker) return;
+    try {
+      await haWebSocket.callService('media_player', 'play_media', {
+        entity_id: activeSpeaker.entityId,
+        media_content_id: mediaContentId,
+        media_content_type: mediaContentType,
+        enqueue: 'add',
+      });
+      setAddFeedback({ id: mediaContentId, status: 'ok' });
+    } catch (err) {
+      console.error('[PlaylistPanel] Add to queue failed:', err);
+      setAddFeedback({ id: mediaContentId, status: 'err' });
+    }
+    setTimeout(() => setAddFeedback(null), 1500);
+  };
+
   // IMPORTANT: Always browse using the Sonos speaker entity (not Spotify entity)
   const handleBrowseInto = (item) => {
     if (activeSpeaker?.entityId) {
@@ -354,30 +374,45 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                   </button>
                 </div>
 
-                {/* Replace Playlist button for non-playlist browse views */}
+                {/* Replace / Add buttons for non-playlist browse views */}
                 {/* When items are loaded (track listing), play first track instead of container
                     because Sonos silently rejects some container types (e.g. Liked Songs) */}
                 {currentItem && currentItem.can_play && title !== 'Playlists' && (
-                  <button
-                    onClick={() => {
-                      // Play the container (album/playlist) so Sonos loads the full queue.
-                      // Stop-then-play in handlePlayPlaylist makes this reliable even cross-account.
-                      // Pass items as preloaded tracks so queue view works immediately.
-                      handlePlayPlaylist(currentItem.media_content_id, currentItem.media_content_type, items);
-                    }}
-                    disabled={playLoading}
-                    className="w-full mb-3 flex items-center justify-center gap-2 py-3 px-4 rounded-lg
-                               text-base font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]
-                               disabled:opacity-60"
-                    style={{ backgroundColor: 'var(--ds-accent)' }}
-                  >
-                    {playLoading ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Play size={18} fill="white" />
-                    )}
-                    {playLoading ? 'Loading...' : 'Replace Playlist'}
-                  </button>
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() =>
+                        handlePlayPlaylist(currentItem.media_content_id, currentItem.media_content_type, items)
+                      }
+                      disabled={playLoading}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg
+                                 text-base font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]
+                                 disabled:opacity-60"
+                      style={{ backgroundColor: 'var(--ds-accent)' }}
+                    >
+                      {playLoading ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Play size={18} fill="white" />
+                      )}
+                      {playLoading ? 'Loading...' : 'Replace Queue'}
+                    </button>
+                    <button
+                      onClick={() =>
+                        handleAddToQueue(currentItem.media_content_id, currentItem.media_content_type)
+                      }
+                      className="flex items-center justify-center gap-2 py-3 px-4 rounded-lg
+                                 text-base font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
+                      style={{
+                        backgroundColor: 'var(--ds-surface-raised, #f0ebe7)',
+                        color: 'var(--ds-accent)',
+                        border: '1px solid var(--ds-accent)',
+                      }}
+                      title="Add to queue"
+                    >
+                      <Plus size={18} />
+                      Add
+                    </button>
+                  </div>
                 )}
 
                 {/* Playlist list */}
@@ -390,6 +425,8 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
                         item={item}
                         isPlaying={lastPlayedPlaylist?.id === item.media_content_id}
                         onPlay={handlePlayPlaylist}
+                        onAdd={handleAddToQueue}
+                        addFeedback={addFeedback?.id === item.media_content_id ? addFeedback.status : null}
                         onBrowse={item.can_expand && (!item.can_play || !isPlaylistsView) ? handleBrowseInto : undefined}
                       />
                     );
@@ -421,12 +458,16 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
 }
 
 /**
- * PlaylistListItem - horizontal row format for playlist items
+ * PlaylistListItem - horizontal row format for playlist items.
+ * Each row shows two action buttons on the right:
+ *   ▶ Replace queue (clears Sonos queue, plays this)
+ *   + Add to queue (appends to current Sonos queue)
+ * Tapping the row body browses into expandable items, or falls back to replace.
  */
-function PlaylistListItem({ item, isPlaying, onPlay, onBrowse }) {
+function PlaylistListItem({ item, isPlaying, onPlay, onAdd, onBrowse, addFeedback }) {
   const [imageError, setImageError] = useState(false);
 
-  const handleClick = () => {
+  const handleRowClick = () => {
     if (onBrowse) {
       onBrowse(item);
     } else if (item.can_play) {
@@ -441,7 +482,7 @@ function PlaylistListItem({ item, isPlaying, onPlay, onBrowse }) {
         ? { backgroundColor: 'var(--ds-accent)', color: 'white' }
         : undefined
       }
-      onClick={handleClick}
+      onClick={handleRowClick}
     >
       {/* Thumbnail */}
       <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
@@ -471,13 +512,46 @@ function PlaylistListItem({ item, isPlaying, onPlay, onBrowse }) {
         {item.title}
       </span>
 
-      {/* Play button */}
+      {/* Action buttons */}
       {item.can_play && (
-        <div
-          className="p-1.5 rounded-full flex-shrink-0"
-          style={{ backgroundColor: isPlaying ? 'rgba(255,255,255,0.2)' : 'rgba(159,86,68,0.1)' }}
-        >
-          <Play size={14} fill={isPlaying ? 'white' : 'var(--ds-accent)'} style={{ color: isPlaying ? 'white' : 'var(--ds-accent)' }} />
+        <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => onPlay(item.media_content_id, item.media_content_type)}
+            className="p-2 rounded-full transition-all hover:scale-110 active:scale-95"
+            style={{ backgroundColor: isPlaying ? 'rgba(255,255,255,0.2)' : 'rgba(159,86,68,0.1)' }}
+            title="Replace queue & play"
+          >
+            <Play
+              size={14}
+              fill={isPlaying ? 'white' : 'var(--ds-accent)'}
+              style={{ color: isPlaying ? 'white' : 'var(--ds-accent)' }}
+            />
+          </button>
+          {onAdd && (
+            <button
+              onClick={() => onAdd(item.media_content_id, item.media_content_type)}
+              className="p-2 rounded-full transition-all hover:scale-110 active:scale-95"
+              style={{
+                backgroundColor: addFeedback === 'ok'
+                  ? 'rgba(74,154,74,0.25)'
+                  : addFeedback === 'err'
+                    ? 'rgba(196,99,106,0.25)'
+                    : (isPlaying ? 'rgba(255,255,255,0.2)' : 'rgba(159,86,68,0.1)'),
+              }}
+              title="Add to queue"
+            >
+              <Plus
+                size={14}
+                style={{
+                  color: addFeedback === 'ok'
+                    ? 'var(--ds-state-on, #4a9a4a)'
+                    : addFeedback === 'err'
+                      ? 'var(--ds-state-off, #b5453a)'
+                      : (isPlaying ? 'white' : 'var(--ds-accent)'),
+                }}
+              />
+            </button>
+          )}
         </div>
       )}
     </div>
