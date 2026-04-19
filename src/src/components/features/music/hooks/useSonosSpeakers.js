@@ -74,15 +74,20 @@ export function useSonosSpeakers() {
   useEffect(() => {
     if (!isConnected) return;
 
-    // Re-initialize from cache when connection is established
-    setSpeakers(
-      SONOS_SPEAKERS.map((config) => ({
-        ...config,
-        ...extractSpeakerData(haWebSocket.getCachedState(config.entityId)),
-      }))
-    );
+    // Initialize from cache once it's ready. If cache isn't ready yet
+    // (race between auth_ok and get_states result), this fires when it is.
+    // Without this wait, speakers start as 'unavailable' and stay that way
+    // until HA fires state_changed — which never happens for idle speakers.
+    haWebSocket.onStateCacheReady(() => {
+      setSpeakers(
+        SONOS_SPEAKERS.map((config) => ({
+          ...config,
+          ...extractSpeakerData(haWebSocket.getCachedState(config.entityId)),
+        }))
+      );
+    });
 
-    // Subscribe to each speaker's state changes
+    // Subscribe to each speaker's state changes for live updates.
     const unsubscribers = SONOS_SPEAKERS.map((config, index) =>
       haWebSocket.subscribeToEntity(config.entityId, (newState) => {
         setSpeakers((prev) => {
