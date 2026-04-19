@@ -107,14 +107,21 @@ export function PlaylistPanel({ activeSpeaker, onPlayMedia, onNextTrack }) {
     setPlayHistory(updated);
     savePlayHistory(updated);
 
-    // Stop current playback first to ensure Sonos queue is cleared
+    // Clear the Sonos queue before building a new one.
+    // Why: media_stop alone pauses playback but leaves the queue intact, so a
+    // subsequent enqueue: 'play' inserts the new track on top of the old queue
+    // (user reported Daz's tracks playing between Nic's after "Replace Playlist").
+    // clear_playlist maps to Sonos ClearQueue(), which actually empties it.
     try {
       await haWebSocket.callService('media_player', 'media_stop', {
         entity_id: activeSpeaker.entityId
       });
+      await haWebSocket.callService('media_player', 'clear_playlist', {
+        entity_id: activeSpeaker.entityId
+      });
       await new Promise(r => setTimeout(r, 500));
     } catch (err) {
-      console.warn('[PlaylistPanel] Stop before play failed:', err);
+      console.warn('[PlaylistPanel] Stop/clear before play failed:', err);
     }
 
     // Helper to store tracks for this speaker + group members
