@@ -14,7 +14,10 @@ import { Modal, ModalFooter } from '../../common/Modal';
 import { usePlaybackControls } from './hooks/usePlaybackControls';
 import { useSpeakerGroups } from './hooks/useSpeakerGroups';
 
-const DINING_ROOM_ENTITY = 'media_player.dining_room';
+// Dining Room Sonos entity_id. Was 'media_player.dining_room' until the
+// 2026-04-26 port change when it came back as 'unnamed_room'. Update if the
+// user renames it back in HA Settings → Devices & Services → Sonos.
+const DINING_ROOM_ENTITY = 'media_player.unnamed_room';
 
 function resolveLineInSource(diningRoom) {
   const list = diningRoom?.sourceList || [];

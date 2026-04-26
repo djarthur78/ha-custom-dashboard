@@ -11,7 +11,11 @@
 export const SONOS_SPEAKERS = [
   { entityId: 'media_player.office',             label: 'Office',       zone: 'downstairs' },
   { entityId: 'media_player.kitchen',            label: 'Kitchen',      zone: 'downstairs' },
-  { entityId: 'media_player.dining_room',        label: 'Dining Room',  zone: 'downstairs' },
+  // After the Sonos port change (2026-04-26) the Dining Room speaker came
+  // back with entity_id 'unnamed_room' instead of 'dining_room'. The friendly
+  // name is still "Dining Room". When the user renames it in HA Settings →
+  // Devices & Services → Sonos, switch this back to media_player.dining_room.
+  { entityId: 'media_player.unnamed_room',       label: 'Dining Room',  zone: 'downstairs' },
   { entityId: 'media_player.living_room',        label: 'Living Room',  zone: 'downstairs' },
   { entityId: 'media_player.games_room',         label: 'Games Room',   zone: 'downstairs' },
   { entityId: 'media_player.gym',                label: 'Gym',          zone: 'downstairs' },
