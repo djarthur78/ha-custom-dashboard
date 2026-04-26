@@ -62,11 +62,17 @@ export function usePlaybackControls() {
       enqueue,
     });
 
+  const selectSource = (entityId, source) =>
+    callService('media_player', 'select_source', {
+      entity_id: entityId,
+      source,
+    });
+
   return {
     playPause, play, pause, next, previous,
     setVolume, toggleMute,
     setShuffle, setRepeat,
-    seek, playMedia,
+    seek, playMedia, selectSource,
     loading, error,
   };
 }

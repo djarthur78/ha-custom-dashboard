@@ -5,11 +5,11 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { format, addDays, subDays, addMonths, subMonths } from 'date-fns';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, RefreshCw } from 'lucide-react';
 import { MobilePageContainer } from '../../components/mobile/MobilePageContainer';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useHAConnection } from '../../hooks/useHAConnection';
-import { fetchAllCalendarEvents } from '../../services/calendar-service';
+import { fetchAllCalendarEvents, forceCalendarSync } from '../../services/calendar-service';
 import { getCalendarColor } from '../../constants/colors';
 import { CALENDAR_IDS, PERSON_CALENDARS } from '../../constants/calendars';
 import { DayListView } from '../../components/features/calendar/DayListView';
@@ -26,6 +26,8 @@ export function MobileCalendarPage() {
   const [enabledCalendars, setEnabledCalendars] = useState(new Set(CALENDAR_IDS));
   const { isConnected } = useHAConnection();
   const hasLoadedOnce = useRef(false);
+  const [syncing, setSyncing] = useState(false);
+  const autoRefreshCountRef = useRef(0);
 
   // Modal states
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -58,12 +60,32 @@ export function MobileCalendarPage() {
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
-  // Auto-refresh every 5 minutes
+  // Auto-refresh every 5 min; every 3rd cycle (15 min) also force HA to
+  // re-poll Google so phone-created events appear without manual refresh.
   useEffect(() => {
     if (!isConnected) return;
-    const interval = setInterval(fetchEvents, 5 * 60 * 1000);
+    const interval = setInterval(async () => {
+      autoRefreshCountRef.current++;
+      if (autoRefreshCountRef.current % 3 === 0) {
+        await forceCalendarSync(CALENDAR_IDS);
+        await new Promise(r => setTimeout(r, 1500));
+      }
+      fetchEvents();
+    }, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [isConnected, fetchEvents]);
+
+  const handleManualSync = async () => {
+    if (syncing) return;
+    setSyncing(true);
+    try {
+      await forceCalendarSync(CALENDAR_IDS);
+      await new Promise(r => setTimeout(r, 1500));
+      await fetchEvents();
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handlePrevious = () => {
     if (view === 'day') setCurrentDate(prev => subDays(prev, 1));
@@ -167,6 +189,15 @@ export function MobileCalendarPage() {
               <option value="day">Day</option>
               <option value="month">Month</option>
             </select>
+            <button
+              onClick={handleManualSync}
+              disabled={syncing || !isConnected}
+              className="p-1.5 rounded-full disabled:opacity-50"
+              style={{ backgroundColor: '#efefef' }}
+              title="Force-sync from Google now"
+            >
+              <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
+            </button>
             <button
               onClick={() => handleAddEvent(currentDate)}
               className="p-1.5 rounded-full"

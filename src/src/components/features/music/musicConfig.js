@@ -62,7 +62,7 @@ export const SPOTIFY_ACCOUNTS = [
     id: 'nic',
     label: "Nic",
     entityId: 'media_player.spotify_nic',
-    defaultCategory: 'Liked songs', // Auto-navigate to Liked Songs
+    defaultCategory: 'Playlists', // Match Daz — Nic prefers her own playlists over Liked Songs
   },
 ];
 

@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { Link2, Unlink, PlayCircle } from 'lucide-react';
 import { SpeakerCard } from './SpeakerCard';
+import { RecordPlayerButton } from './RecordPlayerButton';
 import { ZONES, PRESET_GROUPS } from './musicConfig';
 
 /**
@@ -146,6 +147,14 @@ export function SpeakerPanel({
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Record Player */}
+      <div className="p-4 border-t border-[var(--ds-border)] flex-shrink-0">
+        <div className="text-xs font-medium uppercase tracking-wider mb-3 px-1" style={{ color: 'var(--ds-text-secondary)' }}>
+          Record Player
+        </div>
+        <RecordPlayerButton speakers={speakers} />
       </div>
 
       {/* Preset Groups */}

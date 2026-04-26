@@ -32,6 +32,7 @@ function extractSpeakerData(stateObj) {
       supportedFeatures: 0,
       friendlyName: '',
       source: null,
+      sourceList: [],
     };
   }
 
@@ -55,6 +56,7 @@ function extractSpeakerData(stateObj) {
     supportedFeatures: a.supported_features || 0,
     friendlyName: a.friendly_name || '',
     source: a.source || null,
+    sourceList: a.source_list || [],
     mediaContentId: a.media_content_id || null,
     mediaContentType: a.media_content_type || null,
   };

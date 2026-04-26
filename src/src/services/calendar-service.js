@@ -72,6 +72,25 @@ export async function fetchAllCalendarEvents(calendarIds, start, end) {
   }
 }
 
+// Force HA to re-poll Google Calendar for the given entities. The dashboard's
+// own 5-min refetch only re-reads HA's cache — it doesn't tell HA to talk to
+// Google. homeassistant.update_entity kicks the integration's coordinator,
+// which for Google Calendar triggers an immediate API fetch.
+export async function forceCalendarSync(calendarIds) {
+  if (!calendarIds || calendarIds.length === 0) return;
+  try {
+    await haWebSocket.send({
+      type: 'call_service',
+      domain: 'homeassistant',
+      service: 'update_entity',
+      service_data: { entity_id: calendarIds },
+    });
+    log.debug(`[Calendar Service] Forced sync for ${calendarIds.length} calendars`);
+  } catch (error) {
+    log.error('[Calendar Service] forceCalendarSync failed:', error);
+  }
+}
+
 /**
  * Create a new calendar event
  * @param {string} calendarId - Calendar entity ID (e.g., 'calendar.daz')
@@ -226,6 +245,7 @@ export function parseNaturalLanguage(input) {
 export default {
   fetchCalendarEvents,
   fetchAllCalendarEvents,
+  forceCalendarSync,
   createCalendarEvent,
   updateCalendarEvent,
   deleteCalendarEvent,

@@ -6,13 +6,13 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { format, startOfWeek, addWeeks, subWeeks, addDays, subDays, addMonths, subMonths, isSameDay } from 'date-fns';
 import { isEventOnDay } from '../../../utils/calendar';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus, RefreshCw } from 'lucide-react';
 import { PageContainer } from '../../layout/PageContainer';
 import { LoadingSpinner } from '../../common/LoadingSpinner';
 import { TwoTierSelector } from '../../common/TwoTierSelector';
 import { useHAConnection } from '../../../hooks/useHAConnection';
 import { useWeather } from '../../../hooks/useWeather';
-import { fetchAllCalendarEvents } from '../../../services/calendar-service';
+import { fetchAllCalendarEvents, forceCalendarSync } from '../../../services/calendar-service';
 import { getCalendarColor } from '../../../constants/colors';
 import { CALENDAR_IDS, PERSON_CALENDARS } from '../../../constants/calendars';
 import { EventModal } from './EventModal';
@@ -38,6 +38,8 @@ export function CalendarViewList() {
   const { isConnected } = useHAConnection();
   const weather = useWeather();
   const hasLoadedOnce = useRef(false);
+  const [syncing, setSyncing] = useState(false);
+  const autoRefreshCountRef = useRef(0);
 
   // Modal states
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -79,12 +81,33 @@ export function CalendarViewList() {
     fetchEvents();
   }, [fetchEvents]);
 
-  // Auto-refresh every 5 minutes for fresh data
+  // Auto-refresh every 5 min. Every 3rd cycle (15 min), also force HA to
+  // re-poll Google Calendar so events created on phones land without the
+  // user having to tap the refresh button.
   useEffect(() => {
     if (!isConnected) return;
-    const interval = setInterval(fetchEvents, 5 * 60 * 1000);
+    const interval = setInterval(async () => {
+      autoRefreshCountRef.current++;
+      if (autoRefreshCountRef.current % 3 === 0) {
+        await forceCalendarSync(CALENDAR_IDS);
+        await new Promise(r => setTimeout(r, 1500));
+      }
+      fetchEvents();
+    }, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [isConnected, fetchEvents]);
+
+  const handleManualSync = async () => {
+    if (syncing) return;
+    setSyncing(true);
+    try {
+      await forceCalendarSync(CALENDAR_IDS);
+      await new Promise(r => setTimeout(r, 1500));
+      await fetchEvents();
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   // Force list layout for biweekly period
   useEffect(() => {
@@ -332,6 +355,23 @@ export function CalendarViewList() {
             }}
           >
             Today
+          </button>
+
+          <button
+            onClick={handleManualSync}
+            disabled={syncing || !isConnected}
+            className="flex items-center justify-center hover:bg-gray-200 transition-all disabled:opacity-50"
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              background: '#efefef',
+              boxShadow: 'none',
+              border: 'none',
+            }}
+            title="Force-sync from Google now"
+          >
+            <RefreshCw size={18} className={syncing ? 'animate-spin' : ''} style={{ color: 'black' }} />
           </button>
 
           <button
