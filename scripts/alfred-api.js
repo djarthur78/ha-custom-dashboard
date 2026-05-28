@@ -21,6 +21,54 @@ const HA_TOKEN = process.env.HA_TOKEN || require('fs')
 
 const OPENCLAW = `${process.env.HOME}/.npm-global/bin/openclaw`;
 
+const VISIBLE_CRON_JOBS = new Set([
+  'Morning Brief',
+  'Morning Brief (Weekend)',
+  'Evening Email Sweep',
+  'Weekly Fitness Digest',
+  'Weekly Sleep Analysis',
+  'Thursday Lawn Plan',
+  'Weekly Plants Check',
+  'Weekly Insights',
+  'Monthly Health Check-In',
+  'Monthly Finance Snapshot',
+  'Monthly Infra Health',
+]);
+
+const LAUNCH_AGENT_LABELS = [
+  'ai.openclaw.gateway',
+  'com.alfred.movie-approval-watchdog',
+  'com.alfred.proactive-dispatch-lite',
+  'com.alfred.day-morning',
+  'com.alfred.day-midday',
+  'com.alfred.day-afternoon',
+  'com.alfred.nightly-health-lite',
+  'com.alfred.discord-reply-delivery-audit',
+  'com.alfred.morning-brief-delivery-audit',
+  'com.alfred.weather-watchdog',
+  'com.alfred.knowledge-extraction-lite',
+  'com.alfred.gbrain-reindex',
+  'com.daz.remux-daily-4k-watch',
+  'com.daz.remux-approval-queue',
+  'com.daz.remux-nas-mounts',
+];
+
+const CRITICAL_LAUNCH_AGENTS = new Set([
+  'ai.openclaw.gateway',
+  'com.alfred.movie-approval-watchdog',
+  'com.alfred.proactive-dispatch-lite',
+  'com.alfred.day-morning',
+]);
+
+const STATE_FILES = {
+  movieWatchdog: '/Users/darrenbrain/.openclaw/workspace/scripts/cron/.movie-approval-watchdog-state.json',
+  movieState: '/Users/darrenbrain/.openclaw/workspace/scripts/.movie-state.json',
+  proactive: '/Users/darrenbrain/.openclaw/workspace/scripts/cron/.proactive-dispatch-lite-state.json',
+  morningAudit: '/Users/darrenbrain/.openclaw/workspace/scripts/cron/.morning-brief-delivery-audit-state.json',
+  discordAudit: '/Users/darrenbrain/.openclaw/workspace/scripts/cron/.discord-reply-delivery-audit-state.json',
+  nightlyHealth: '/Users/darrenbrain/.openclaw/workspace/scripts/cron/.nightly-health-lite-state.json',
+};
+
 function run(cmd, timeout = 15000) {
   try {
     const out = execSync(cmd, { timeout, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
@@ -35,6 +83,288 @@ function parseOpenclawJson(raw) {
   // Strip ANSI codes and [plugins] log lines
   const cleaned = raw.replace(/\x1b\[[0-9;]*m/g, '').split('\n').filter(l => !l.startsWith('[plugins]')).join('\n').trim();
   try { return JSON.parse(cleaned); } catch { return null; }
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function toEpochMs(value) {
+  if (value == null) return null;
+  if (typeof value === 'number') return value;
+  const parsed = new Date(value).getTime();
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function issue(severity, source, title, detail, action = null) {
+  return { severity, source, title, detail, action };
+}
+
+function severityRank(value) {
+  if (value === 'critical' || value === 'error') return 0;
+  if (value === 'warning' || value === 'warn') return 1;
+  if (value === 'healthy' || value === 'ok' || value === 'success') return 2;
+  return 3;
+}
+
+function readJsonFile(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return null;
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function getNested(obj, keys) {
+  for (const key of keys) {
+    if (obj && obj[key] != null) return obj[key];
+  }
+  return null;
+}
+
+function recentError(value) {
+  if (!value) return null;
+  const errorText = typeof value === 'string' ? value : JSON.stringify(value);
+  const ts = toEpochMs(value.timestamp || value.at || value.time || value.created_at || value.createdAt);
+  if (ts && Date.now() - ts > 86400000) return null;
+  return errorText;
+}
+
+function collectGatewayOps() {
+  const raw = run(`${OPENCLAW} gateway status`, 5000) || '';
+  const healthRaw = run('curl -s --connect-timeout 2 http://localhost:18789/health', 3000);
+  const running = /Runtime:\s*running/i.test(raw);
+  const probeOk = /Connectivity probe:\s*ok/i.test(raw) || !!healthRaw;
+  const pidMatch = raw.match(/Runtime:\s*running\s*\(pid\s+(\d+)/i);
+  const versionMatch = raw.match(/(?:CLI|Gateway|Runtime|Version)[^\n:]*:\s*([0-9]{4}\.[0-9.]+)/i);
+  const eventLoopDegraded = /degraded|event_loop_delay|event_loop_utilization/i.test(raw);
+
+  return {
+    running,
+    pid: pidMatch ? Number(pidMatch[1]) : null,
+    version: versionMatch ? versionMatch[1] : null,
+    probe_ok: probeOk,
+    event_loop_degraded: eventLoopDegraded,
+    status_text: running ? 'running' : (raw ? 'not running' : 'unknown'),
+    raw_ok: !!raw,
+  };
+}
+
+function collectDiscordOps() {
+  const raw = run(`${OPENCLAW} channels status`, 8000) || '';
+  const discordLine = raw.split('\n').find(line => /Discord default:/i.test(line)) || '';
+  const reachable = /Gateway reachable/i.test(raw);
+  const configured = /configured/i.test(discordLine);
+  const running = /running/i.test(discordLine);
+  const connected = /connected/i.test(discordLine) && !/disconnected|not connected/i.test(discordLine);
+  const botMatch = raw.match(/(?:bot|user|as)\s*[:=]\s*(@?[A-Za-z0-9_.-]+)/i);
+  const inboundMatch = raw.match(/\bin:([0-9]+[smhd]\s+ago)/i);
+
+  return {
+    configured,
+    running,
+    connected: reachable && configured && running && connected,
+    bot: botMatch ? botMatch[1] : null,
+    last_inbound: inboundMatch ? inboundMatch[1] : null,
+    raw_ok: !!raw,
+  };
+}
+
+function normalizeCronJob(job) {
+  const state = job.state || {};
+  const name = job.name || job.label || job.id || 'Unknown';
+  const delivery = job.delivery || job.channel || job.destination || job.deliverTo || state.delivery || null;
+  const status = state.lastStatus || job.status || job.last_status || 'unknown';
+  const consecutiveErrors = Number(state.consecutiveErrors ?? job.consecutive_errors ?? job.consecutiveErrors ?? 0);
+  const lastRunMs = toEpochMs(state.lastRunAtMs ?? state.lastRunAt ?? job.last_run_ms ?? job.last_run);
+  const nextRunMs = toEpochMs(state.nextRunAtMs ?? state.nextRunAt ?? job.next_run_ms ?? job.next_run);
+  const latestText = JSON.stringify({ status, delivery, lastError: state.lastError || job.last_error || job.summary || job.history || '' }).toLowerCase();
+
+  let risk = null;
+  if (String(status).toLowerCase() === 'error') risk = 'critical';
+  else if (consecutiveErrors > 0) risk = 'warning';
+  else if (VISIBLE_CRON_JOBS.has(name) && /not requested/i.test(String(delivery || ''))) risk = 'warning';
+  else if (/approval|rate_limit|stream disconnected|not-delivered/.test(latestText)) risk = 'warning';
+
+  return {
+    name,
+    enabled: job.enabled ?? true,
+    status,
+    delivery,
+    last_run_ms: lastRunMs,
+    next_run_ms: nextRunMs,
+    consecutive_errors: consecutiveErrors,
+    risk,
+  };
+}
+
+function parsePlainCron(raw) {
+  if (!raw) return [];
+  return raw.split('\n')
+    .map(line => line.trim())
+    .filter(line => line && !/^name\b/i.test(line))
+    .map(line => ({ name: line.replace(/^\W+/, '').split(/\s{2,}/)[0] || line, status: /error|failed/i.test(line) ? 'error' : 'unknown' }));
+}
+
+function collectCronOps() {
+  const jsonRaw = run(`${OPENCLAW} cron list --json`, 10000);
+  const cronData = parseOpenclawJson(jsonRaw);
+  const rawJobs = cronData ? (cronData.jobs || cronData) : parsePlainCron(run(`${OPENCLAW} cron list`, 10000));
+  const jobs = (Array.isArray(rawJobs) ? rawJobs : []).map(normalizeCronJob);
+  const warning = jobs.filter(j => j.risk === 'warning').length;
+  const error = jobs.filter(j => j.risk === 'critical' || String(j.status).toLowerCase() === 'error').length;
+  const ok = Math.max(0, jobs.length - warning - error);
+  const sortedJobs = jobs
+    .sort((a, b) => severityRank(a.risk || a.status) - severityRank(b.risk || b.status) || (a.next_run_ms || Infinity) - (b.next_run_ms || Infinity))
+    .slice(0, 20);
+
+  return {
+    total: jobs.length,
+    ok,
+    warning,
+    error,
+    delivery_risks: jobs.filter(j => j.risk).length,
+    jobs: sortedJobs,
+  };
+}
+
+function collectLaunchAgents() {
+  const agents = LAUNCH_AGENT_LABELS.map(label => {
+    const raw = run(`launchctl list ${label}`, 2000) || '';
+    const missing = !raw;
+    const statusMatch = raw.match(/"LastExitStatus"\s*=\s*(-?\d+)|LastExitStatus\s*=\s*(-?\d+)/);
+    const pidMatch = raw.match(/"PID"\s*=\s*(\d+)|PID\s*=\s*(\d+)/);
+    const lastExitStatus = missing ? null : Number(statusMatch?.[1] ?? statusMatch?.[2] ?? 0);
+    const critical = CRITICAL_LAUNCH_AGENTS.has(label);
+    const status = missing || lastExitStatus !== 0 ? (critical ? 'critical' : 'warning') : 'ok';
+    return {
+      label,
+      status,
+      pid: pidMatch ? Number(pidMatch[1] || pidMatch[2]) : null,
+      last_exit_status: lastExitStatus,
+      expected: true,
+    };
+  }).sort((a, b) => severityRank(a.status) - severityRank(b.status) || a.label.localeCompare(b.label));
+
+  return {
+    ok: agents.filter(a => a.status === 'ok').length,
+    warning: agents.filter(a => a.status === 'warning').length,
+    error: agents.filter(a => a.status === 'critical').length,
+    agents,
+  };
+}
+
+function workflowStatus(name, state, launchAgents, issues) {
+  const lastError = recentError(state?.last_error || state?.lastError || state?.error);
+  if (lastError) {
+    issues.push(issue(name === 'movie_approval' ? 'critical' : 'warning', 'workflow', `${name.replace(/_/g, ' ')} error`, lastError, 'Check the matching OpenClaw state file and LaunchAgent log.'));
+  }
+  const launchFailed = name === 'movie_approval'
+    ? launchAgents.agents.find(a => a.label === 'com.alfred.movie-approval-watchdog' && a.status !== 'ok')
+    : name === 'proactive_dispatch'
+      ? launchAgents.agents.find(a => a.label === 'com.alfred.proactive-dispatch-lite' && a.status !== 'ok')
+      : null;
+  return lastError || launchFailed ? (name === 'movie_approval' ? 'critical' : 'warning') : 'ok';
+}
+
+function collectWorkflowOps(launchAgents, issues) {
+  const movieWatchdog = readJsonFile(STATE_FILES.movieWatchdog);
+  const movieState = readJsonFile(STATE_FILES.movieState);
+  const proactive = readJsonFile(STATE_FILES.proactive);
+  const morningAudit = readJsonFile(STATE_FILES.morningAudit);
+  const discordAudit = readJsonFile(STATE_FILES.discordAudit);
+
+  const movieStatus = workflowStatus('movie_approval', movieWatchdog || movieState, launchAgents, issues);
+  const proactiveStatus = workflowStatus('proactive_dispatch', proactive, launchAgents, issues);
+  const morningError = recentError(morningAudit?.last_error || morningAudit?.lastError);
+  const morningLeak = Boolean(morningAudit?.leakage_detected || morningAudit?.leakageDetected || morningAudit?.missing_post || morningAudit?.missingPost);
+  const discordError = recentError(discordAudit?.last_error || discordAudit?.lastError || discordAudit?.latest_delivery_failure || discordAudit?.latestDeliveryFailure);
+
+  if (!morningAudit) issues.push(issue('warning', 'workflow', 'Morning brief audit missing', 'No delivery audit state file was found.', 'Confirm the morning brief delivery audit LaunchAgent has run.'));
+  if (morningError || morningLeak) issues.push(issue('warning', 'workflow', 'Morning brief delivery risk', morningError || 'Leakage or missing post flag is set.', 'Review the morning brief delivery audit output.'));
+  if (discordError) issues.push(issue('critical', 'workflow', 'Discord reply delivery failure', discordError, 'Review the Discord reply delivery audit output.'));
+
+  return {
+    movie_approval: {
+      status: movieStatus,
+      last_run_at: getNested(movieWatchdog, ['last_run_at', 'lastRunAt', 'updated_at']) || getNested(movieState, ['last_run_at', 'lastRunAt', 'updated_at']),
+      last_error: movieWatchdog?.last_error || movieState?.last_error || null,
+      approved_count: movieWatchdog?.approved_count ?? movieState?.approved_count ?? movieState?.collection_hunt_count ?? null,
+      latest_key: movieWatchdog?.latest_key ?? movieState?.latest_key ?? null,
+      processed_count: movieWatchdog?.processed_count ?? movieState?.processed_count ?? null,
+      duplicate_count: movieWatchdog?.duplicate_count ?? movieState?.duplicate_count ?? null,
+    },
+    proactive_dispatch: {
+      status: proactiveStatus,
+      last_run_at: getNested(proactive, ['last_run_at', 'lastRunAt', 'updated_at']),
+      last_error: proactive?.last_error || null,
+      today_deduped: Boolean(JSON.stringify(proactive || {}).match(/green-training-window|recovery-compromised-sleep|sleep-protocol/)),
+    },
+    morning_brief: {
+      status: !morningAudit || morningError || morningLeak ? 'warning' : 'ok',
+      last_audit: morningAudit?.last_audit || morningAudit?.status || null,
+      leakage_detected: morningLeak,
+    },
+    discord_reply_audit: {
+      status: discordError ? 'critical' : 'ok',
+      latest_delivery_failure: discordError,
+      last_audit: discordAudit?.last_audit || discordAudit?.status || null,
+    },
+  };
+}
+
+function collectOpsDashboard() {
+  const issues = [];
+  const gateway = collectGatewayOps();
+  const discord = collectDiscordOps();
+  const cron = collectCronOps();
+  const launchAgents = collectLaunchAgents();
+  const workflows = collectWorkflowOps(launchAgents, issues);
+
+  if (!gateway.running || !gateway.probe_ok) issues.push(issue('critical', 'gateway', 'Gateway is not healthy', `Runtime: ${gateway.status_text}; probe: ${gateway.probe_ok ? 'ok' : 'failed'}.`, 'Run OpenClaw doctor from the dashboard or inspect the gateway LaunchAgent.'));
+  if (gateway.event_loop_degraded) issues.push(issue('warning', 'gateway', 'Gateway event loop degraded', 'Gateway status mentions degraded event loop metrics.', 'Watch for slow replies and inspect gateway logs.'));
+  if (!discord.connected) issues.push(issue('critical', 'discord', 'Discord is disconnected', 'OpenClaw channels status does not report a connected Discord default channel.', 'Restart or re-authenticate the Discord channel.'));
+
+  for (const job of cron.jobs) {
+    if (job.risk === 'critical' || String(job.status).toLowerCase() === 'error') {
+      issues.push(issue('critical', 'cron', `${job.name} latest run failed`, `Status is ${job.status}.`, 'Inspect the latest cron run output.'));
+    } else if (job.risk === 'warning') {
+      issues.push(issue('warning', 'cron', `${job.name} delivery risk`, job.delivery ? `Delivery: ${job.delivery}.` : 'Latest run history indicates a delivery or approval risk.', 'Review the next scheduled run and latest cron output.'));
+    }
+  }
+
+  for (const agent of launchAgents.agents.filter(a => a.status !== 'ok')) {
+    issues.push(issue(agent.status === 'critical' ? 'critical' : 'warning', 'launch_agent', `${agent.label} ${agent.status}`, `LastExitStatus: ${agent.last_exit_status ?? 'missing'}.`, 'Check launchctl and the agent log on the Mac Mini.'));
+  }
+
+  const boundedIssues = issues
+    .sort((a, b) => severityRank(a.severity) - severityRank(b.severity))
+    .slice(0, 8);
+  const overall = boundedIssues.some(i => i.severity === 'critical')
+    ? 'critical'
+    : boundedIssues.some(i => i.severity === 'warning')
+      ? 'warning'
+      : 'healthy';
+
+  return {
+    generated_at: nowIso(),
+    overall,
+    summary: overall === 'healthy'
+      ? `Gateway OK, Discord connected, ${cron.ok} crons OK, ${launchAgents.ok} LaunchAgents OK.`
+      : `${boundedIssues.filter(i => i.severity === 'critical').length} critical, ${boundedIssues.filter(i => i.severity === 'warning').length} warning issue(s).`,
+    gateway,
+    discord,
+    cron,
+    launch_agents: launchAgents,
+    workflows,
+    issues: boundedIssues,
+    last_successful_smoke: {
+      discord_read: discord.connected ? nowIso() : null,
+      cron_list: cron.total > 0 ? nowIso() : null,
+      gateway_probe: gateway.probe_ok ? nowIso() : null,
+    },
+  };
 }
 
 function pushToHA(entityId, payload) {
@@ -225,6 +555,20 @@ function collectTokenUsage() {
 
 function collectData() {
   const data = {};
+
+  data.ops = collectOpsDashboard();
+  pushToHA('sensor.alfred_ops_dashboard', {
+    state: data.ops.overall,
+    attributes: {
+      friendly_name: 'Alfred Ops Dashboard',
+      icon: data.ops.overall === 'critical'
+        ? 'mdi:alert-circle'
+        : data.ops.overall === 'warning'
+          ? 'mdi:alert'
+          : 'mdi:shield-check',
+      ...data.ops,
+    }
+  });
 
   // Cron jobs
   const cronRaw = run(`${OPENCLAW} cron list --json`);

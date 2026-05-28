@@ -3,9 +3,10 @@
  * Service status checks + Mac Mini resource gauges
  */
 
-import { Server, AlertCircle } from 'lucide-react';
+import { Server } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import { ALFRED_SERVICES, ALFRED_SYSTEM, getResourceColor } from './alfredConfig';
+import { LaunchAgentStatus } from './LaunchAgentStatus';
 
 function ServiceRow({ label, entityId }) {
   const { state } = useEntity(entityId);
@@ -106,6 +107,8 @@ export function SystemHealth() {
         <ResourceGauge label="RAM" entityId={ALFRED_SYSTEM.ram} />
         <ResourceGauge label="Disk" entityId={ALFRED_SYSTEM.disk} />
       </div>
+
+      <LaunchAgentStatus />
     </div>
   );
 }

@@ -4,11 +4,12 @@
  * Fetches fresh data from Mac Mini API on mount, pushes to HA sensors.
  */
 
-import { RefreshCw } from 'lucide-react';
 import { StatusHero } from './StatusHero';
 import { CronTable } from './CronTable';
 import { TokenUsage } from './TokenUsage';
 import { SystemHealth } from './SystemHealth';
+import { OpsOverview } from './OpsOverview';
+import { WorkflowCards } from './WorkflowCards';
 import { useAlfredRefresh } from './hooks/useAlfredRefresh';
 
 export function AlfredDashboard() {
@@ -23,18 +24,25 @@ export function AlfredDashboard() {
 
       {/* Right: Operations Grid (70%) */}
       <div className="flex-[70] min-h-0 flex flex-col gap-3">
-        {/* Top: Cron Monitor — full width, 55% height */}
-        <div className="flex-[55] min-h-0">
-          <CronTable />
+        <div className="flex-[28] min-h-0">
+          <OpsOverview />
         </div>
 
-        {/* Bottom: 2-column split, 45% height */}
-        <div className="flex-[45] min-h-0 flex gap-3">
-          <div className="flex-1 min-h-0">
-            <TokenUsage />
+        <div className="flex-[38] min-h-0 flex gap-3">
+          <div className="flex-[58] min-h-0">
+            <WorkflowCards />
           </div>
-          <div className="flex-1 min-h-0">
+          <div className="flex-[42] min-h-0">
             <SystemHealth />
+          </div>
+        </div>
+
+        <div className="flex-[34] min-h-0 flex gap-3">
+          <div className="flex-[62] min-h-0">
+            <CronTable />
+          </div>
+          <div className="flex-[38] min-h-0">
+            <TokenUsage />
           </div>
         </div>
       </div>

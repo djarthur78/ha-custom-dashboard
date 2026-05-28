@@ -15,6 +15,10 @@ export const ALFRED_DATA = {
   memoryStatus: 'sensor.alfred_memory_status',
 };
 
+export const ALFRED_OPS = {
+  dashboard: 'sensor.alfred_ops_dashboard',
+};
+
 // Mac Mini system monitoring
 export const ALFRED_SYSTEM = {
   cpu: 'sensor.mac_mini_cpu_usage',
@@ -44,6 +48,27 @@ export function getResourceColor(pct) {
   if (pct < 60) return 'var(--ds-health-good)';
   if (pct < 85) return 'var(--ds-health-warn)';
   return 'var(--ds-health-bad)';
+}
+
+export function getOpsColor(state) {
+  if (state === 'healthy' || state === 'ok') return 'var(--ds-health-good)';
+  if (state === 'warning' || state === 'warn') return 'var(--ds-health-warn)';
+  if (state === 'critical' || state === 'error') return 'var(--ds-health-bad)';
+  return 'var(--ds-text-secondary)';
+}
+
+export function getOpsBg(state) {
+  if (state === 'healthy' || state === 'ok') return 'var(--ds-state-on-bg)';
+  if (state === 'warning' || state === 'warn') return 'rgba(212, 148, 76, 0.14)';
+  if (state === 'critical' || state === 'error') return 'var(--ds-state-off-bg)';
+  return 'var(--ds-warm-inactive-bg)';
+}
+
+export function getSeverityRank(value) {
+  if (value === 'critical' || value === 'error') return 0;
+  if (value === 'warning' || value === 'warn') return 1;
+  if (value === 'healthy' || value === 'ok' || value === 'success') return 2;
+  return 3;
 }
 
 /**

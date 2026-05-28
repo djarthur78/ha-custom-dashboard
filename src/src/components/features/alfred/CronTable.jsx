@@ -5,25 +5,32 @@
 
 import { Clock, AlertCircle } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
-import { ALFRED_DATA, formatRelativeTime } from './alfredConfig';
+import { ALFRED_DATA, ALFRED_OPS, formatRelativeTime, getOpsBg, getOpsColor, getSeverityRank } from './alfredConfig';
 
 function StatusDot({ status }) {
-  const passed = status === 'ok' || status === 'success' || status === true;
+  const passed = status === 'ok' || status === 'success' || status === true || status === 'healthy';
   return (
     <div
       className="w-2.5 h-2.5 rounded-full"
-      style={{ backgroundColor: passed ? 'var(--ds-state-on)' : 'var(--ds-state-off)' }}
+      style={{ backgroundColor: passed ? 'var(--ds-state-on)' : getOpsColor(status) }}
       title={passed ? 'Passed' : 'Failed'}
     />
   );
 }
 
 export function CronTable() {
+  const opsEntity = useEntity(ALFRED_OPS.dashboard);
   const cronEntity = useEntity(ALFRED_DATA.cronList);
+  const opsCron = opsEntity.attributes?.cron || null;
   const attrs = cronEntity.attributes || {};
 
   // Cron data may be in attributes.jobs (array) or the attributes itself may be the array
-  const jobs = Array.isArray(attrs.jobs) ? attrs.jobs : (Array.isArray(attrs) ? attrs : null);
+  const fallbackJobs = Array.isArray(attrs.jobs) ? attrs.jobs : (Array.isArray(attrs) ? attrs : null);
+  const jobs = Array.isArray(opsCron?.jobs) ? opsCron.jobs : fallbackJobs;
+  const issueCount = opsCron ? (opsCron.warning || 0) + (opsCron.error || 0) : jobs?.filter(job => job.status !== 'ok' && job.status !== 'success').length || 0;
+  const sortedJobs = jobs
+    ? [...jobs].sort((a, b) => getSeverityRank(a.risk || a.status) - getSeverityRank(b.risk || b.status) || (a.next_run_ms || a.next_run || Infinity) - (b.next_run_ms || b.next_run || Infinity))
+    : null;
 
   if (!jobs) {
     return (
@@ -53,11 +60,11 @@ export function CronTable() {
         <span
           className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium"
           style={{
-            backgroundColor: 'var(--ds-state-on-bg)',
-            color: 'var(--ds-state-on)',
+            backgroundColor: getOpsBg(issueCount ? (opsCron?.error ? 'critical' : 'warning') : 'ok'),
+            color: getOpsColor(issueCount ? (opsCron?.error ? 'critical' : 'warning') : 'ok'),
           }}
         >
-          {jobs.length} active
+          {issueCount ? `${issueCount} issues` : 'All clear'}
         </span>
       </div>
 
@@ -72,12 +79,14 @@ export function CronTable() {
               <th className="text-left py-1.5 px-2 font-semibold">Name</th>
               <th className="text-left py-1.5 px-2 font-semibold">Next</th>
               <th className="text-left py-1.5 px-2 font-semibold">Last Run</th>
-              <th className="text-right py-1.5 px-2 font-semibold">Cost</th>
+              <th className="text-left py-1.5 px-2 font-semibold">Delivery</th>
               <th className="text-center py-1.5 px-2 font-semibold w-10">Status</th>
             </tr>
           </thead>
           <tbody>
-            {jobs.map((job, i) => (
+            {sortedJobs.map((job, i) => {
+              const status = job.risk || job.status;
+              return (
               <tr
                 key={job.name || i}
                 className="transition-colors"
@@ -90,22 +99,24 @@ export function CronTable() {
                   {job.name || job.label || `Job ${i + 1}`}
                 </td>
                 <td className="py-1.5 px-2" style={{ color: 'var(--ds-text-secondary)' }}>
-                  {formatRelativeTime(job.next_run)}
+                  {formatRelativeTime(job.next_run_ms || job.next_run)}
                 </td>
                 <td className="py-1.5 px-2" style={{ color: 'var(--ds-text-secondary)' }}>
-                  {formatRelativeTime(job.last_run)}
+                  {formatRelativeTime(job.last_run_ms || job.last_run)}
                 </td>
                 <td
-                  className="py-1.5 px-2 text-right text-xs font-medium"
-                  style={{ color: job.cost > 1 ? 'var(--ds-accent)' : 'var(--ds-text-secondary)' }}
+                  className="py-1.5 px-2 text-xs truncate max-w-64"
+                  style={{ color: job.risk ? getOpsColor(job.risk) : 'var(--ds-text-secondary)' }}
+                  title={job.delivery || job.risk || '--'}
                 >
-                  {job.cost ? `$${job.cost.toFixed(2)}` : '--'}
+                  {job.risk || job.delivery || '--'}
                 </td>
                 <td className="py-1.5 px-2 flex justify-center items-center" style={{ height: '36px' }}>
-                  <StatusDot status={job.status} />
+                  <StatusDot status={status} />
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>

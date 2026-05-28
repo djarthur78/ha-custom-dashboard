@@ -4,23 +4,25 @@
  */
 
 import { useState } from 'react';
-import { Bot, Database, Brain, RefreshCw, RotateCcw, Loader2 } from 'lucide-react';
+import { createElement } from 'react';
+import { AlertTriangle, Bot, Database, Brain, RefreshCw, RotateCcw, Loader2, MessageCircle } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
-import { ALFRED_GATEWAY, ALFRED_DATA } from './alfredConfig';
+import { ALFRED_GATEWAY, ALFRED_DATA, ALFRED_OPS, getOpsBg, getOpsColor } from './alfredConfig';
 
 function ConnBadge({ label, connected }) {
   const isOn = connected === true || connected === 'true';
+  const isUnknown = connected == null || connected === 'unknown';
   return (
     <div
       className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium"
       style={{
-        backgroundColor: isOn ? 'var(--ds-state-on-bg)' : 'var(--ds-state-off-bg)',
-        color: isOn ? 'var(--ds-state-on)' : 'var(--ds-state-off)',
+        backgroundColor: isUnknown ? 'var(--ds-warm-inactive-bg)' : isOn ? 'var(--ds-state-on-bg)' : 'var(--ds-state-off-bg)',
+        color: isUnknown ? 'var(--ds-warm-inactive-text)' : isOn ? 'var(--ds-state-on)' : 'var(--ds-state-off)',
       }}
     >
       <div
         className="w-2 h-2 rounded-full"
-        style={{ backgroundColor: isOn ? 'var(--ds-state-on)' : 'var(--ds-state-off)' }}
+        style={{ backgroundColor: isUnknown ? 'var(--ds-warm-inactive-text)' : isOn ? 'var(--ds-state-on)' : 'var(--ds-state-off)' }}
       />
       {label}
     </div>
@@ -30,7 +32,7 @@ function ConnBadge({ label, connected }) {
 function StatBox({ label, value, icon: Icon }) {
   return (
     <div className="flex flex-col items-center gap-1 flex-1">
-      <Icon size={16} style={{ color: 'var(--ds-text-secondary)' }} />
+      {createElement(Icon, { size: 16, style: { color: 'var(--ds-text-secondary)' } })}
       <div className="text-lg font-bold" style={{ color: 'var(--ds-text)' }}>{value ?? '--'}</div>
       <div className="text-xs" style={{ color: 'var(--ds-text-secondary)' }}>{label}</div>
     </div>
@@ -40,13 +42,26 @@ function StatBox({ label, value, icon: Icon }) {
 export function StatusHero({ refreshing, error, onRefresh }) {
   const health = useEntity(ALFRED_GATEWAY.health);
   const status = useEntity(ALFRED_GATEWAY.status);
+  const ops = useEntity(ALFRED_OPS.dashboard);
   const memory = useEntity(ALFRED_DATA.memoryStatus);
   const taskStats = useEntity('sensor.alfred_task_stats');
 
   const [restarting, setRestarting] = useState(false);
   const [restartResult, setRestartResult] = useState(null); // 'ok' | 'error' | null
 
-  const isOnline = health.state && health.state !== 'unavailable' && health.state !== 'unknown' && health.state !== 'offline';
+  const opsAttrs = ops.attributes || {};
+  const hasOps = ops.state && ops.state !== 'unknown' && ops.state !== 'unavailable';
+  const legacyOnline = health.state && health.state !== 'unavailable' && health.state !== 'unknown' && health.state !== 'offline';
+  const overall = hasOps ? (opsAttrs.overall || ops.state) : legacyOnline ? 'healthy' : 'unknown';
+  const gateway = hasOps ? (opsAttrs.gateway || {}) : {
+    version: health.attributes?.version,
+    status_text: health.state,
+  };
+  const discord = hasOps ? (opsAttrs.discord || {}) : {
+    connected: status.attributes?.discord_connected === true ? true : null,
+  };
+  const issues = Array.isArray(opsAttrs.issues) ? opsAttrs.issues : [];
+  const isOnline = overall === 'healthy' || overall === 'warning' || legacyOnline;
   const attrs = status.attributes || {};
   const memAttrs = memory.attributes || {};
   const tasks = taskStats.attributes || {};
@@ -73,7 +88,7 @@ export function StatusHero({ refreshing, error, onRefresh }) {
       className="ds-card h-full flex flex-col"
       style={{
         background: isOnline
-          ? 'linear-gradient(135deg, rgba(74,154,74,0.06), rgba(74,154,74,0.02))'
+          ? `linear-gradient(135deg, ${getOpsBg(overall)}, rgba(255,255,255,0.02))`
           : 'linear-gradient(135deg, rgba(181,69,58,0.06), rgba(181,69,58,0.02))',
       }}
     >
@@ -100,33 +115,53 @@ export function StatusHero({ refreshing, error, onRefresh }) {
         <Bot
           size={48}
           className="mb-2"
-          style={{ color: isOnline ? 'var(--ds-state-on)' : 'var(--ds-state-off)' }}
+          style={{ color: getOpsColor(overall) }}
         />
         <div className="text-2xl font-bold mb-1" style={{ color: 'var(--ds-text)' }}>Alfred</div>
 
-        {/* Online status */}
+        {/* Overall status */}
         <div className="flex items-center gap-2 mb-3">
           <div
             className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'animate-pulse' : ''}`}
-            style={{ backgroundColor: isOnline ? 'var(--ds-state-on)' : 'var(--ds-state-off)' }}
+            style={{ backgroundColor: getOpsColor(overall) }}
           />
           <span
             className="text-sm font-semibold uppercase tracking-wider"
-            style={{ color: isOnline ? 'var(--ds-state-on)' : 'var(--ds-state-off)' }}
+            style={{ color: getOpsColor(overall) }}
           >
-            {isOnline ? 'Online' : 'Offline'}
+            {overall}
           </span>
         </div>
 
-        {/* Model + Uptime */}
+        {/* Gateway version */}
         <div className="text-sm mb-1" style={{ color: 'var(--ds-text-secondary)' }}>
-          {attrs.model || 'OpenClaw 2026.4.5'}
+          {gateway.version ? `Gateway ${gateway.version}` : attrs.model || 'OpenClaw'}
         </div>
         {attrs.uptime && (
           <div className="text-xs mb-4" style={{ color: 'var(--ds-text-secondary)' }}>
             Uptime: {attrs.uptime}
           </div>
         )}
+
+        <div className="flex gap-2 mb-4 justify-center flex-wrap">
+          <ConnBadge label={discord.connected == null ? 'Discord pending' : 'Discord'} connected={discord.connected} />
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium"
+            style={{
+              backgroundColor: issues.length ? getOpsBg(issues.some(i => i.severity === 'critical') ? 'critical' : 'warning') : 'var(--ds-state-on-bg)',
+              color: issues.length ? getOpsColor(issues.some(i => i.severity === 'critical') ? 'critical' : 'warning') : 'var(--ds-state-on)',
+            }}
+          >
+            <AlertTriangle size={14} />
+            {issues.length ? `${issues.length} issues` : 'No issues'}
+          </div>
+          {discord.last_inbound && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium" style={{ backgroundColor: 'var(--ds-warm-inactive-bg)', color: 'var(--ds-warm-inactive-text)' }}>
+              <MessageCircle size={14} />
+              {discord.last_inbound}
+            </div>
+          )}
+        </div>
 
         {/* 14-Day Health */}
         {(() => {
@@ -160,10 +195,6 @@ export function StatusHero({ refreshing, error, onRefresh }) {
           <StatBox label="Chunks" value={memAttrs.total_chunks} icon={Brain} />
         </div>
 
-        {/* Discord Badge */}
-        <div className="flex gap-2 mb-4">
-          <ConnBadge label="Discord" connected={attrs.discord_connected} />
-        </div>
       </div>
 
       {/* Restart Button */}
@@ -199,7 +230,7 @@ export function StatusHero({ refreshing, error, onRefresh }) {
         ) : (
           <>
             <RotateCcw size={14} />
-            Restart Alfred
+            Run Doctor
           </>
         )}
       </button>
