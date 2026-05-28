@@ -5,7 +5,7 @@
 
 import { Clock, AlertCircle } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
-import { ALFRED_DATA, ALFRED_OPS, formatRelativeTime, getOpsBg, getOpsColor, getSeverityRank } from './alfredConfig';
+import { ALFRED_DATA, ALFRED_OPS, formatOpsValue, formatRelativeTime, getOpsBg, getOpsColor, getSeverityRank } from './alfredConfig';
 
 function StatusDot({ status }) {
   const passed = status === 'ok' || status === 'success' || status === true || status === 'healthy';
@@ -107,9 +107,9 @@ export function CronTable() {
                 <td
                   className="py-1.5 px-2 text-xs truncate max-w-64"
                   style={{ color: job.risk ? getOpsColor(job.risk) : 'var(--ds-text-secondary)' }}
-                  title={job.delivery || job.risk || '--'}
+                  title={formatOpsValue(job.delivery || job.risk)}
                 >
-                  {job.risk || job.delivery || '--'}
+                  {job.risk || formatOpsValue(job.delivery)}
                 </td>
                 <td className="py-1.5 px-2 flex justify-center items-center" style={{ height: '36px' }}>
                   <StatusDot status={status} />

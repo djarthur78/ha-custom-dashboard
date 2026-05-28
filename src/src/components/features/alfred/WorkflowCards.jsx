@@ -1,7 +1,7 @@
 import { CheckCircle2, Film, MessageCircle, Newspaper, Send } from 'lucide-react';
 import { createElement } from 'react';
 import { useEntity } from '../../../hooks/useEntity';
-import { ALFRED_OPS, formatRelativeTime, getOpsBg, getOpsColor } from './alfredConfig';
+import { ALFRED_OPS, formatOpsValue, formatRelativeTime, getOpsBg, getOpsColor } from './alfredConfig';
 
 function WorkflowRow({ icon: Icon, title, status, rows }) {
   return (
@@ -20,7 +20,7 @@ function WorkflowRow({ icon: Icon, title, status, rows }) {
         {rows.map(([label, value]) => (
           <div key={label} className="flex min-w-0 gap-2 text-xs">
             <span className="flex-shrink-0" style={{ color: 'var(--ds-text-secondary)' }}>{label}</span>
-            <span className="truncate font-medium" style={{ color: 'var(--ds-text)' }} title={String(value ?? '--')}>{value ?? '--'}</span>
+            <span className="truncate font-medium" style={{ color: 'var(--ds-text)' }} title={formatOpsValue(value)}>{formatOpsValue(value)}</span>
           </div>
         ))}
       </div>

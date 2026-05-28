@@ -71,6 +71,21 @@ export function getSeverityRank(value) {
   return 3;
 }
 
+export function formatOpsValue(value) {
+  if (value == null || value === '') return '--';
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  if (typeof value === 'object') {
+    const compact = Object.entries(value)
+      .filter(([, entryValue]) => entryValue != null && entryValue !== '')
+      .map(([key, entryValue]) => `${key}: ${entryValue}`)
+      .join(', ');
+    return compact || '--';
+  }
+  return String(value);
+}
+
 /**
  * Get color for Oura readiness score
  * Matches healthConfig.getScoreColor but uses CSS vars

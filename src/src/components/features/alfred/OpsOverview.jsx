@@ -1,7 +1,7 @@
 import { AlertTriangle, MessageCircle, Server, ShieldCheck, Wifi } from 'lucide-react';
 import { createElement } from 'react';
 import { useEntity } from '../../../hooks/useEntity';
-import { ALFRED_GATEWAY, ALFRED_OPS, formatRelativeTime, getOpsBg, getOpsColor } from './alfredConfig';
+import { ALFRED_GATEWAY, ALFRED_OPS, formatOpsValue, formatRelativeTime, getOpsBg, getOpsColor } from './alfredConfig';
 
 function StateBadge({ state }) {
   const label = state ? state.charAt(0).toUpperCase() + state.slice(1) : 'Unknown';
@@ -20,8 +20,8 @@ function MetricRow({ icon: Icon, label, value, state }) {
     <div className="flex items-center gap-2 min-w-0" style={{ height: '30px' }}>
       {createElement(Icon, { size: 15, style: { color: getOpsColor(state) } })}
       <span className="text-sm font-medium" style={{ color: 'var(--ds-text)' }}>{label}</span>
-      <span className="ml-auto text-sm truncate" style={{ color: 'var(--ds-text-secondary)' }} title={value}>
-        {value || '--'}
+      <span className="ml-auto text-sm truncate" style={{ color: 'var(--ds-text-secondary)' }} title={formatOpsValue(value)}>
+        {formatOpsValue(value)}
       </span>
     </div>
   );
@@ -108,7 +108,7 @@ export function OpsOverview() {
                 <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: getOpsColor(item.severity) }} />
                 <span className="text-sm font-medium truncate" style={{ color: 'var(--ds-text)' }} title={item.title}>{item.title}</span>
               </div>
-              <div className="text-xs truncate ml-4" style={{ color: 'var(--ds-text-secondary)' }} title={item.detail}>{item.detail}</div>
+              <div className="text-xs truncate ml-4" style={{ color: 'var(--ds-text-secondary)' }} title={formatOpsValue(item.detail)}>{formatOpsValue(item.detail)}</div>
             </div>
           ))
         )}
