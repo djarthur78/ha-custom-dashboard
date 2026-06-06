@@ -12,11 +12,7 @@ export const SCENES = [
     icon: 'Clapperboard',
     color: '#7c3aed',
     bgColor: '#ede9fe',
-    action: {
-      domain: 'automation',
-      service: 'trigger',
-      data: { entity_id: 'automation.setup_games_room_for_movie' },
-    },
+    harmonyActivity: 'Kodi Movies',
     activeWhen: ['Kodi Movies'],
   },
   {
@@ -25,11 +21,7 @@ export const SCENES = [
     icon: 'Satellite',
     color: '#0ea5e9',
     bgColor: '#e0f2fe',
-    action: {
-      domain: 'select',
-      service: 'select_option',
-      data: { entity_id: 'select.games_room_harmony_activities', option: 'SkyQ' },
-    },
+    harmonyActivity: 'SkyQ',
     activeWhen: ['SkyQ'],
   },
   {
@@ -38,11 +30,7 @@ export const SCENES = [
     icon: 'MonitorPlay',
     color: '#dc2626',
     bgColor: '#fee2e2',
-    action: {
-      domain: 'select',
-      service: 'select_option',
-      data: { entity_id: 'select.games_room_harmony_activities', option: 'Netflix Amazon' },
-    },
+    harmonyActivity: 'Netflix Amazon',
     activeWhen: ['Netflix Amazon'],
   },
   {
@@ -51,11 +39,7 @@ export const SCENES = [
     icon: 'Music',
     color: '#16a34a',
     bgColor: '#dcfce7',
-    action: {
-      domain: 'automation',
-      service: 'trigger',
-      data: { entity_id: 'automation.setup_games_room_for_sonos' },
-    },
+    harmonyActivity: 'Listen to Sonos Inside',
     activeWhen: ['Listen to Sonos Inside'],
   },
   {
@@ -76,6 +60,25 @@ export const SCENES = [
 // ─── HARMONY ACTIVITY ─────────────────────────────────────────────────────────
 
 export const HARMONY_ACTIVITY_ENTITY = 'select.games_room_harmony_activities';
+export const HARMONY_REMOTE_ENTITY = 'remote.games_room_harmony';
+
+export const GAMES_ROOM_COMMON_POWER = [
+  'switch.gr_avr',
+  'switch.gr_subwoofer',
+  'switch.lounge_subwoofer',
+  'switch.christmas_front_left',
+  'switch.unnamed_p304m_smart_plug_2',
+  'switch.unnamed_p304m_games_room_sonos_port',
+  'switch.sky_games_room',
+];
+
+export const GAMES_ROOM_ACTIVITY_LIGHTS = [
+  'switch.iport_area_2',
+  'switch.iport_area_3',
+];
+
+export const GAMES_ROOM_OUTDOOR_LIGHT = 'switch.iport_area_4';
+export const SUN_ENTITY = 'sun.sun';
 
 // ─── MEDIA PLAYERS ────────────────────────────────────────────────────────────
 
