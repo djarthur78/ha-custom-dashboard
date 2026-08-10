@@ -3,8 +3,9 @@
  * Dashboard overview with warm earthy cards and live data previews
  */
 
+import { createElement } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Utensils, Gamepad2, Camera, Music, Users, Heart } from 'lucide-react';
+import { Calendar, Utensils, Gamepad2, Camera, Music, Users, Heart, Search } from 'lucide-react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { useEntity } from '../hooks/useEntity';
 
@@ -16,6 +17,7 @@ const TINTS = {
   people: 'var(--ds-tint-people)',
   health: 'var(--ds-tint-health)',
   cameras: 'var(--ds-tint-cameras)',
+  media: 'var(--ds-tint-games)',
 };
 
 function HomeCard({ to, icon: Icon, title, tint, children }) {
@@ -27,7 +29,7 @@ function HomeCard({ to, icon: Icon, title, tint, children }) {
     >
       <div className="flex items-center gap-3 mb-3">
         <div className="p-2 rounded-xl" style={{ backgroundColor: 'rgba(159, 86, 68, 0.1)' }}>
-          <Icon size={22} style={{ color: 'var(--ds-accent)' }} />
+          {createElement(Icon, { size: 22, style: { color: 'var(--ds-accent)' } })}
         </div>
         <h3 className="text-base font-semibold" style={{ color: 'var(--ds-text)' }}>{title}</h3>
       </div>
@@ -78,6 +80,10 @@ export function HomePage() {
           <GamesRoomPreview />
         </HomeCard>
 
+        <HomeCard to="/add-media" icon={Search} title="Add Movie/TV" tint={TINTS.media}>
+          Search TMDb, confirm the right match, and post to #movies
+        </HomeCard>
+
         <HomeCard to="/music" icon={Music} title="Music" tint={TINTS.music}>
           <MusicPreview />
         </HomeCard>
@@ -96,7 +102,7 @@ export function HomePage() {
       </div>
 
       <div className="text-center text-sm" style={{ color: 'var(--ds-text-secondary)' }}>
-        Family Dashboard <span className="font-semibold" style={{ color: 'var(--ds-text)' }}>v3.8.1</span>
+        Family Dashboard <span className="font-semibold" style={{ color: 'var(--ds-text)' }}>v3.8.6</span>
       </div>
     </PageContainer>
   );

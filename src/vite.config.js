@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite'
-import { resolve } from 'path'
+import { dirname, resolve } from 'path'
+import { fileURLToPath } from 'url'
 import react from '@vitejs/plugin-react'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -39,6 +43,11 @@ export default defineConfig({
       '/api': {
         target: 'http://192.168.1.2:8123',
         changeOrigin: true,
+      },
+      '/remux-api': {
+        target: 'http://192.168.1.150:8765',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/remux-api/, ''),
       },
     },
   },

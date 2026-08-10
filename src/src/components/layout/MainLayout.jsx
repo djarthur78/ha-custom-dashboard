@@ -5,7 +5,7 @@
 
 import { Suspense } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { Calendar, Utensils, Gamepad2, Camera, Home, Music, Users, Heart, Snowflake, ListChecks, CloudSun, Flame, Sprout, Bot } from 'lucide-react';
+import { Calendar, Utensils, Gamepad2, Camera, Home, Music, Users, Heart, Snowflake, ListChecks, CloudSun, Flame, Sprout, Bot, Search } from 'lucide-react';
 import { useWeather } from '../../hooks/useWeather';
 import { useHAConnection } from '../../hooks/useHAConnection';
 import { getWeatherIcon } from '../../utils/weather';
@@ -21,6 +21,7 @@ const navItems = [
   { to: '/meals', icon: Utensils, label: 'Meals' },
   { to: '/weather', icon: CloudSun, label: 'Weather' },
   { to: '/games-room', icon: Gamepad2, label: 'Games Room' },
+  { to: '/add-media', icon: Search, label: 'Add Media', title: 'Add Movie/TV' },
   { to: '/music', icon: Music, label: 'Music' },
   { to: '/people', icon: Users, label: 'People' },
   { to: '/health', icon: Heart, label: 'Health' },
@@ -59,11 +60,11 @@ export function MainLayout() {
           {/* Left: Icon Navigation */}
           <nav className="flex items-center gap-1">
             {/* eslint-disable-next-line no-unused-vars */}
-            {navItems.map(({ to, icon: Icon, label }) => (
+            {navItems.map(({ to, icon: Icon, label, title }) => (
               <NavLink
                 key={to}
                 to={to}
-                title={label}
+                title={title || label}
                 className={({ isActive }) =>
                   `flex flex-col items-center justify-center gap-1 px-2.5 py-1.5 rounded-full transition-colors ${
                     isActive
