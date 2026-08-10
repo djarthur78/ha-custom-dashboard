@@ -310,8 +310,8 @@ export function AddMediaPage() {
   };
 
   return (
-    <div className="flex gap-3 p-3" style={{ height: 'calc(100vh - 72px)' }}>
-      <section className="ds-card flex min-h-0 flex-[32] flex-col overflow-hidden" style={{ padding: 0 }}>
+    <div className="flex flex-col gap-3 p-3 min-h-[calc(100vh-72px)] xl:flex-row xl:h-[calc(100vh-72px)]">
+      <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden xl:flex-[32]" style={{ padding: 0 }}>
         <div className="flex-shrink-0 border-b border-[var(--ds-border)] px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-[var(--ds-tint-games)] p-2.5 text-[var(--ds-accent)] shadow-sm">
@@ -432,7 +432,7 @@ export function AddMediaPage() {
         </div>
       </section>
 
-      <section className="ds-card flex min-h-0 flex-[38] flex-col overflow-hidden" style={{ padding: 0, backgroundColor: 'var(--ds-tint-games)' }}>
+      <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden xl:flex-[38]" style={{ padding: 0, backgroundColor: 'var(--ds-tint-games)' }}>
         <div className="flex items-center justify-between border-b border-[var(--ds-border)] px-4 py-3">
           <div>
             <h2 className="text-base font-bold text-[var(--ds-text)]">Featured match</h2>
@@ -471,7 +471,7 @@ export function AddMediaPage() {
         </div>
       </section>
 
-      <section className="ds-card flex min-h-0 flex-[30] flex-col overflow-hidden" style={{ padding: 0 }}>
+      <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden xl:flex-[30]" style={{ padding: 0 }}>
         <div className="flex items-center justify-between border-b border-[var(--ds-border)] px-4 py-3">
           <div>
             <h2 className="text-base font-bold text-[var(--ds-text)]">IMDb matches</h2>

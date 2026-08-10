@@ -20,6 +20,7 @@ const MobileTodoPage = lazy(() => import('./pages/mobile/MobileTodoPage'));
 const MobileWeatherPage = lazy(() => import('./pages/mobile/MobileWeatherPage'));
 const MobileHeatingPage = lazy(() => import('./pages/mobile/MobileHeatingPage'));
 const MobileLawnPage = lazy(() => import('./pages/mobile/MobileLawnPage'));
+const AddMediaPage = lazy(() => import('./pages/AddMediaPage'));
 
 function MobileApp() {
   return (
@@ -31,6 +32,7 @@ function MobileApp() {
         <Route path="meals" element={<MobileMealsPage />} />
         <Route path="weather" element={<MobileWeatherPage />} />
         <Route path="games-room" element={<MobileGamesRoomPage />} />
+        <Route path="add-media" element={<AddMediaPage />} />
         <Route path="music" element={<MobileMusicPage />} />
         <Route path="people" element={<MobilePeoplePage />} />
         <Route path="health" element={<MobileHealthPage />} />

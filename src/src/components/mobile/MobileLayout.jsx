@@ -14,6 +14,7 @@ const PAGE_TITLES = {
   '/home': 'Home',
   '/meals': 'Meals',
   '/games-room': 'Games Room',
+  '/add-media': 'Add Movie/TV',
   '/music': 'Music',
   '/people': 'People',
   '/health': 'Health',
