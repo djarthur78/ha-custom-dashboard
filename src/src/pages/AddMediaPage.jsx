@@ -77,9 +77,13 @@ function scoreResult(item, query, index) {
 
   if (item.owned === 'owned') score += 40;
   if (item.owned === 'missing') score += 5;
-  if (isShortQuery && titleTokens.length > queryTokens.length) score += 120;
-
-  score += Math.max(0, 25 - Math.abs(normalizedTitle.length - normalizedQuery.length));
+  if (isShortQuery && titleTokens.length > queryTokens.length && !titleTokens.includes('up')) score += 30;
+  if (isShortQuery) {
+    if (titleTokens.some((token) => /\d/.test(token))) score -= 25;
+    if (titleTokens.includes('up')) score -= 20;
+  } else {
+    score += Math.max(0, 25 - Math.abs(normalizedTitle.length - normalizedQuery.length));
+  }
 
   return { score, index };
 }
