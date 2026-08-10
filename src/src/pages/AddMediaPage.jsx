@@ -37,7 +37,7 @@ function typeLabel(item) {
   return item.mediaType === 'movie' ? 'Movie' : 'TV series';
 }
 
-function ResultCard({ item, selected, onSelect, onCollect, collecting }) {
+function ResultCard({ item, selected, onSelect }) {
   const owned = ownedLabel(item.owned);
 
   return (
@@ -51,91 +51,63 @@ function ResultCard({ item, selected, onSelect, onCollect, collecting }) {
           onSelect(item);
         }
       }}
-      className={`ds-card flex gap-4 items-stretch transition-all cursor-pointer ${
+      className={`ds-card overflow-hidden transition-all cursor-pointer ${
         selected ? 'ring-2 ring-[var(--ds-accent)] shadow-md' : 'hover:shadow-md'
       }`}
-      style={{ padding: 12, backgroundColor: selected ? 'rgba(243,238,255,0.7)' : 'var(--ds-card)' }}
+      style={{ padding: 0, backgroundColor: selected ? 'rgba(243,238,255,0.7)' : 'var(--ds-card)' }}
     >
-      <div className="w-24 shrink-0">
-        <div className="aspect-[2/3] rounded-lg overflow-hidden bg-[var(--ds-border)] shadow-sm">
-          {item.posterUrl ? (
-            <img
-              src={item.posterUrl}
-              alt={item.title}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-[var(--ds-text-secondary)]">
-              <Clapperboard size={28} />
-            </div>
-          )}
-        </div>
-      </div>
+      <div className="relative aspect-[2/3] bg-[var(--ds-border)]">
+        {item.posterUrl ? (
+          <img
+            src={item.posterUrl}
+            alt={item.title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-[var(--ds-text-secondary)]">
+            <Clapperboard size={32} />
+          </div>
+        )}
 
-      <div className="min-w-0 flex-1 flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-lg font-semibold text-[var(--ds-text)] truncate">
-                {item.title}
-              </h3>
-              <span className="px-2 py-0.5 rounded-full text-xs font-semibold border bg-[var(--ds-tint-games)] text-[var(--ds-text)]">
-                {typeLabel(item)}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
+
+        <div className="absolute left-2 top-2 flex items-center gap-1.5 rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold text-[var(--ds-text)] shadow-sm">
+          <Sparkles size={10} className="text-[var(--ds-accent)]" />
+          {selected ? 'Selected' : typeLabel(item)}
+        </div>
+
+        <div className="absolute left-2 right-2 bottom-2 space-y-2 text-white">
+          <div className="flex items-center gap-2 flex-wrap">
+            {item.year ? (
+              <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-[var(--ds-text)]">
+                {item.year}
               </span>
-              {item.year ? (
-                <span className="px-2 py-0.5 rounded-full text-xs font-semibold border bg-white text-[var(--ds-text-secondary)]">
-                  {item.year}
-                </span>
-              ) : null}
-              {item.imdbId ? (
-                <span className="px-2 py-0.5 rounded-full text-xs font-semibold border bg-white text-[var(--ds-text-secondary)]">
-                  IMDb {item.imdbId}
-                </span>
-              ) : null}
-            </div>
-            <p className="mt-1 text-sm text-[var(--ds-text-secondary)] line-clamp-3">
-              {item.overview || 'No overview available.'}
-            </p>
+            ) : null}
+            <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold ${owned.className}`}>
+              {owned.text}
+            </span>
           </div>
 
-          <a
-            href={`https://www.themoviedb.org/${item.mediaType}/${item.tmdbId}`}
-            target="_blank"
-            rel="noreferrer"
-            className="shrink-0 p-2 rounded-lg hover:bg-black/[0.04] text-[var(--ds-text-secondary)]"
-            title="Open TMDb listing"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <ExternalLink size={16} />
-          </a>
-        </div>
+          <h3 className="text-sm font-bold leading-tight line-clamp-2 drop-shadow">
+            {item.title}
+          </h3>
 
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${owned.className}`}>
-            <BadgeCheck size={14} />
-            {owned.text}
-          </span>
-
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onCollect(item);
-            }}
-            disabled={collecting}
-            className="ds-btn"
-            style={{ minWidth: 120 }}
-          >
-            {collecting ? (
-              <>
-                <LoaderCircle size={16} className="animate-spin" />
-                Sending
-              </>
-            ) : (
-              'Collect'
-            )}
-          </button>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-medium uppercase tracking-wide text-white/80">
+              {item.imdbId ? `IMDb ${item.imdbId}` : 'No IMDb id'}
+            </span>
+            <a
+              href={`https://www.themoviedb.org/${item.mediaType}/${item.tmdbId}`}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-[var(--ds-text)] shadow-sm"
+              title="Open TMDb listing"
+              onClick={(event) => event.stopPropagation()}
+            >
+              TMDb
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -148,8 +120,8 @@ function FeaturedMedia({ item, onCollect, collecting }) {
 
   return (
     <div className="ds-card overflow-hidden" style={{ backgroundColor: 'var(--ds-tint-games)', padding: 0 }}>
-      <div className="grid gap-0 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <div className="relative bg-black/10 min-h-[360px] lg:min-h-[520px]">
+      <div className="grid gap-0 lg:grid-cols-[300px_minmax(0,1fr)]">
+        <div className="relative bg-black/10 min-h-[360px] lg:min-h-[480px]">
           {poster ? (
             <img
               src={poster}
@@ -331,24 +303,26 @@ export function AddMediaPage() {
   };
 
   return (
-    <PageContainer maxWidth="max-w-[1720px]">
+    <PageContainer maxWidth="max-w-[1760px]">
       <div className="space-y-4">
-        <div className="ds-card overflow-hidden" style={{ backgroundColor: 'var(--ds-tint-games)', padding: 0 }}>
-          <div className="grid gap-0 xl:grid-cols-[380px_minmax(0,1fr)]">
-            <div className="border-b xl:border-b-0 xl:border-r border-white/70 p-5 lg:p-6">
+        <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <div className="ds-card overflow-hidden" style={{ padding: 0 }}>
+            <div className="bg-[var(--ds-tint-games)] px-4 py-4 border-b border-[var(--ds-border)]">
               <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-white/80 p-3 text-[var(--ds-accent)] shadow-sm">
+                <div className="rounded-2xl bg-white/90 p-3 text-[var(--ds-accent)] shadow-sm">
                   <Film size={24} />
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-[var(--ds-text)]">Add Movie/TV</h1>
-                  <p className="text-sm text-[var(--ds-text-secondary)]">Search, confirm, and send the exact request to #movies.</p>
+                <div className="min-w-0">
+                  <h1 className="text-2xl font-bold text-[var(--ds-text)] leading-tight">Add Movie/TV</h1>
+                  <p className="text-sm text-[var(--ds-text-secondary)] truncate">Search TMDb and confirm the right poster before you collect it.</p>
                 </div>
               </div>
+            </div>
 
-              <form onSubmit={runSearch} className="mt-6 space-y-4">
+            <div className="p-4 space-y-4">
+              <form onSubmit={runSearch} className="space-y-4">
                 <label className="block">
-                  <span className="block text-sm font-semibold text-[var(--ds-text)] mb-2">Search</span>
+                  <span className="block text-xs font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)] mb-2">Search</span>
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
@@ -359,7 +333,7 @@ export function AddMediaPage() {
                 </label>
 
                 <div>
-                  <span className="block text-sm font-semibold text-[var(--ds-text)] mb-2">Type</span>
+                  <span className="block text-xs font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)] mb-2">Type</span>
                   <div className="grid grid-cols-3 gap-2">
                     {filterButtons.map(({ id, label, icon: Icon }) => (
                       <button
@@ -394,90 +368,88 @@ export function AddMediaPage() {
                 </button>
               </form>
 
-              <div className="mt-5 grid grid-cols-3 gap-2">
-                <div className="rounded-xl border border-white/70 bg-white/80 p-3">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-3">
                   <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Results</div>
-                  <div className="mt-1 text-lg font-bold text-[var(--ds-text)]">{results.length}</div>
+                  <div className="mt-1 text-xl font-bold text-[var(--ds-text)]">{results.length}</div>
                 </div>
-                <div className="rounded-xl border border-white/70 bg-white/80 p-3">
+                <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-3">
                   <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Mode</div>
-                  <div className="mt-1 text-lg font-bold text-[var(--ds-text)]">{activeFilter.toUpperCase()}</div>
+                  <div className="mt-1 text-xl font-bold text-[var(--ds-text)]">{activeFilter.toUpperCase()}</div>
                 </div>
-                <div className="rounded-xl border border-white/70 bg-white/80 p-3">
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Queue</div>
-                  <div className="mt-1 text-lg font-bold text-[var(--ds-text)]">{selectedItem ? 'Ready' : '--'}</div>
+                <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Ready</div>
+                  <div className="mt-1 text-xl font-bold text-[var(--ds-text)]">{selectedItem ? 'Yes' : '--'}</div>
                 </div>
               </div>
-            </div>
 
-            <div className="p-5 lg:p-6">
-              {selectedItem ? (
-                <FeaturedMedia
-                  item={selectedItem}
-                  onCollect={handleCollect}
-                  collecting={collectingKey === `${selectedItem.mediaType}:${selectedItem.tmdbId}`}
-                />
-              ) : (
-                <div className="ds-card flex min-h-[360px] items-center justify-center border-dashed bg-white/60 text-center" style={{ borderStyle: 'dashed' }}>
-                  <div className="max-w-md px-4">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm text-[var(--ds-accent)]">
-                      <Sparkles size={28} />
-                    </div>
-                    <h2 className="text-2xl font-bold text-[var(--ds-text)]">Find a title</h2>
-                    <p className="mt-2 text-sm leading-6 text-[var(--ds-text-secondary)]">
-                      Search TMDb, compare the best match, and confirm whether it is already in Jellyfin before you collect it.
-                    </p>
-                  </div>
+              {searchMeta ? (
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-[var(--ds-border)] bg-white px-2.5 py-1 text-xs font-semibold">
+                    <BadgeCheck size={13} />
+                    {searchMeta}
+                  </span>
+                  {selectedItem ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-[var(--ds-border)] bg-white px-2.5 py-1 text-xs font-semibold">
+                      <ChevronRight size={13} />
+                      Selected: {selectedItem.title}
+                    </span>
+                  ) : null}
                 </div>
-              )}
+              ) : null}
+
+              {error ? (
+                <div className="ds-card flex items-center gap-2 text-sm text-red-700" style={{ padding: 12, backgroundColor: 'rgba(196, 99, 106, 0.08)' }}>
+                  <CircleAlert size={16} />
+                  {error}
+                </div>
+              ) : null}
             </div>
           </div>
-        </div>
 
-        {error ? (
-          <div className="ds-card flex items-center gap-2 text-sm text-red-700" style={{ padding: 12, backgroundColor: 'rgba(196, 99, 106, 0.08)' }}>
-            <CircleAlert size={16} />
-            {error}
-          </div>
-        ) : null}
-
-        {searchMeta ? (
-          <div className="flex flex-wrap items-center gap-2 px-1 text-sm text-[var(--ds-text-secondary)]">
-            <span className="inline-flex items-center gap-1 rounded-full border border-[var(--ds-border)] bg-white px-2.5 py-1 font-semibold">
-              <BadgeCheck size={13} />
-              {searchMeta}
-            </span>
+          <div className="space-y-4">
             {selectedItem ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--ds-border)] bg-white px-2.5 py-1 font-semibold">
-                <ChevronRight size={13} />
-                Selected: {selectedItem.title}
-              </span>
+              <FeaturedMedia
+                item={selectedItem}
+                onCollect={handleCollect}
+                collecting={collectingKey === `${selectedItem.mediaType}:${selectedItem.tmdbId}`}
+              />
+            ) : (
+              <div className="ds-card flex min-h-[420px] items-center justify-center border-dashed bg-[var(--ds-tint-games)] text-center" style={{ borderStyle: 'dashed' }}>
+                <div className="max-w-md px-4">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm text-[var(--ds-accent)]">
+                    <Sparkles size={28} />
+                  </div>
+                  <h2 className="text-2xl font-bold text-[var(--ds-text)]">Find a title</h2>
+                  <p className="mt-2 text-sm leading-6 text-[var(--ds-text-secondary)]">
+                    Search TMDb, compare similar posters, and use the art to confirm the exact movie or series.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {results.map((item) => {
+                const key = `${item.mediaType}:${item.tmdbId}`;
+                return (
+                  <ResultCard
+                    key={key}
+                    item={item}
+                    selected={selectedKey === key || (!selectedKey && results[0] && results[0].mediaType === item.mediaType && results[0].tmdbId === item.tmdbId)}
+                    onSelect={(picked) => setSelectedKey(`${picked.mediaType}:${picked.tmdbId}`)}
+                  />
+                );
+              })}
+            </div>
+
+            {!loading && !results.length && !error ? (
+              <div className="ds-card flex items-center gap-2 text-sm text-[var(--ds-text-secondary)]" style={{ padding: 12 }}>
+                <Search size={16} />
+                Search by title to pull candidates from TMDb and check Jellyfin ownership.
+              </div>
             ) : null}
           </div>
-        ) : null}
-
-        <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-          {results.map((item) => {
-            const key = `${item.mediaType}:${item.tmdbId}`;
-            return (
-              <ResultCard
-                key={key}
-                item={item}
-                selected={selectedKey === key || (!selectedKey && results[0] && results[0].mediaType === item.mediaType && results[0].tmdbId === item.tmdbId)}
-                onSelect={(picked) => setSelectedKey(`${picked.mediaType}:${picked.tmdbId}`)}
-                onCollect={handleCollect}
-                collecting={collectingKey === key}
-              />
-            );
-          })}
         </div>
-
-        {!loading && !results.length && !error ? (
-          <div className="ds-card flex items-center gap-2 text-sm text-[var(--ds-text-secondary)]" style={{ padding: 12 }}>
-            <Search size={16} />
-            Search by title to pull candidates from TMDb and check Jellyfin ownership.
-          </div>
-        ) : null}
       </div>
     </PageContainer>
   );
