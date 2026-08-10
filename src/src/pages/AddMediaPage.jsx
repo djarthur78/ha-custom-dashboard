@@ -56,7 +56,7 @@ function scoreResult(item, query, index) {
 
   let score = 0;
 
-  if (normalizedTitle === normalizedQuery) score += isShortQuery ? 75 : 1000;
+  if (normalizedTitle === normalizedQuery) score += isShortQuery ? -50 : 1000;
   if (normalizedTitle.startsWith(normalizedQuery)) score += 350;
   if (normalizedTitle.includes(normalizedQuery)) score += 250;
 
