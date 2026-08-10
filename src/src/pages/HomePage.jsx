@@ -81,7 +81,7 @@ export function HomePage() {
         </HomeCard>
 
         <HomeCard to="/add-media" icon={Search} title="Add Movie/TV" tint={TINTS.media}>
-          Search TMDb, confirm the right match, and post to #movies
+          Search IMDb, confirm the right match, and post to #movies
         </HomeCard>
 
         <HomeCard to="/music" icon={Music} title="Music" tint={TINTS.music}>
@@ -102,7 +102,7 @@ export function HomePage() {
       </div>
 
       <div className="text-center text-sm" style={{ color: 'var(--ds-text-secondary)' }}>
-        Family Dashboard <span className="font-semibold" style={{ color: 'var(--ds-text)' }}>v3.8.9</span>
+        Family Dashboard <span className="font-semibold" style={{ color: 'var(--ds-text)' }}>v3.8.10</span>
       </div>
     </PageContainer>
   );

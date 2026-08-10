@@ -116,6 +116,7 @@ function ResultCard({ item, selected, onSelect }) {
 function SelectedMediaContent({ item, onCollect, collecting }) {
   const owned = ownedLabel(item.owned);
   const poster = item.posterUrl;
+  const canCollect = item.owned !== 'owned';
 
   return (
     <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
@@ -192,7 +193,7 @@ function SelectedMediaContent({ item, onCollect, collecting }) {
           <button
             type="button"
             onClick={() => onCollect(item)}
-            disabled={collecting}
+            disabled={collecting || !canCollect}
             className="ds-btn"
             style={{ minWidth: 160 }}
           >
@@ -200,6 +201,11 @@ function SelectedMediaContent({ item, onCollect, collecting }) {
               <>
                 <LoaderCircle size={16} className="animate-spin" />
                 Sending
+              </>
+            ) : !canCollect ? (
+              <>
+                <BadgeCheck size={16} />
+                Already in Jellyfin
               </>
             ) : (
               <>
@@ -252,6 +258,7 @@ export function AddMediaPage() {
   const [searchMeta, setSearchMeta] = useState('');
   const [collectingKey, setCollectingKey] = useState('');
   const [selectedKey, setSelectedKey] = useState('');
+  const [searched, setSearched] = useState(false);
 
   const filterButtons = useMemo(() => FILTERS, []);
   const selectedItem = useMemo(
@@ -264,23 +271,26 @@ export function AddMediaPage() {
     const trimmed = query.trim();
     if (!trimmed) {
       setResults([]);
-      setError('Type a title to search.');
+      setError('Type a movie or TV title to search IMDb.');
+      setSearched(false);
       return;
     }
 
     setLoading(true);
     setError('');
     setSearchMeta('');
+    setSearched(true);
 
     try {
       const response = await searchMedia(trimmed, activeFilter);
       setResults(response.results || []);
       setSelectedKey(response.results?.[0] ? `${response.results[0].mediaType}:${response.results[0].tmdbId}` : '');
-      setSearchMeta(response.results?.length ? `Found ${response.results.length} result${response.results.length === 1 ? '' : 's'}` : 'No matches');
+      setSearchMeta(response.results?.length ? `Found ${response.results.length} IMDb result${response.results.length === 1 ? '' : 's'}` : 'No IMDb matches');
     } catch (err) {
       setError(err.message || 'Search failed');
       setResults([]);
       setSelectedKey('');
+      setSearchMeta('');
     } finally {
       setLoading(false);
     }
@@ -304,13 +314,13 @@ export function AddMediaPage() {
       <section className="ds-card flex min-h-0 flex-[32] flex-col overflow-hidden" style={{ padding: 0 }}>
         <div className="flex-shrink-0 border-b border-[var(--ds-border)] px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-[var(--ds-tint-games)] p-2.5 text-[var(--ds-accent)]">
-              <Film size={22} />
+            <div className="rounded-xl bg-[var(--ds-tint-games)] p-2.5 text-[var(--ds-accent)] shadow-sm">
+              <Film size={20} />
             </div>
             <div className="min-w-0">
               <h2 className="text-base font-bold text-[var(--ds-text)] leading-tight">Add Movie/TV</h2>
               <p className="truncate text-xs uppercase tracking-wide text-[var(--ds-text-secondary)]">
-                Search TMDb, confirm artwork, then collect the right match
+                Search IMDb, confirm artwork, then collect the right match
               </p>
             </div>
           </div>
@@ -319,11 +329,11 @@ export function AddMediaPage() {
         <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
           <form onSubmit={runSearch} className="space-y-4">
             <label className="block">
-              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Search</span>
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Title</span>
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Movie title or TV series name"
+                placeholder="Search IMDb by movie or TV title"
                 autoFocus
                 className="w-full rounded-xl border border-[var(--ds-border)] bg-white px-4 py-3 text-[var(--ds-text)] outline-none shadow-sm"
               />
@@ -354,12 +364,12 @@ export function AddMediaPage() {
               {loading ? (
                 <>
                   <LoaderCircle size={16} className="animate-spin" />
-                  Searching
+                  Searching IMDb
                 </>
               ) : (
                 <>
                   <Search size={16} />
-                  Search library
+                  Search IMDb
                 </>
               )}
             </button>
@@ -402,11 +412,20 @@ export function AddMediaPage() {
             </div>
           ) : null}
 
-          {!loading && !results.length && !error ? (
+          {!loading && !results.length && !error && !searched ? (
             <div className="rounded-xl border border-dashed border-[var(--ds-border)] bg-white/60 p-4 text-sm text-[var(--ds-text-secondary)]">
               <div className="flex items-center gap-2">
                 <Search size={16} />
-                Search by title, typos, or partial names to pull candidates from TMDb and check Jellyfin ownership.
+                Search by title, typos, or partial names to pull candidates from IMDb and check Jellyfin ownership.
+              </div>
+            </div>
+          ) : null}
+
+          {!loading && searched && !results.length && !error ? (
+            <div className="rounded-xl border border-dashed border-[var(--ds-border)] bg-white/60 p-4 text-sm text-[var(--ds-text-secondary)]">
+              <div className="flex items-center gap-2">
+                <Search size={16} />
+                No IMDb matches. Try a broader title, a typo, or a partial phrase.
               </div>
             </div>
           ) : null}
@@ -416,7 +435,7 @@ export function AddMediaPage() {
       <section className="ds-card flex min-h-0 flex-[38] flex-col overflow-hidden" style={{ padding: 0, backgroundColor: 'var(--ds-tint-games)' }}>
         <div className="flex items-center justify-between border-b border-[var(--ds-border)] px-4 py-3">
           <div>
-            <h2 className="text-base font-bold text-[var(--ds-text)]">Selected match</h2>
+            <h2 className="text-base font-bold text-[var(--ds-text)]">Featured match</h2>
             <p className="text-xs uppercase tracking-wide text-[var(--ds-text-secondary)]">Artwork first, then collect</p>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-[var(--ds-border)] bg-white px-3 py-1 text-xs font-semibold text-[var(--ds-text-secondary)]">
@@ -438,9 +457,13 @@ export function AddMediaPage() {
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm text-[var(--ds-accent)]">
                   <Sparkles size={28} />
                 </div>
-                <h2 className="text-2xl font-bold text-[var(--ds-text)]">Find a title</h2>
+                <h2 className="text-2xl font-bold text-[var(--ds-text)]">
+                  {searched ? 'No match selected' : 'Find a title'}
+                </h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--ds-text-secondary)]">
-                  Search TMDb with fuzzy terms, compare similar posters, and use the art to confirm the exact movie or series.
+                  {searched
+                    ? 'Pick one of the IMDb matches on the right to review artwork, year, and ownership.'
+                    : 'Search IMDb with fuzzy terms, compare similar posters, and use the art to confirm the exact movie or series.'}
                 </p>
               </div>
             </div>
@@ -451,8 +474,8 @@ export function AddMediaPage() {
       <section className="ds-card flex min-h-0 flex-[30] flex-col overflow-hidden" style={{ padding: 0 }}>
         <div className="flex items-center justify-between border-b border-[var(--ds-border)] px-4 py-3">
           <div>
-            <h2 className="text-base font-bold text-[var(--ds-text)]">Matches</h2>
-            <p className="text-xs uppercase tracking-wide text-[var(--ds-text-secondary)]">Poster grid with ownership state</p>
+            <h2 className="text-base font-bold text-[var(--ds-text)]">IMDb matches</h2>
+            <p className="text-xs uppercase tracking-wide text-[var(--ds-text-secondary)]">Poster cards with Jellyfin state</p>
           </div>
           <span className="rounded-full border border-[var(--ds-border)] bg-white px-3 py-1 text-xs font-semibold text-[var(--ds-text-secondary)]">
             {results.length}
@@ -460,7 +483,7 @@ export function AddMediaPage() {
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto p-3">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+          <div className="grid gap-3 grid-cols-1">
             {results.map((item) => {
               const key = `${item.mediaType}:${item.tmdbId}`;
               return (
@@ -472,6 +495,11 @@ export function AddMediaPage() {
                 />
               );
             })}
+            {!results.length && !loading && !error ? (
+              <div className="rounded-xl border border-dashed border-[var(--ds-border)] bg-white/60 p-4 text-sm text-[var(--ds-text-secondary)]">
+                Search IMDb to load poster cards here.
+              </div>
+            ) : null}
           </div>
         </div>
       </section>

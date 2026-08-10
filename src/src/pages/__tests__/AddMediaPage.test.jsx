@@ -52,16 +52,16 @@ describe('AddMediaPage', () => {
 
     render(<AddMediaPage />);
 
-    fireEvent.change(screen.getByPlaceholderText('Movie title or TV series name'), {
+    fireEvent.change(screen.getByPlaceholderText('Search IMDb by movie or TV title'), {
       target: { value: 'Alien' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /search library/i }));
+    fireEvent.click(screen.getByRole('button', { name: /search imdb/i }));
 
     await waitFor(() => {
       expect(searchMedia).toHaveBeenCalledWith('Alien', 'all');
     });
 
-    const featuredPanel = screen.getByRole('heading', { name: 'Selected match' }).closest('.ds-card');
+    const featuredPanel = screen.getByRole('heading', { name: 'Featured match' }).closest('.ds-card');
     expect(featuredPanel).toBeTruthy();
 
     expect(within(featuredPanel).getAllByText('In Jellyfin').length).toBeGreaterThan(0);
@@ -82,10 +82,10 @@ describe('AddMediaPage', () => {
 
     render(<AddMediaPage />);
 
-    fireEvent.change(screen.getByPlaceholderText('Movie title or TV series name'), {
+    fireEvent.change(screen.getByPlaceholderText('Search IMDb by movie or TV title'), {
       target: { value: 'Alien' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /search library/i }));
+    fireEvent.click(screen.getByRole('button', { name: /search imdb/i }));
 
     await screen.findByText('Alien: Covenant');
 
@@ -94,12 +94,12 @@ describe('AddMediaPage', () => {
     fireEvent.click(covenantCard);
 
     await waitFor(() => {
-      const featuredPanel = screen.getByRole('heading', { name: 'Selected match' }).closest('.ds-card');
+      const featuredPanel = screen.getByRole('heading', { name: 'Featured match' }).closest('.ds-card');
       expect(featuredPanel).toBeTruthy();
       expect(within(featuredPanel).getByRole('heading', { name: 'Alien: Covenant' })).toBeInTheDocument();
     });
 
-    const featuredPanel = screen.getByRole('heading', { name: 'Selected match' }).closest('.ds-card');
+    const featuredPanel = screen.getByRole('heading', { name: 'Featured match' }).closest('.ds-card');
     expect(featuredPanel).toBeTruthy();
     const featuredPoster = within(featuredPanel).getByAltText('Alien: Covenant');
     expect(featuredPoster).toHaveAttribute('src', movieResults[1].posterUrl);
@@ -112,5 +112,24 @@ describe('AddMediaPage', () => {
       expect(collectMedia).toHaveBeenCalledWith(movieResults[1]);
       expect(showToast).toHaveBeenCalledWith('movie add: Alien: Covenant (2017)', 'success');
     });
+  });
+
+  it('disables collect for titles already in Jellyfin', async () => {
+    searchMedia.mockResolvedValue({ results: movieResults });
+
+    render(<AddMediaPage />);
+
+    fireEvent.change(screen.getByPlaceholderText('Search IMDb by movie or TV title'), {
+      target: { value: 'Alien' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /search imdb/i }));
+
+    await waitFor(() => {
+      expect(searchMedia).toHaveBeenCalled();
+    });
+
+    const featuredPanel = screen.getByRole('heading', { name: 'Featured match' }).closest('.ds-card');
+    expect(featuredPanel).toBeTruthy();
+    expect(within(featuredPanel).getByRole('button', { name: /already in jellyfin/i })).toBeDisabled();
   });
 });
