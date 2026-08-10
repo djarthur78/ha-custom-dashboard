@@ -36,6 +36,65 @@ function typeLabel(item) {
   return item.mediaType === 'movie' ? 'Movie' : 'TV series';
 }
 
+function normalizeText(value) {
+  return (value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function scoreResult(item, query, index) {
+  const normalizedQuery = normalizeText(query);
+  if (!normalizedQuery) {
+    return { score: 0, index };
+  }
+
+  const normalizedTitle = normalizeText(item.title);
+  const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
+  const titleTokens = normalizedTitle.split(/\s+/).filter(Boolean);
+
+  let score = 0;
+
+  if (normalizedTitle === normalizedQuery) score += 1000;
+  if (normalizedTitle.startsWith(normalizedQuery)) score += 350;
+  if (normalizedTitle.includes(normalizedQuery)) score += 250;
+
+  const matchedTokens = queryTokens.filter((token) => normalizedTitle.includes(token));
+  score += matchedTokens.length * 80;
+
+  const orderedTokens = queryTokens.every((token, tokenIndex) => {
+    const currentIndex = titleTokens.indexOf(token);
+    if (currentIndex === -1) return false;
+    if (tokenIndex === 0) return true;
+    const previousIndex = titleTokens.indexOf(queryTokens[tokenIndex - 1]);
+    return previousIndex !== -1 && previousIndex <= currentIndex;
+  });
+  if (orderedTokens) score += 120;
+
+  const titleWordMatches = titleTokens.filter((token) => queryTokens.includes(token));
+  score += titleWordMatches.length * 20;
+
+  if (item.owned === 'owned') score += 40;
+  if (item.owned === 'missing') score += 5;
+
+  score += Math.max(0, 25 - Math.abs(normalizedTitle.length - normalizedQuery.length));
+
+  return { score, index };
+}
+
+function rankResults(results, query) {
+  return [...results]
+    .map((item, index) => ({ item, ...scoreResult(item, query, index) }))
+    .sort((left, right) => {
+      if (right.score !== left.score) return right.score - left.score;
+      if ((left.item.title || '') !== (right.item.title || '')) {
+        return (left.item.title || '').localeCompare(right.item.title || '');
+      }
+      return left.index - right.index;
+    })
+    .map(({ item }) => item);
+}
+
 function ResultCard({ item, selected, onSelect }) {
   const owned = ownedLabel(item.owned);
 
@@ -261,9 +320,10 @@ export function AddMediaPage() {
   const [searched, setSearched] = useState(false);
 
   const filterButtons = useMemo(() => FILTERS, []);
+  const rankedResults = useMemo(() => rankResults(results, query), [results, query]);
   const selectedItem = useMemo(
-    () => results.find((item) => `${item.mediaType}:${item.tmdbId}` === selectedKey) || results[0] || null,
-    [results, selectedKey],
+    () => rankedResults.find((item) => `${item.mediaType}:${item.tmdbId}` === selectedKey) || rankedResults[0] || null,
+    [rankedResults, selectedKey],
   );
 
   const runSearch = async (event) => {
@@ -283,9 +343,11 @@ export function AddMediaPage() {
 
     try {
       const response = await searchMedia(trimmed, activeFilter);
-      setResults(response.results || []);
-      setSelectedKey(response.results?.[0] ? `${response.results[0].mediaType}:${response.results[0].tmdbId}` : '');
-      setSearchMeta(response.results?.length ? `Found ${response.results.length} IMDb result${response.results.length === 1 ? '' : 's'}` : 'No IMDb matches');
+      const nextResults = response.results || [];
+      const nextRankedResults = rankResults(nextResults, trimmed);
+      setResults(nextResults);
+      setSelectedKey(nextRankedResults[0] ? `${nextRankedResults[0].mediaType}:${nextRankedResults[0].tmdbId}` : '');
+      setSearchMeta(nextResults.length ? `Found ${nextResults.length} IMDb result${nextResults.length === 1 ? '' : 's'}` : 'No IMDb matches');
     } catch (err) {
       setError(err.message || 'Search failed');
       setResults([]);
@@ -483,19 +545,19 @@ export function AddMediaPage() {
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto p-3">
-          <div className="grid gap-3 grid-cols-1">
-            {results.map((item) => {
+          <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(165px,1fr))]">
+            {rankedResults.map((item) => {
               const key = `${item.mediaType}:${item.tmdbId}`;
               return (
                 <ResultCard
                   key={key}
                   item={item}
-                  selected={selectedKey === key || (!selectedKey && results[0] && results[0].mediaType === item.mediaType && results[0].tmdbId === item.tmdbId)}
+                  selected={selectedKey === key || (!selectedKey && rankedResults[0] && rankedResults[0].mediaType === item.mediaType && rankedResults[0].tmdbId === item.tmdbId)}
                   onSelect={(picked) => setSelectedKey(`${picked.mediaType}:${picked.tmdbId}`)}
                 />
               );
             })}
-            {!results.length && !loading && !error ? (
+            {!rankedResults.length && !loading && !error ? (
               <div className="rounded-xl border border-dashed border-[var(--ds-border)] bg-white/60 p-4 text-sm text-[var(--ds-text-secondary)]">
                 Search IMDb to load poster cards here.
               </div>

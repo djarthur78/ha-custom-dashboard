@@ -38,6 +38,42 @@ const movieResults = [
   },
 ];
 
+const stepResults = [
+  {
+    mediaType: 'movie',
+    title: 'Step Up',
+    originalTitle: 'Step Up',
+    year: 2006,
+    tmdbId: 9762,
+    imdbId: 'tt0462590',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/step-up-poster.jpg',
+    overview: 'Delinquent Tyler Gage receives the opportunity of a lifetime...',
+    owned: 'missing',
+  },
+  {
+    mediaType: 'movie',
+    title: 'Step Brothers',
+    originalTitle: 'Step Brothers',
+    year: 2008,
+    tmdbId: 10664,
+    imdbId: 'tt0838283',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/step-brothers-poster.jpg',
+    overview: 'Brennan Huff and Dale Doback become step brothers.',
+    owned: 'owned',
+  },
+  {
+    mediaType: 'movie',
+    title: 'Step Up 2: The Streets',
+    originalTitle: 'Step Up 2: The Streets',
+    year: 2008,
+    tmdbId: 8328,
+    imdbId: 'tt1023481',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/step-up-2-poster.jpg',
+    overview: 'Tyler Gage joins a dance crew at an elite arts school.',
+    owned: 'missing',
+  },
+];
+
 describe('AddMediaPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -131,5 +167,27 @@ describe('AddMediaPage', () => {
     const featuredPanel = screen.getByRole('heading', { name: 'Featured match' }).closest('.ds-card');
     expect(featuredPanel).toBeTruthy();
     expect(within(featuredPanel).getByRole('button', { name: /already in jellyfin/i })).toBeDisabled();
+  });
+
+  it('ranks owned broad matches ahead of weaker fuzzy matches', async () => {
+    searchMedia.mockResolvedValue({ results: stepResults });
+
+    render(<AddMediaPage />);
+
+    fireEvent.change(screen.getByPlaceholderText('Search IMDb by movie or TV title'), {
+      target: { value: 'Step' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /search imdb/i }));
+
+    await waitFor(() => {
+      expect(searchMedia).toHaveBeenCalledWith('Step', 'all');
+    });
+
+    const resultsPanel = screen.getByRole('heading', { name: 'IMDb matches' }).closest('.ds-card');
+    expect(resultsPanel).toBeTruthy();
+
+    const resultCards = within(resultsPanel).getAllByRole('button');
+    expect(resultCards[0]).toHaveTextContent('Step Brothers');
+    expect(resultCards[0]).toHaveTextContent('In Jellyfin');
   });
 });
