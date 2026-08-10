@@ -52,10 +52,11 @@ function scoreResult(item, query, index) {
   const normalizedTitle = normalizeText(item.title);
   const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
   const titleTokens = normalizedTitle.split(/\s+/).filter(Boolean);
+  const isShortQuery = normalizedQuery.length <= 4;
 
   let score = 0;
 
-  if (normalizedTitle === normalizedQuery) score += 1000;
+  if (normalizedTitle === normalizedQuery) score += isShortQuery ? 75 : 1000;
   if (normalizedTitle.startsWith(normalizedQuery)) score += 350;
   if (normalizedTitle.includes(normalizedQuery)) score += 250;
 
@@ -76,6 +77,7 @@ function scoreResult(item, query, index) {
 
   if (item.owned === 'owned') score += 40;
   if (item.owned === 'missing') score += 5;
+  if (isShortQuery && titleTokens.length > queryTokens.length) score += 120;
 
   score += Math.max(0, 25 - Math.abs(normalizedTitle.length - normalizedQuery.length));
 
