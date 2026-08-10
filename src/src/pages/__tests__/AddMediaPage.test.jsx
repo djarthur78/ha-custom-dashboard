@@ -61,11 +61,11 @@ describe('AddMediaPage', () => {
       expect(searchMedia).toHaveBeenCalledWith('Alien', 'all');
     });
 
-    const featuredPanel = screen.getByText('Selected match').closest('.ds-card');
+    const featuredPanel = screen.getByRole('heading', { name: 'Selected match' }).closest('.ds-card');
     expect(featuredPanel).toBeTruthy();
 
-    expect(within(featuredPanel).getByText('In Jellyfin')).toBeInTheDocument();
-    expect(screen.getByText('Not in Jellyfin')).toBeInTheDocument();
+    expect(within(featuredPanel).getAllByText('In Jellyfin').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Not in Jellyfin').length).toBeGreaterThan(0);
     expect(within(featuredPanel).getByRole('heading', { name: 'Alien' })).toBeInTheDocument();
     expect(screen.getByText('Alien: Covenant')).toBeInTheDocument();
 
@@ -94,17 +94,17 @@ describe('AddMediaPage', () => {
     fireEvent.click(covenantCard);
 
     await waitFor(() => {
-      const featuredPanel = screen.getByText('Selected match').closest('.ds-card');
+      const featuredPanel = screen.getByRole('heading', { name: 'Selected match' }).closest('.ds-card');
       expect(featuredPanel).toBeTruthy();
       expect(within(featuredPanel).getByRole('heading', { name: 'Alien: Covenant' })).toBeInTheDocument();
     });
 
-    const featuredPanel = screen.getByText('Selected match').closest('.ds-card');
+    const featuredPanel = screen.getByRole('heading', { name: 'Selected match' }).closest('.ds-card');
     expect(featuredPanel).toBeTruthy();
     const featuredPoster = within(featuredPanel).getByAltText('Alien: Covenant');
     expect(featuredPoster).toHaveAttribute('src', movieResults[1].posterUrl);
 
-    expect(within(featuredPanel).getByText('Not in Jellyfin')).toBeInTheDocument();
+    expect(within(featuredPanel).getAllByText('Not in Jellyfin').length).toBeGreaterThan(0);
 
     fireEvent.click(within(featuredPanel).getByRole('button', { name: /collect/i }));
 
