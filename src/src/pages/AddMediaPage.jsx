@@ -136,7 +136,7 @@ function ResultCard({ item, selected, onSelect }) {
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
 
-        <div className="absolute left-2 top-2 flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-[var(--ds-text)] shadow-sm">
+        <div className="absolute left-2 top-2 flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-sm font-semibold text-[var(--ds-text)] shadow-sm">
           <Sparkles size={12} className="text-[var(--ds-accent)]" />
           {selected ? 'Selected' : typeLabel(item)}
         </div>
@@ -144,11 +144,11 @@ function ResultCard({ item, selected, onSelect }) {
         <div className="absolute left-2 right-2 bottom-2 space-y-2 text-white">
           <div className="flex items-center gap-2 flex-wrap">
             {item.year ? (
-              <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-[var(--ds-text)]">
+              <span className="rounded-full bg-white/90 px-2.5 py-1 text-sm font-semibold text-[var(--ds-text)]">
                 {item.year}
               </span>
             ) : null}
-            <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${owned.className}`}>
+            <span className={`rounded-full border px-2.5 py-1 text-sm font-semibold ${owned.className}`}>
               {owned.text}
             </span>
           </div>
@@ -158,14 +158,14 @@ function ResultCard({ item, selected, onSelect }) {
           </h3>
 
           <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-white/80">
+            <span className="text-sm font-medium uppercase tracking-wide text-white/80">
               {item.imdbId ? `IMDb ${item.imdbId}` : 'No IMDb id'}
             </span>
             <a
               href={`https://www.themoviedb.org/${item.mediaType}/${item.tmdbId}`}
               target="_blank"
               rel="noreferrer"
-              className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-[var(--ds-text)] shadow-sm"
+              className="rounded-full bg-white/90 px-2.5 py-1 text-sm font-semibold text-[var(--ds-text)] shadow-sm"
               title="Open TMDb listing"
               onClick={(event) => event.stopPropagation()}
             >
@@ -200,7 +200,7 @@ function SelectedMediaContent({ item, onCollect, collecting }) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
         <div className="absolute left-4 bottom-4 right-4">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-sm font-semibold text-[var(--ds-text)] shadow-sm">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-base font-semibold text-[var(--ds-text)] shadow-sm">
             <Sparkles size={13} className="text-[var(--ds-accent)]" />
             {typeLabel(item)}
           </div>
@@ -209,48 +209,48 @@ function SelectedMediaContent({ item, onCollect, collecting }) {
 
       <div className="flex min-w-0 flex-col gap-5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--ds-border)] bg-white px-3 py-1.5 text-sm font-semibold text-[var(--ds-text)]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[var(--ds-border)] bg-white px-3 py-1.5 text-base font-semibold text-[var(--ds-text)]">
             <BadgeCheck size={14} />
             Selected match
           </span>
-          <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${owned.className}`}>
+          <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-base font-semibold ${owned.className}`}>
             <BadgeCheck size={14} />
             {owned.text}
           </span>
           {item.year ? (
-            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--ds-border)] bg-white px-3 py-1.5 text-sm font-semibold text-[var(--ds-text-secondary)]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[var(--ds-border)] bg-white px-3 py-1.5 text-base font-semibold text-[var(--ds-text-secondary)]">
               {item.year}
             </span>
           ) : null}
         </div>
 
         <div className="min-w-0">
-          <h2 className="text-4xl lg:text-5xl font-bold text-[var(--ds-text)] leading-tight">
+          <h2 className="text-5xl lg:text-6xl font-bold text-[var(--ds-text)] leading-tight">
             {item.title}
           </h2>
-          <p className="mt-2 text-base font-medium uppercase tracking-wide text-[var(--ds-text-secondary)]">
+          <p className="mt-2 text-lg font-medium uppercase tracking-wide text-[var(--ds-text-secondary)]">
             {item.originalTitle && item.originalTitle !== item.title ? item.originalTitle : item.mediaType}
           </p>
         </div>
 
-        <p className="max-w-3xl text-base leading-7 text-[var(--ds-text-secondary)]">
+        <p className="max-w-3xl text-lg leading-7 text-[var(--ds-text-secondary)]">
           {item.overview || 'No overview available.'}
         </p>
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-[var(--ds-border)] bg-white p-3">
-            <div className="text-sm font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Type</div>
-            <div className="mt-1 text-base font-semibold text-[var(--ds-text)]">{typeLabel(item)}</div>
+            <div className="text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Type</div>
+            <div className="mt-1 text-lg font-semibold text-[var(--ds-text)]">{typeLabel(item)}</div>
           </div>
           <div className="rounded-xl border border-[var(--ds-border)] bg-white p-3">
-            <div className="text-sm font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">IMDb</div>
-            <div className="mt-1 text-base font-semibold text-[var(--ds-text)] truncate">
+            <div className="text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">IMDb</div>
+            <div className="mt-1 text-lg font-semibold text-[var(--ds-text)] truncate">
               {item.imdbId || 'Not available'}
             </div>
           </div>
           <div className="rounded-xl border border-[var(--ds-border)] bg-white p-3">
-            <div className="text-sm font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">TMDb</div>
-            <div className="mt-1 text-base font-semibold text-[var(--ds-text)] truncate">{item.tmdbId}</div>
+            <div className="text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">TMDb</div>
+            <div className="mt-1 text-lg font-semibold text-[var(--ds-text)] truncate">{item.tmdbId}</div>
           </div>
         </div>
 
@@ -260,7 +260,7 @@ function SelectedMediaContent({ item, onCollect, collecting }) {
             onClick={() => onCollect(item)}
             disabled={collecting || !canCollect}
             className="ds-btn"
-            style={{ minWidth: 160 }}
+            style={{ minWidth: 180, fontSize: '1.05rem' }}
           >
             {collecting ? (
               <>
@@ -305,7 +305,7 @@ function SelectedMediaContent({ item, onCollect, collecting }) {
           ) : null}
         </div>
 
-        <div className="flex items-center gap-2 text-sm font-medium text-[var(--ds-text-secondary)]">
+        <div className="flex items-center gap-2 text-base font-medium text-[var(--ds-text-secondary)]">
           <ChevronRight size={16} />
           Pick a result below, then collect the match you want.
         </div>
@@ -386,8 +386,8 @@ export function AddMediaPage() {
               <Film size={24} />
             </div>
             <div className="min-w-0">
-              <h2 className="text-2xl font-bold text-[var(--ds-text)] leading-tight">Add Movie/TV</h2>
-              <p className="truncate text-sm font-medium uppercase tracking-wide text-[var(--ds-text-secondary)]">
+              <h2 className="text-3xl font-bold text-[var(--ds-text)] leading-tight">Add Movie/TV</h2>
+              <p className="truncate text-base font-medium uppercase tracking-wide text-[var(--ds-text-secondary)]">
                 Search IMDb, confirm artwork, then collect the right match
               </p>
             </div>
@@ -397,25 +397,25 @@ export function AddMediaPage() {
         <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-5">
           <form onSubmit={runSearch} className="space-y-4">
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Title</span>
+              <span className="mb-2 block text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Title</span>
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search IMDb by movie or TV title"
                 autoFocus
-                className="w-full rounded-xl border border-[var(--ds-border)] bg-white px-4 py-4 text-lg text-[var(--ds-text)] outline-none shadow-sm"
+                className="w-full rounded-xl border border-[var(--ds-border)] bg-white px-4 py-4 text-xl text-[var(--ds-text)] outline-none shadow-sm"
               />
             </label>
 
             <div>
-              <span className="mb-2 block text-sm font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Type</span>
+              <span className="mb-2 block text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Type</span>
               <div className="grid grid-cols-3 gap-2">
                 {filterButtons.map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
                     type="button"
                     onClick={() => setActiveFilter(id)}
-                    className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-3.5 text-base font-semibold transition-colors ${
+                    className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-3.5 text-lg font-semibold transition-colors ${
                       activeFilter === id
                         ? 'border-[var(--ds-accent)] bg-[var(--ds-accent)] text-white shadow-sm'
                         : 'border-[var(--ds-border)] bg-white text-[var(--ds-text-secondary)] hover:bg-black/[0.03]'
@@ -428,7 +428,7 @@ export function AddMediaPage() {
               </div>
             </div>
 
-            <button type="submit" className="ds-btn w-full justify-center text-lg" disabled={loading} style={{ height: 56 }}>
+            <button type="submit" className="ds-btn w-full justify-center" disabled={loading} style={{ height: 60, fontSize: '1.125rem' }}>
               {loading ? (
                 <>
                   <LoaderCircle size={18} className="animate-spin" />
@@ -445,27 +445,27 @@ export function AddMediaPage() {
 
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-4">
-              <div className="text-sm font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Results</div>
+              <div className="text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Results</div>
               <div className="mt-1 text-3xl font-bold text-[var(--ds-text)]">{results.length}</div>
             </div>
             <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-4">
-              <div className="text-sm font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Mode</div>
+              <div className="text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Mode</div>
               <div className="mt-1 text-3xl font-bold text-[var(--ds-text)]">{activeFilter.toUpperCase()}</div>
             </div>
             <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-4">
-              <div className="text-sm font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Ready</div>
+              <div className="text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Ready</div>
               <div className="mt-1 text-3xl font-bold text-[var(--ds-text)]">{selectedItem ? 'Yes' : '--'}</div>
             </div>
           </div>
 
           {searchMeta ? (
             <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--ds-border)] bg-white px-3 py-1.5 text-sm font-semibold">
+              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--ds-border)] bg-white px-3 py-1.5 text-base font-semibold">
                 <BadgeCheck size={15} />
                 {searchMeta}
               </span>
               {selectedItem ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--ds-border)] bg-white px-3 py-1.5 text-sm font-semibold">
+                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--ds-border)] bg-white px-3 py-1.5 text-base font-semibold">
                   <ChevronRight size={15} />
                   Selected: {selectedItem.title}
                 </span>
@@ -474,14 +474,14 @@ export function AddMediaPage() {
           ) : null}
 
           {error ? (
-            <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-base text-red-700">
-              <CircleAlert size={18} />
+            <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-lg text-red-700">
+              <CircleAlert size={20} />
               {error}
             </div>
           ) : null}
 
           {!loading && !results.length && !error && !searched ? (
-            <div className="rounded-xl border border-dashed border-[var(--ds-border)] bg-white/60 p-5 text-base text-[var(--ds-text-secondary)]">
+            <div className="rounded-xl border border-dashed border-[var(--ds-border)] bg-white/60 p-5 text-lg text-[var(--ds-text-secondary)]">
               <div className="flex items-center gap-2">
                 <Search size={18} />
                 Search by title, typos, or partial names to pull candidates from IMDb and check Jellyfin ownership.
@@ -490,7 +490,7 @@ export function AddMediaPage() {
           ) : null}
 
           {!loading && searched && !results.length && !error ? (
-            <div className="rounded-xl border border-dashed border-[var(--ds-border)] bg-white/60 p-5 text-base text-[var(--ds-text-secondary)]">
+            <div className="rounded-xl border border-dashed border-[var(--ds-border)] bg-white/60 p-5 text-lg text-[var(--ds-text-secondary)]">
               <div className="flex items-center gap-2">
                 <Search size={18} />
                 No IMDb matches. Try a broader title, a typo, or a partial phrase.
@@ -503,10 +503,10 @@ export function AddMediaPage() {
       <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden xl:flex-[38]" style={{ padding: 0, backgroundColor: 'var(--ds-tint-games)' }}>
         <div className="flex items-center justify-between border-b border-[var(--ds-border)] px-5 py-4">
           <div>
-            <h2 className="text-2xl font-bold text-[var(--ds-text)]">Featured match</h2>
-            <p className="text-sm font-medium uppercase tracking-wide text-[var(--ds-text-secondary)]">Artwork first, then collect</p>
+            <h2 className="text-3xl font-bold text-[var(--ds-text)]">Featured match</h2>
+            <p className="text-base font-medium uppercase tracking-wide text-[var(--ds-text-secondary)]">Artwork first, then collect</p>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--ds-border)] bg-white px-3 py-1.5 text-sm font-semibold text-[var(--ds-text-secondary)]">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--ds-border)] bg-white px-3 py-1.5 text-base font-semibold text-[var(--ds-text-secondary)]">
             <Sparkles size={14} className="text-[var(--ds-accent)]" />
             {selectedItem ? ownedLabel(selectedItem.owned).text : 'Waiting'}
           </div>
@@ -525,10 +525,10 @@ export function AddMediaPage() {
                 <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-white shadow-sm text-[var(--ds-accent)]">
                   <Sparkles size={34} />
                 </div>
-                <h2 className="text-4xl font-bold text-[var(--ds-text)]">
+                <h2 className="text-5xl font-bold text-[var(--ds-text)]">
                   {searched ? 'No match selected' : 'Find a title'}
                 </h2>
-                <p className="mt-3 text-base leading-7 text-[var(--ds-text-secondary)]">
+                <p className="mt-3 text-lg leading-7 text-[var(--ds-text-secondary)]">
                   {searched
                     ? 'Pick one of the IMDb matches on the right to review artwork, year, and ownership.'
                     : 'Search IMDb with fuzzy terms, compare similar posters, and use the art to confirm the exact movie or series.'}
@@ -542,10 +542,10 @@ export function AddMediaPage() {
       <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden xl:flex-[30]" style={{ padding: 0 }}>
         <div className="flex items-center justify-between border-b border-[var(--ds-border)] px-5 py-4">
           <div>
-            <h2 className="text-2xl font-bold text-[var(--ds-text)]">IMDb matches</h2>
-            <p className="text-sm font-medium uppercase tracking-wide text-[var(--ds-text-secondary)]">Poster cards with Jellyfin state</p>
+            <h2 className="text-3xl font-bold text-[var(--ds-text)]">IMDb matches</h2>
+            <p className="text-base font-medium uppercase tracking-wide text-[var(--ds-text-secondary)]">Poster cards with Jellyfin state</p>
           </div>
-          <span className="rounded-full border border-[var(--ds-border)] bg-white px-3 py-1.5 text-sm font-semibold text-[var(--ds-text-secondary)]">
+          <span className="rounded-full border border-[var(--ds-border)] bg-white px-3 py-1.5 text-base font-semibold text-[var(--ds-text-secondary)]">
             {results.length}
           </span>
         </div>
