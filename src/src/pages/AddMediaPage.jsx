@@ -300,17 +300,17 @@ export function AddMediaPage() {
   };
 
   return (
-    <div className="grid h-[calc(100vh-72px)] gap-3 p-3 xl:grid-cols-[320px_minmax(0,1.3fr)_minmax(380px,0.9fr)]">
-      <section className="ds-card flex min-h-0 flex-col overflow-hidden" style={{ padding: 0 }}>
-        <div className="px-4 py-4 border-b border-[var(--ds-border)] bg-[var(--ds-tint-games)]">
+    <div className="flex gap-3 p-3" style={{ height: 'calc(100vh - 72px)' }}>
+      <section className="ds-card flex min-h-0 flex-[32] flex-col overflow-hidden" style={{ padding: 0 }}>
+        <div className="flex-shrink-0 border-b border-[var(--ds-border)] px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-white/90 p-3 text-[var(--ds-accent)] shadow-sm">
-              <Film size={24} />
+            <div className="rounded-xl bg-[var(--ds-tint-games)] p-2.5 text-[var(--ds-accent)]">
+              <Film size={22} />
             </div>
             <div className="min-w-0">
-              <h1 className="text-2xl font-bold text-[var(--ds-text)] leading-tight">Add Movie/TV</h1>
-              <p className="truncate text-sm text-[var(--ds-text-secondary)]">
-                Search TMDb with typos or partial titles, then confirm the right poster before you collect it.
+              <h2 className="text-base font-bold text-[var(--ds-text)] leading-tight">Add Movie/TV</h2>
+              <p className="truncate text-xs uppercase tracking-wide text-[var(--ds-text-secondary)]">
+                Search TMDb, confirm artwork, then collect the right match
               </p>
             </div>
           </div>
@@ -413,7 +413,7 @@ export function AddMediaPage() {
         </div>
       </section>
 
-      <section className="ds-card flex min-h-0 flex-col overflow-hidden" style={{ padding: 0, backgroundColor: 'var(--ds-tint-games)' }}>
+      <section className="ds-card flex min-h-0 flex-[38] flex-col overflow-hidden" style={{ padding: 0, backgroundColor: 'var(--ds-tint-games)' }}>
         <div className="flex items-center justify-between border-b border-[var(--ds-border)] px-4 py-3">
           <div>
             <h2 className="text-base font-bold text-[var(--ds-text)]">Selected match</h2>
@@ -448,7 +448,7 @@ export function AddMediaPage() {
         </div>
       </section>
 
-      <section className="ds-card flex min-h-0 flex-col overflow-hidden" style={{ padding: 0 }}>
+      <section className="ds-card flex min-h-0 flex-[30] flex-col overflow-hidden" style={{ padding: 0 }}>
         <div className="flex items-center justify-between border-b border-[var(--ds-border)] px-4 py-3">
           <div>
             <h2 className="text-base font-bold text-[var(--ds-text)]">Matches</h2>
