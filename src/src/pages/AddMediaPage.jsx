@@ -314,7 +314,7 @@ export function AddMediaPage() {
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-2xl font-bold text-[var(--ds-text)] leading-tight">Add Movie/TV</h1>
-                  <p className="text-sm text-[var(--ds-text-secondary)] truncate">Search TMDb and confirm the right poster before you collect it.</p>
+                  <p className="text-sm text-[var(--ds-text-secondary)] truncate">Search TMDb with typos or partial titles, then confirm the right poster before you collect it.</p>
                 </div>
               </div>
             </div>
@@ -326,7 +326,7 @@ export function AddMediaPage() {
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Movie title or TV series"
+                    placeholder="Movie title or TV series name"
                     autoFocus
                     className="w-full rounded-xl border border-[var(--ds-border)] bg-white px-4 py-3 text-[var(--ds-text)] outline-none shadow-sm"
                   />
@@ -422,7 +422,7 @@ export function AddMediaPage() {
                   </div>
                   <h2 className="text-2xl font-bold text-[var(--ds-text)]">Find a title</h2>
                   <p className="mt-2 text-sm leading-6 text-[var(--ds-text-secondary)]">
-                    Search TMDb, compare similar posters, and use the art to confirm the exact movie or series.
+                    Search TMDb with fuzzy terms, compare similar posters, and use the art to confirm the exact movie or series.
                   </p>
                 </div>
               </div>
@@ -445,7 +445,7 @@ export function AddMediaPage() {
             {!loading && !results.length && !error ? (
               <div className="ds-card flex items-center gap-2 text-sm text-[var(--ds-text-secondary)]" style={{ padding: 12 }}>
                 <Search size={16} />
-                Search by title to pull candidates from TMDb and check Jellyfin ownership.
+                Search by title, typos, or partial names to pull candidates from TMDb and check Jellyfin ownership.
               </div>
             ) : null}
           </div>

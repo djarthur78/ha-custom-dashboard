@@ -52,7 +52,7 @@ describe('AddMediaPage', () => {
 
     render(<AddMediaPage />);
 
-    fireEvent.change(screen.getByPlaceholderText('Movie title or TV series'), {
+    fireEvent.change(screen.getByPlaceholderText('Movie title or TV series name'), {
       target: { value: 'Alien' },
     });
     fireEvent.click(screen.getByRole('button', { name: /search library/i }));
@@ -82,7 +82,7 @@ describe('AddMediaPage', () => {
 
     render(<AddMediaPage />);
 
-    fireEvent.change(screen.getByPlaceholderText('Movie title or TV series'), {
+    fireEvent.change(screen.getByPlaceholderText('Movie title or TV series name'), {
       target: { value: 'Alien' },
     });
     fireEvent.click(screen.getByRole('button', { name: /search library/i }));
