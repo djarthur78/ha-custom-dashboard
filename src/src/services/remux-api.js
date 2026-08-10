@@ -1,7 +1,15 @@
-const REMUX_API_BASE = '/remux-api/api';
+function getRemuxApiBase() {
+  const pathname = window.location?.pathname || '';
+  const ingressMatch = pathname.match(/^\/api\/hassio_ingress\/[^/]+/);
+  if (ingressMatch) {
+    return `${ingressMatch[0]}/remux-api/api`;
+  }
+
+  return '/remux-api/api';
+}
 
 async function request(path, options = {}) {
-  const response = await fetch(`${REMUX_API_BASE}${path}`, {
+  const response = await fetch(`${getRemuxApiBase()}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -34,4 +42,3 @@ export function collectMedia(item) {
     }),
   });
 }
-

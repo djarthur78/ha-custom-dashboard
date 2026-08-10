@@ -1,6 +1,6 @@
 {
   "name": "Family Dashboard",
-  "version": "3.8.11",
+  "version": "3.8.12",
   "slug": "family-dashboard",
   "description": "Modern family calendar and dashboard for Home Assistant",
   "url": "https://github.com/djarthur78/ha-custom-dashboard",
