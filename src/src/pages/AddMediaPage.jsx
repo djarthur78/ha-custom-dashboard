@@ -3,7 +3,7 @@
  * Search movies and TV series, confirm the right match, then post to #movies.
  */
 
-import { createElement, useMemo, useState } from 'react';
+import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BadgeCheck,
   CircleAlert,
@@ -324,6 +324,8 @@ export function AddMediaPage() {
   const [collectingKey, setCollectingKey] = useState('');
   const [selectedKey, setSelectedKey] = useState('');
   const [searched, setSearched] = useState(false);
+  const searchCacheRef = useRef(new Map());
+  const searchSeqRef = useRef(0);
 
   const filterButtons = useMemo(() => FILTERS, []);
   const rankedResults = useMemo(() => rankResults(results, query), [results, query]);
@@ -342,6 +344,19 @@ export function AddMediaPage() {
       return;
     }
 
+    const cacheKey = `${activeFilter}|${trimmed.toLowerCase()}`;
+    const cachedResults = searchCacheRef.current.get(cacheKey);
+    if (cachedResults) {
+      setLoading(false);
+      setError('');
+      setSearchMeta(cachedResults.length ? `Found ${cachedResults.length} IMDb result${cachedResults.length === 1 ? '' : 's'}` : 'No IMDb matches');
+      setResults(cachedResults);
+      setSelectedKey(cachedResults[0] ? `${cachedResults[0].mediaType}:${cachedResults[0].tmdbId}` : '');
+      setSearched(true);
+      return;
+    }
+
+    const requestId = ++searchSeqRef.current;
     setLoading(true);
     setError('');
     setSearchMeta('');
@@ -349,20 +364,36 @@ export function AddMediaPage() {
 
     try {
       const response = await searchMedia(trimmed, activeFilter);
+      if (requestId !== searchSeqRef.current) return;
       const nextResults = response.results || [];
       const nextRankedResults = rankResults(nextResults, trimmed);
-      setResults(nextResults);
+      searchCacheRef.current.set(cacheKey, nextRankedResults);
+      setResults(nextRankedResults);
       setSelectedKey(nextRankedResults[0] ? `${nextRankedResults[0].mediaType}:${nextRankedResults[0].tmdbId}` : '');
-      setSearchMeta(nextResults.length ? `Found ${nextResults.length} IMDb result${nextResults.length === 1 ? '' : 's'}` : 'No IMDb matches');
+      setSearchMeta(nextRankedResults.length ? `Found ${nextRankedResults.length} IMDb result${nextRankedResults.length === 1 ? '' : 's'}` : 'No IMDb matches');
     } catch (err) {
+      if (requestId !== searchSeqRef.current) return;
       setError(err.message || 'Search failed');
       setResults([]);
       setSelectedKey('');
       setSearchMeta('');
     } finally {
-      setLoading(false);
+      if (requestId === searchSeqRef.current) {
+        setLoading(false);
+      }
     }
   };
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (trimmed.length < 3) return undefined;
+
+    const timer = window.setTimeout(() => {
+      void runSearch();
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [query, activeFilter]);
 
   const handleCollect = async (item) => {
     const key = `${item.mediaType}:${item.tmdbId}`;
@@ -378,8 +409,8 @@ export function AddMediaPage() {
   };
 
   return (
-    <div className="flex flex-col gap-3 p-3 min-h-[calc(100vh-72px)] xl:flex-row xl:h-[calc(100vh-72px)]">
-      <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden xl:flex-[32]" style={{ padding: 0 }}>
+    <div className="flex flex-col gap-3 p-3 min-h-[calc(100vh-72px)] lg:flex-row lg:h-[calc(100vh-72px)]">
+      <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden lg:flex-[30]" style={{ padding: 0 }}>
         <div className="flex-shrink-0 border-b border-[var(--ds-border)] px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-[var(--ds-tint-games)] p-3 text-[var(--ds-accent)] shadow-sm">
@@ -395,7 +426,7 @@ export function AddMediaPage() {
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-5">
-          <form onSubmit={runSearch} className="space-y-4">
+          <form onSubmit={runSearch} className="space-y-5">
             <label className="block">
               <span className="mb-2 block text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Title</span>
               <input
@@ -409,7 +440,7 @@ export function AddMediaPage() {
 
             <div>
               <span className="mb-2 block text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Type</span>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-3">
                 {filterButtons.map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
@@ -443,7 +474,7 @@ export function AddMediaPage() {
             </button>
           </form>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-4">
               <div className="text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Results</div>
               <div className="mt-1 text-3xl font-bold text-[var(--ds-text)]">{results.length}</div>
@@ -500,7 +531,7 @@ export function AddMediaPage() {
         </div>
       </section>
 
-      <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden xl:flex-[38]" style={{ padding: 0, backgroundColor: 'var(--ds-tint-games)' }}>
+      <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden lg:flex-[42]" style={{ padding: 0, backgroundColor: 'var(--ds-tint-games)' }}>
         <div className="flex items-center justify-between border-b border-[var(--ds-border)] px-5 py-4">
           <div>
             <h2 className="text-3xl font-bold text-[var(--ds-text)]">Featured match</h2>
@@ -539,7 +570,7 @@ export function AddMediaPage() {
         </div>
       </section>
 
-      <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden xl:flex-[30]" style={{ padding: 0 }}>
+      <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden lg:flex-[28]" style={{ padding: 0 }}>
         <div className="flex items-center justify-between border-b border-[var(--ds-border)] px-5 py-4">
           <div>
             <h2 className="text-3xl font-bold text-[var(--ds-text)]">IMDb matches</h2>
@@ -551,7 +582,7 @@ export function AddMediaPage() {
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto p-4">
-          <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
+          <div className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
             {rankedResults.map((item) => {
               const key = `${item.mediaType}:${item.tmdbId}`;
               return (
