@@ -436,9 +436,9 @@ export function AddMediaPage() {
   };
 
   return (
-    <div className="flex flex-col gap-2 p-2 min-h-[calc(100vh-72px)] lg:h-[calc(100vh-72px)] lg:flex-row lg:overflow-hidden">
-      <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden lg:flex-[29]" style={{ padding: 0 }}>
-        <div className="flex-shrink-0 border-b border-[var(--ds-border)] px-4 py-4">
+    <div className="flex flex-col gap-3 p-3 min-h-[calc(100vh-72px)] lg:h-[calc(100vh-72px)] lg:flex-row lg:overflow-hidden">
+      <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden lg:flex-[28]" style={{ padding: 0 }}>
+        <div className="flex-shrink-0 border-b border-[var(--ds-border)] px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-[var(--ds-tint-games)] p-3 text-[var(--ds-accent)] shadow-sm">
               <Film size={22} />
@@ -452,8 +452,8 @@ export function AddMediaPage() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden p-4 space-y-4">
-          <form onSubmit={runSearch} className="space-y-4">
+        <div className="flex-1 min-h-0 overflow-hidden p-5 space-y-5">
+          <form onSubmit={runSearch} className="space-y-5">
             <label className="block">
               <span className="mb-2 block text-sm lg:text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Title</span>
               <input
@@ -467,7 +467,7 @@ export function AddMediaPage() {
 
             <div>
               <span className="mb-2 block text-sm lg:text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Type</span>
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-3 gap-3">
                 {filterButtons.map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
@@ -501,16 +501,16 @@ export function AddMediaPage() {
             </button>
           </form>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-5">
               <div className="text-sm lg:text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Results</div>
               <div className="mt-1 text-3xl font-bold text-[var(--ds-text)]">{results.length}</div>
             </div>
-            <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-4">
+            <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-5">
               <div className="text-sm lg:text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Mode</div>
               <div className="mt-1 text-3xl font-bold text-[var(--ds-text)]">{activeFilter.toUpperCase()}</div>
             </div>
-            <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-4">
+            <div className="rounded-xl border border-[var(--ds-border)] bg-[var(--ds-tint-games)] p-5">
               <div className="text-sm lg:text-base font-semibold uppercase tracking-wide text-[var(--ds-text-secondary)]">Ready</div>
               <div className="mt-1 text-3xl font-bold text-[var(--ds-text)]">{selectedItem ? 'Yes' : '--'}</div>
             </div>
@@ -577,7 +577,7 @@ export function AddMediaPage() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto p-5" data-testid="featured-scroll-region">
           {selectedItem ? (
             <SelectedMediaContent
               item={selectedItem}
@@ -605,7 +605,7 @@ export function AddMediaPage() {
       </section>
 
       <section className="ds-card flex min-h-0 w-full flex-col overflow-hidden lg:flex-[31]" style={{ padding: 0 }}>
-        <div className="flex items-center justify-between border-b border-[var(--ds-border)] px-4 py-4">
+        <div className="flex items-center justify-between border-b border-[var(--ds-border)] px-5 py-5">
           <div>
             <h2 className="text-3xl font-bold text-[var(--ds-text)]">IMDb matches</h2>
             <p className="text-sm lg:text-base font-medium uppercase tracking-wide text-[var(--ds-text-secondary)]">Poster cards with Jellyfin state</p>
@@ -615,7 +615,7 @@ export function AddMediaPage() {
           </span>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto p-5" data-testid="results-scroll-region">
           <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
             {visibleResults.map((item) => {
               const key = `${item.mediaType}:${item.tmdbId}`;

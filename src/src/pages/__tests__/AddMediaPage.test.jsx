@@ -240,4 +240,13 @@ describe('AddMediaPage', () => {
       expect(screen.getByText('IMDb lookup timed out. Try again or narrow the title.')).toBeInTheDocument();
     });
   });
+
+  it('keeps the featured and results panes scrollable on desktop layouts', () => {
+    searchMedia.mockResolvedValue({ results: broadResults });
+
+    render(<AddMediaPage />);
+
+    expect(screen.getByTestId('featured-scroll-region')).toHaveClass('overflow-y-auto');
+    expect(screen.getByTestId('results-scroll-region')).toHaveClass('overflow-y-auto');
+  });
 });
