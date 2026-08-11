@@ -1,0 +1,1 @@
+import{r as t}from"./ErrorBoundary-DsbjC9-N.js";let s=null,e=0;function i(t,i="info",r=4e3){if(!s)return;const o=++e;s(s=>[...s,{id:o,message:t,type:i}]),setTimeout(()=>{s(t=>t.filter(t=>t.id!==o))},r)}function r(){const[e,i]=t.useState([]);s=i;return{toasts:e,dismissToast:t.useCallback(t=>{i(s=>s.filter(s=>s.id!==t))},[])}}export{i as s,r as u};
