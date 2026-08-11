@@ -19,15 +19,23 @@ async function request(path, options = {}) {
 
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    const message = payload?.detail || payload?.message || response.statusText || 'Request failed';
-    throw new Error(message);
+    const message =
+      payload?.detail ||
+      payload?.message ||
+      (response.status === 504 ? 'IMDb lookup timed out' : '') ||
+      response.statusText ||
+      'Request failed';
+    const error = new Error(message);
+    error.status = response.status;
+    error.payload = payload;
+    throw error;
   }
   return payload;
 }
 
-export function searchMedia(query, type = 'all') {
+export function searchMedia(query, type = 'all', requestOptions = {}) {
   const params = new URLSearchParams({ q: query, type });
-  return request(`/media/search?${params.toString()}`);
+  return request(`/media/search?${params.toString()}`, requestOptions);
 }
 
 export function collectMedia(item) {

@@ -74,6 +74,18 @@ const stepResults = [
   },
 ];
 
+const broadResults = Array.from({ length: 7 }, (_, index) => ({
+  mediaType: 'movie',
+  title: `Broad Result ${index + 1}`,
+  originalTitle: `Broad Result ${index + 1}`,
+  year: 2000 + index,
+  tmdbId: 5000 + index,
+  imdbId: `tt50000${index}`,
+  posterUrl: `https://image.tmdb.org/t/p/w500/broad-${index + 1}.jpg`,
+  overview: `Broad overview ${index + 1}`,
+  owned: index === 2 ? 'owned' : 'missing',
+}));
+
 describe('AddMediaPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -94,7 +106,7 @@ describe('AddMediaPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /search imdb/i }));
 
     await waitFor(() => {
-      expect(searchMedia).toHaveBeenCalledWith('Alien', 'all');
+      expect(searchMedia).toHaveBeenCalledWith('Alien', 'all', expect.objectContaining({ signal: expect.any(Object) }));
     });
 
     const featuredPanel = screen.getByRole('heading', { name: 'Featured match' }).closest('.ds-card');
@@ -180,7 +192,7 @@ describe('AddMediaPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /search imdb/i }));
 
     await waitFor(() => {
-      expect(searchMedia).toHaveBeenCalledWith('Step', 'all');
+      expect(searchMedia).toHaveBeenCalledWith('Step', 'all', expect.objectContaining({ signal: expect.any(Object) }));
     });
 
     const resultsPanel = screen.getByRole('heading', { name: 'IMDb matches' }).closest('.ds-card');
@@ -189,5 +201,43 @@ describe('AddMediaPage', () => {
     const resultCards = within(resultsPanel).getAllByRole('button');
     expect(resultCards[0]).toHaveTextContent('Step Brothers');
     expect(resultCards[0]).toHaveTextContent('In Jellyfin');
+  });
+
+  it('shows a more results control for broader searches', async () => {
+    searchMedia.mockResolvedValue({ results: broadResults });
+
+    render(<AddMediaPage />);
+
+    fireEvent.change(screen.getByPlaceholderText('Search IMDb by movie or TV title'), {
+      target: { value: 'Broad' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /search imdb/i }));
+
+    await waitFor(() => {
+      expect(searchMedia).toHaveBeenCalledWith('Broad', 'all', expect.objectContaining({ signal: expect.any(Object) }));
+    });
+
+    const resultsPanel = screen.getByRole('heading', { name: 'IMDb matches' }).closest('.ds-card');
+    expect(resultsPanel).toBeTruthy();
+
+    expect(within(resultsPanel).queryByText('Broad Result 7')).not.toBeInTheDocument();
+    fireEvent.click(within(resultsPanel).getByRole('button', { name: /show 1 more/i }));
+
+    expect(within(resultsPanel).getByText('Broad Result 7')).toBeInTheDocument();
+  });
+
+  it('shows a timeout message when the IMDb search times out', async () => {
+    searchMedia.mockRejectedValue(Object.assign(new Error('Gateway Timeout'), { status: 504 }));
+
+    render(<AddMediaPage />);
+
+    fireEvent.change(screen.getByPlaceholderText('Search IMDb by movie or TV title'), {
+      target: { value: 'Step' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /search imdb/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('IMDb lookup timed out. Try again or narrow the title.')).toBeInTheDocument();
+    });
   });
 });
