@@ -1,0 +1,9 @@
+{
+  "domain": "ondilo_ico_recommendations",
+  "name": "Ondilo ICO Recommendations",
+  "version": "1.0.0",
+  "documentation": "https://interop.ondilo.com/docs/api/customer/v1",
+  "codeowners": [],
+  "dependencies": ["ondilo_ico"],
+  "iot_class": "cloud_polling"
+}

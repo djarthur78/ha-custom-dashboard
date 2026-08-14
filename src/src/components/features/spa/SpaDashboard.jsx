@@ -11,11 +11,13 @@ import {
   Play,
   Pause,
   Volume2,
-  ChevronRight,
+  Trees,
+  CircleAlert,
 } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import { useServiceCall } from '../../../hooks/useServiceCall';
 import { SPA_ENTITIES, SPA_TARGET_PRESETS } from './spaConfig';
+import { SpaHistoryCharts } from './SpaHistoryCharts';
 
 function parseNumber(value) {
   if (value == null) return null;
@@ -26,6 +28,16 @@ function parseNumber(value) {
 function formatTemp(value) {
   const n = parseNumber(value);
   return n == null ? '--' : `${n.toFixed(1)}°`;
+}
+
+function formatDifference(value, unit = '', decimals = 2) {
+  if (value == null) return '--';
+  return `${Math.abs(value).toFixed(decimals)}${unit} ${value > 0 ? 'high' : 'low'}`;
+}
+
+function getRecommendationList(entity) {
+  const recommendations = entity?.attributes?.recommendations;
+  return Array.isArray(recommendations) ? recommendations : [];
 }
 
 function StatusChip({ label, active = false, tone = 'neutral' }) {
@@ -130,10 +142,10 @@ function WaterQualityCard() {
   const phValue = parseNumber(ph.state);
   const orpValue = parseNumber(orp.state);
   const phMin = parseNumber(phMinimum.state) ?? 7.2;
-  const phMax = parseNumber(phMaximum.state) ?? 7.8;
-  const orpMin = parseNumber(orpMinimum.state) ?? 650;
-  const orpMax = parseNumber(orpMaximum.state) ?? 750;
-  const recommendation = rec.state || rec.attributes?.friendly_name || null;
+  const phMax = parseNumber(phMaximum.state) ?? 7.6;
+  const orpMin = parseNumber(orpMinimum.state) ?? 550;
+  const orpMax = parseNumber(orpMaximum.state) ?? 650;
+  const recommendation = rec.attributes?.summary || null;
 
   const phTone = phValue == null ? 'neutral' : (phValue < phMin || phValue > phMax ? 'bad' : 'neutral');
   const orpTone = orpValue == null ? 'neutral' : (orpValue < orpMin || orpValue > orpMax ? 'warn' : 'neutral');
@@ -150,11 +162,17 @@ function WaterQualityCard() {
           <div className="text-xs font-medium uppercase tracking-wider text-[var(--ds-text-secondary)]">pH</div>
           <div className="mt-1 text-2xl font-bold text-[var(--ds-text)]">{phValue == null ? '--' : phValue.toFixed(2)}</div>
           <StatusChip label={phValue == null ? 'Unavailable' : phTone === 'bad' ? 'Needs attention' : 'Normal'} tone={phTone} active />
+          <div className="mt-1 text-xs text-[var(--ds-text-secondary)]">
+            Target {phMin.toFixed(1)}–{phMax.toFixed(1)}{phValue != null && phTone === 'bad' ? ` · ${formatDifference(phValue - (phValue > phMax ? phMax : phMin))}` : ''}
+          </div>
         </div>
         <div>
-          <div className="text-xs font-medium uppercase tracking-wider text-[var(--ds-text-secondary)]">ORP</div>
+          <div className="text-xs font-medium uppercase tracking-wider text-[var(--ds-text-secondary)]">ORP / Bromine</div>
           <div className="mt-1 text-2xl font-bold text-[var(--ds-text)]">{orpValue == null ? '--' : `${orpValue.toFixed(0)} mV`}</div>
-          <StatusChip label={orpValue == null ? 'Unavailable' : orpTone === 'warn' ? 'Watch' : 'Normal'} tone={orpTone} active />
+          <StatusChip label={orpValue == null ? 'Unavailable' : orpTone === 'warn' ? 'Needs attention' : 'Normal'} tone={orpTone} active />
+          <div className="mt-1 text-xs text-[var(--ds-text-secondary)]">
+            Target {orpMin.toFixed(0)}–{orpMax.toFixed(0)} mV{orpValue != null && orpTone === 'warn' ? ` · ${formatDifference(orpValue - (orpValue > orpMax ? orpMax : orpMin), ' mV', 0)}` : ''}
+          </div>
         </div>
         <div>
           <div className="text-xs font-medium uppercase tracking-wider text-[var(--ds-text-secondary)]">ICO Temp</div>
@@ -172,6 +190,53 @@ function WaterQualityCard() {
           <span className="text-[var(--ds-text-secondary)]">{recommendation}</span>
         </div>
       )}
+    </div>
+  );
+}
+
+function IcoActionCard() {
+  const ph = useEntity(SPA_ENTITIES.waterQualityPh);
+  const orp = useEntity(SPA_ENTITIES.waterQualityOrp);
+  const rec = useEntity(SPA_ENTITIES.icoRecommendation);
+  const phMinimum = useEntity(SPA_ENTITIES.phMinimum);
+  const phMaximum = useEntity(SPA_ENTITIES.phMaximum);
+  const orpMinimum = useEntity(SPA_ENTITIES.orpMinimum);
+  const orpMaximum = useEntity(SPA_ENTITIES.orpMaximum);
+  const phValue = parseNumber(ph.state);
+  const orpValue = parseNumber(orp.state);
+  const phMin = parseNumber(phMinimum.state) ?? 7.2;
+  const phMax = parseNumber(phMaximum.state) ?? 7.6;
+  const orpMin = parseNumber(orpMinimum.state) ?? 550;
+  const orpMax = parseNumber(orpMaximum.state) ?? 650;
+  const recommendations = getRecommendationList(rec);
+  const fallbackActions = [];
+
+  if (phValue != null && phValue > phMax) fallbackActions.push({ title: 'Lower pH gradually', action: `pH is ${formatDifference(phValue - phMax)} outside your target. Add pH Minus gradually, following the product label.` });
+  if (phValue != null && phValue < phMin) fallbackActions.push({ title: 'Raise pH gradually', action: `pH is ${formatDifference(phValue - phMin)} outside your target. Add pH Plus gradually, following the product label.` });
+  if (orpValue != null && orpValue < orpMin) fallbackActions.push({ title: 'Check bromine treatment', action: `ORP is ${formatDifference(orpValue - orpMin, ' mV', 0)} below the configured disinfection range. Follow the ICO or product instructions for bromine treatment.` });
+  if (orpValue != null && orpValue > orpMax) fallbackActions.push({ title: 'Pause extra bromine', action: `ORP is ${formatDifference(orpValue - orpMax, ' mV', 0)} above the configured range. Do not add more disinfectant until it returns to range.` });
+
+  const actions = recommendations.length > 0 ? recommendations : fallbackActions;
+  if (actions.length === 0) return null;
+
+  return (
+    <div className="ds-card flex h-full flex-col" style={{ padding: 16, backgroundColor: 'rgba(212,148,76,0.08)', borderColor: 'rgba(212,148,76,0.28)' }}>
+      <div className="flex items-center gap-2 pb-3 border-b" style={{ borderColor: 'rgba(212,148,76,0.25)' }}>
+        <CircleAlert size={18} className="text-[var(--ds-health-warn)]" />
+        <div>
+          <h3 className="text-base font-bold text-[var(--ds-text)]">ICO action</h3>
+          <p className="text-xs text-[var(--ds-text-secondary)]">What to do next, based on your configured targets</p>
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pt-3">
+        {actions.map((item, index) => (
+          <div key={`${item.title}-${index}`} className="rounded-xl border bg-white/60 px-3 py-2.5" style={{ borderColor: 'rgba(212,148,76,0.25)' }}>
+            <div className="text-sm font-bold text-[var(--ds-text)]">{item.title}</div>
+            <div className="mt-1 text-xs leading-relaxed text-[var(--ds-text-secondary)]">{item.message || item.action}</div>
+          </div>
+        ))}
+      </div>
+      <div className="pt-2 text-[11px] leading-relaxed text-[var(--ds-text-secondary)]">Do not dose automatically. Adjust pH before a bromine shock, follow the product label, and let filtration run.</div>
     </div>
   );
 }
@@ -256,6 +321,25 @@ function QuickActionsCard() {
   );
 }
 
+function OutdoorLightsCard() {
+  return (
+    <div className="ds-card h-full flex flex-col" style={{ padding: 16 }}>
+      <div className="flex items-center justify-between pb-3 border-b border-[var(--ds-border)]">
+        <h3 className="text-base font-bold text-[var(--ds-text)]">Outdoor Lights</h3>
+        <Trees size={18} className="text-[var(--ds-text-secondary)]" />
+      </div>
+      <div className="grid grid-cols-2 gap-2 pt-3 flex-1">
+        <ControlButton icon={Trees} label="Games Room" entityId={SPA_ENTITIES.outdoorGamesRoom} />
+        <button disabled className="flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl p-3 opacity-55" style={{ backgroundColor: 'var(--ds-warm-inactive-bg)', color: 'var(--ds-warm-inactive-text)' }} title="No Gazebo light entity is exposed by Home Assistant">
+          <SunMedium size={24} />
+          <span className="text-sm font-semibold">Gazebo</span>
+          <span className="text-[10px]">Not connected</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SonosCard() {
   const { state, attributes } = useEntity(SPA_ENTITIES.sonos);
   const { callService } = useServiceCall();
@@ -318,46 +402,30 @@ function AlertsCard() {
   );
 }
 
-function HistoryCard() {
-  return (
-    <div className="ds-card h-full flex flex-col justify-between" style={{ padding: 16 }}>
-      <div>
-        <div className="text-base font-bold text-[var(--ds-text)]">History</div>
-        <div className="mt-2 text-sm text-[var(--ds-text-secondary)]">
-          Temperature, pH, and ORP trends belong here once the spa integration is publishing history entities.
-        </div>
-      </div>
-      <div className="mt-4 flex items-center justify-between rounded-xl border px-3 py-3" style={{ borderColor: 'var(--ds-border)', backgroundColor: 'var(--ds-warm-inactive-bg)' }}>
-        <div>
-          <div className="text-sm font-semibold text-[var(--ds-text)]">Open detail view</div>
-          <div className="text-xs text-[var(--ds-text-secondary)]">24h and 7d graphs</div>
-        </div>
-        <ChevronRight size={18} className="text-[var(--ds-text-secondary)]" />
-      </div>
-    </div>
-  );
-}
-
 export function SpaDashboard() {
   const sonosState = useEntity(SPA_ENTITIES.sonos).state;
   const hasSonos = sonosState != null && !['unknown', 'unavailable'].includes(String(sonosState));
   const rightPanels = useMemo(() => [
     { key: 'controls', node: <SpaControlsCard /> },
     { key: 'actions', node: <QuickActionsCard /> },
+    { key: 'outdoor', node: <OutdoorLightsCard /> },
     { key: 'sonos', node: hasSonos ? <SonosCard /> : null },
-    { key: 'history', node: <HistoryCard /> },
   ].filter((item) => item.node), [hasSonos]);
 
   return (
     <div className="flex flex-col md:flex-row md:h-[calc(100vh-72px)] gap-2 p-2 overflow-y-auto md:overflow-hidden">
       <div className="md:flex-[58] min-w-0 flex flex-col gap-2 overflow-hidden">
-        <div className="grid grid-cols-1 gap-2 min-h-0">
+        <div className="min-h-0 md:flex-[30]">
           <LargeTempCard />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 min-h-0">
+        <div className="grid min-h-0 grid-cols-1 gap-2 md:flex-[30] md:grid-cols-2">
           <WaterQualityCard />
-          <AlertsCard />
+          <div className="flex min-h-0 flex-col gap-2">
+            <IcoActionCard />
+            <AlertsCard />
+          </div>
         </div>
+        <div className="min-h-0 flex-1"><SpaHistoryCharts /></div>
       </div>
 
       <div className="md:flex-[42] min-w-0 flex flex-col gap-2 overflow-hidden">

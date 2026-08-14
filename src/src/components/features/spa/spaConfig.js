@@ -19,6 +19,8 @@ export const SPA_ENTITIES = {
   lights: 'switch.spa_light',
   standbyTemp: 'input_number.spa_standby_temperature',
   sonos: 'media_player.spa_sonos_port',
+  outdoorGamesRoom: 'switch.iport_area_4',
+  outdoorGazebo: null,
   alert: 'sensor.spa_total_alerts',
   fault: 'sensor.spa_fault_message',
   online: 'binary_sensor.isonline',
@@ -26,4 +28,12 @@ export const SPA_ENTITIES = {
 
 export const SPA_TARGET_PRESETS = {
   ready: 38,
+};
+
+export const SPA_HISTORY_ENTITIES = {
+  balboaTemperature: 'sensor.spa_current_temperature',
+  icoTemperature: 'sensor.hot_tub_temperature',
+  targetTemperature: 'number.spa_target_desired_temperature',
+  ph: 'sensor.hot_tub_ph',
+  orp: 'sensor.hot_tub_oxydo_reduction_potential',
 };
