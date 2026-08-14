@@ -20,6 +20,24 @@ vi.mock('../../hooks/useHAConnection', () => ({
   useHAConnection: () => ({ isConnected: false }),
 }));
 
+vi.mock('../../components/features/spa/hooks/useSpaHistory', () => ({
+  useSpaHistory: () => {
+    const now = Date.now() / 1000;
+    const points = (values) => values.map((value, index) => ({ s: String(value), lu: now - (values.length - index) * 3600 }));
+    return {
+      history: {
+        'sensor.spa_current_temperature': points([37.2, 37.4]),
+        'sensor.hot_tub_temperature': points([36.9, 37.1]),
+        'number.spa_target_desired_temperature': points([38, 38]),
+        'sensor.hot_tub_ph': points([7.4, 7.42]),
+        'sensor.hot_tub_oxydo_reduction_potential': points([700, 705]),
+      },
+      loading: false,
+      error: null,
+    };
+  },
+}));
+
 describe('SpaPage', () => {
   beforeEach(() => {
     stateMap.clear();
@@ -59,6 +77,7 @@ describe('SpaPage', () => {
     expect(screen.getByText('7.42')).toBeInTheDocument();
     expect(screen.getByText('705 mV')).toBeInTheDocument();
     expect(screen.getByText('Ready')).toBeInTheDocument();
+    expect(document.querySelectorAll('svg[role="img"] path').length).toBeGreaterThan(0);
   });
 
   it('hides the attention banner when no alert is present', () => {
