@@ -85,6 +85,6 @@ describe('SpaPage', () => {
 
     expect(screen.getByText('ICO action')).toBeInTheDocument();
     expect(screen.getByText('Add 22 g of bromine shock')).toBeInTheDocument();
-    expect(screen.getByText('Adjust pH first and run filtration for a few hours.')).toBeInTheDocument();
+    expect(screen.getByText((text) => text.includes('Adjust pH first and run filtration for a few hours.'))).toBeInTheDocument();
   });
 });

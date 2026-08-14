@@ -40,6 +40,19 @@ function getRecommendationList(entity) {
   return Array.isArray(recommendations) ? recommendations : [];
 }
 
+function conciseRecommendation(item) {
+  const message = String(item?.message || '').trim();
+  if (!message) return item?.action || '';
+  const firstParagraph = message.split(/\n\s*\n/)[0].trim();
+  if (/pH Minus/i.test(item?.title || '') || /pH Minus/i.test(item?.action || '')) {
+    return `${firstParagraph} Add gradually, follow the product label, and let ICO reassess before adding more.`;
+  }
+  if (/bromine shock/i.test(item?.title || '') || /bromine shock/i.test(item?.action || '')) {
+    return `${firstParagraph} Adjust pH first, then run filtration for a few hours.`;
+  }
+  return firstParagraph;
+}
+
 function StatusChip({ label, active = false, tone = 'neutral' }) {
   const palette = {
     neutral: active ? { bg: 'var(--ds-state-on-bg)', fg: 'var(--ds-state-on)' } : { bg: 'var(--ds-warm-inactive-bg)', fg: 'var(--ds-warm-inactive-text)' },
@@ -232,11 +245,11 @@ function IcoActionCard() {
         {actions.map((item, index) => (
           <div key={`${item.title}-${index}`} className="rounded-xl border bg-white/60 px-3 py-2.5" style={{ borderColor: 'rgba(212,148,76,0.25)' }}>
             <div className="text-sm font-bold text-[var(--ds-text)]">{item.title}</div>
-            <div className="mt-1 text-xs leading-relaxed text-[var(--ds-text-secondary)]">{item.message || item.action}</div>
+            <div className="mt-1 line-clamp-3 text-xs leading-relaxed text-[var(--ds-text-secondary)]">{conciseRecommendation(item)}</div>
           </div>
         ))}
       </div>
-      <div className="pt-2 text-[11px] leading-relaxed text-[var(--ds-text-secondary)]">Do not dose automatically. Adjust pH before a bromine shock, follow the product label, and let filtration run.</div>
+      <div className="pt-2 text-[11px] leading-relaxed text-[var(--ds-text-secondary)]">Do not dose automatically. Follow the product label.</div>
     </div>
   );
 }
@@ -414,18 +427,18 @@ export function SpaDashboard() {
 
   return (
     <div className="flex flex-col md:flex-row md:h-[calc(100vh-72px)] gap-2 p-2 overflow-y-auto md:overflow-hidden">
-      <div className="md:flex-[58] min-w-0 flex flex-col gap-2 overflow-hidden">
-        <div className="min-h-0 md:flex-[30]">
+      <div className="md:flex-[58] min-w-0 grid min-h-0 grid-rows-[minmax(190px,0.85fr)_minmax(205px,0.85fr)_minmax(260px,1.3fr)] gap-2 overflow-hidden">
+        <div className="min-h-0">
           <LargeTempCard />
         </div>
-        <div className="grid min-h-0 grid-cols-1 gap-2 md:flex-[30] md:grid-cols-2">
+        <div className="grid min-h-0 grid-cols-1 gap-2 md:grid-cols-2">
           <WaterQualityCard />
           <div className="flex min-h-0 flex-col gap-2">
             <IcoActionCard />
             <AlertsCard />
           </div>
         </div>
-        <div className="min-h-0 flex-1"><SpaHistoryCharts /></div>
+        <div className="min-h-0"><SpaHistoryCharts /></div>
       </div>
 
       <div className="md:flex-[42] min-w-0 flex flex-col gap-2 overflow-hidden">
