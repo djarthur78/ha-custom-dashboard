@@ -44,9 +44,9 @@ describe('SpaPage', () => {
     stateMap.set('sensor.spa_current_temperature', { state: '37.4', attributes: {} });
     stateMap.set('number.spa_target_desired_temperature', { state: '38', attributes: {} });
     stateMap.set('select.spa_heater_mode', { state: 'Filtering', attributes: {} });
-    stateMap.set('sensor.hot_tub_ph', { state: '7.42', attributes: {} });
+    stateMap.set('sensor.hot_tub_ph', { state: '7.42', attributes: {}, lastUpdated: '2026-08-14T18:37:16.485Z' });
     stateMap.set('sensor.hot_tub_oxydo_reduction_potential', { state: '705', attributes: {} });
-    stateMap.set('sensor.hot_tub_temperature', { state: '37.1', attributes: {} });
+    stateMap.set('sensor.hot_tub_temperature', { state: '37.1', attributes: {}, lastUpdated: '2026-08-14T18:37:16.485Z' });
     stateMap.set('sensor.hot_tub_battery', { state: '92', attributes: {} });
     stateMap.set('sensor.spa_ico_recommendation', { state: '0', attributes: {} });
     stateMap.set('switch.spa_pump_1', { state: 'off', attributes: {} });
@@ -76,6 +76,7 @@ describe('SpaPage', () => {
     expect(screen.getAllByText('37.4°')).toHaveLength(2);
     expect(screen.getByText('7.42')).toBeInTheDocument();
     expect(screen.getByText('705 mV')).toBeInTheDocument();
+    expect(screen.getByText(/Last ICO measurement:/)).toBeInTheDocument();
     expect(screen.getByText('Ready')).toBeInTheDocument();
     expect(document.querySelectorAll('svg[role="img"] path').length).toBeGreaterThan(0);
   });

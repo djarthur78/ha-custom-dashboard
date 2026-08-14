@@ -1,4 +1,5 @@
 import { createElement, useMemo } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import {
   Bath,
   Minus,
@@ -33,6 +34,15 @@ function formatTemp(value) {
 function formatDifference(value, unit = '', decimals = 2) {
   if (value == null) return '--';
   return `${Math.abs(value).toFixed(decimals)}${unit} ${value > 0 ? 'high' : 'low'}`;
+}
+
+function formatMeasurementTime(timestamps) {
+  const latest = timestamps
+    .map((value) => value ? new Date(value) : null)
+    .filter((value) => value && Number.isFinite(value.getTime()))
+    .sort((a, b) => b.getTime() - a.getTime())[0];
+  if (!latest) return 'Unavailable';
+  return `${latest.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${formatDistanceToNow(latest, { addSuffix: true })}`;
 }
 
 function getRecommendationList(entity) {
@@ -168,6 +178,7 @@ function WaterQualityCard() {
   const phMax = parseNumber(phMaximum.state) ?? 7.6;
   const orpMin = parseNumber(orpMinimum.state) ?? 550;
   const orpMax = parseNumber(orpMaximum.state) ?? 650;
+  const lastMeasurement = formatMeasurementTime([ph.lastUpdated, orp.lastUpdated, icoTemp.lastUpdated]);
   const recommendationCount = getRecommendationList(rec).filter((item) => isRecommendationRelevant(item, {
     phValue, phMin, phMax, orpValue, orpMin, orpMax,
   })).length;
@@ -208,6 +219,10 @@ function WaterQualityCard() {
           <div className="text-xs font-medium uppercase tracking-wider text-[var(--ds-text-secondary)]">Battery</div>
           <div className="mt-1 text-2xl font-bold text-[var(--ds-text)]">{icoBattery.state || '--'}</div>
         </div>
+      </div>
+
+      <div className="mt-3 border-t border-[var(--ds-border)] pt-2 text-xs text-[var(--ds-text-secondary)]">
+        Last ICO measurement: <span className="font-semibold text-[var(--ds-text)]">{lastMeasurement}</span>
       </div>
 
       {recommendation && (
