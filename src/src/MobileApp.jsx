@@ -11,6 +11,7 @@ const MobileHomePage = lazy(() => import('./pages/mobile/MobileHomePage'));
 const MobileCalendarPage = lazy(() => import('./pages/mobile/MobileCalendarPage'));
 const MobileMealsPage = lazy(() => import('./pages/mobile/MobileMealsPage'));
 const MobileGamesRoomPage = lazy(() => import('./pages/mobile/MobileGamesRoomPage'));
+const MobileSpaPage = lazy(() => import('./pages/mobile/MobileSpaPage'));
 const MobileMusicPage = lazy(() => import('./pages/mobile/MobileMusicPage'));
 const MobilePeoplePage = lazy(() => import('./pages/mobile/MobilePeoplePage'));
 const MobileHealthPage = lazy(() => import('./pages/mobile/MobileHealthPage'));
@@ -32,6 +33,7 @@ function MobileApp() {
         <Route path="meals" element={<MobileMealsPage />} />
         <Route path="weather" element={<MobileWeatherPage />} />
         <Route path="games-room" element={<MobileGamesRoomPage />} />
+        <Route path="spa" element={<MobileSpaPage />} />
         <Route path="add-media" element={<AddMediaPage />} />
         <Route path="music" element={<MobileMusicPage />} />
         <Route path="people" element={<MobilePeoplePage />} />

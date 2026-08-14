@@ -4,12 +4,14 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { Home, Music, Camera, Users, Heart, ListChecks, CloudSun, Flame, Sprout, Search, X } from 'lucide-react';
+import { Home, Music, Camera, Users, Heart, ListChecks, CloudSun, Flame, Sprout, Search, Bath, X } from 'lucide-react';
+import { createElement } from 'react';
 
 const moreItems = [
   { to: '/home', icon: Home, label: 'Home' },
   { to: '/todo', icon: ListChecks, label: 'To-Do' },
   { to: '/weather', icon: CloudSun, label: 'Weather' },
+  { to: '/spa', icon: Bath, label: 'Spa' },
   { to: '/add-media', icon: Search, label: 'Add Movie/TV' },
   { to: '/music', icon: Music, label: 'Music' },
   { to: '/cameras', icon: Camera, label: 'Cameras' },
@@ -53,7 +55,7 @@ export function MobileMoreSheet({ isOpen, onClose }) {
 
         {/* Items */}
         <div className="px-2 pb-4">
-          {moreItems.map(({ to, icon: Icon, label }) => (
+          {moreItems.map(({ to, icon: MenuIcon, label }) => (
             <button
               key={to}
               onClick={() => {
@@ -66,7 +68,7 @@ export function MobileMoreSheet({ isOpen, onClose }) {
                 className="w-9 h-9 rounded-xl flex items-center justify-center"
                 style={{ backgroundColor: 'rgba(181,69,58,0.08)' }}
               >
-                <Icon size={18} style={{ color: 'var(--ds-accent)' }} />
+                {createElement(MenuIcon, { size: 18, style: { color: 'var(--ds-accent)' } })}
               </div>
               <span className="text-sm font-medium text-[var(--ds-text)]">{label}</span>
             </button>

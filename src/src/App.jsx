@@ -12,6 +12,7 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const CalendarViewList = lazy(() => import('./pages/CalendarViewList'));
 const MealsPage = lazy(() => import('./pages/MealsPage'));
 const GamesRoomPage = lazy(() => import('./pages/GamesRoomPage'));
+const SpaPage = lazy(() => import('./pages/SpaPage'));
 const AddMediaPage = lazy(() => import('./pages/AddMediaPage'));
 const CamerasPage = lazy(() => import('./pages/CamerasPage'));
 const MusicPage = lazy(() => import('./pages/MusicPage'));
@@ -34,6 +35,7 @@ function App() {
         <Route path="meals" element={<MealsPage />} />
         <Route path="weather" element={<WeatherPage />} />
         <Route path="games-room" element={<GamesRoomPage />} />
+        <Route path="spa" element={<SpaPage />} />
         <Route path="add-media" element={<AddMediaPage />} />
         <Route path="people" element={<PeoplePage />} />
         <Route path="cameras" element={<CamerasPage />} />
