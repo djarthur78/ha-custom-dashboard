@@ -14,9 +14,11 @@ function numberValue(value) {
 
 function historyPoints(history, entityId, start, end) {
   return (history?.[entityId] || []).map((item) => ({
-    time: new Date(item.last_changed || item.last_updated).getTime(),
-    value: numberValue(item.state),
-  })).filter((point) => point.value != null && point.time >= start && point.time <= end);
+    time: item.last_changed || item.last_updated
+      ? new Date(item.last_changed || item.last_updated).getTime()
+      : Number(item.lu) * 1000,
+    value: numberValue(item.state ?? item.s),
+  })).filter((point) => point.value != null && Number.isFinite(point.time) && point.time >= start && point.time <= end);
 }
 
 function formatAxisValue(value, decimals = 1) {
