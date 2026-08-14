@@ -122,13 +122,21 @@ function WaterQualityCard() {
   const icoTemp = useEntity(SPA_ENTITIES.icoTemp);
   const icoBattery = useEntity(SPA_ENTITIES.icoBattery);
   const rec = useEntity(SPA_ENTITIES.icoRecommendation);
+  const phMinimum = useEntity(SPA_ENTITIES.phMinimum);
+  const phMaximum = useEntity(SPA_ENTITIES.phMaximum);
+  const orpMinimum = useEntity(SPA_ENTITIES.orpMinimum);
+  const orpMaximum = useEntity(SPA_ENTITIES.orpMaximum);
 
   const phValue = parseNumber(ph.state);
   const orpValue = parseNumber(orp.state);
+  const phMin = parseNumber(phMinimum.state) ?? 7.2;
+  const phMax = parseNumber(phMaximum.state) ?? 7.8;
+  const orpMin = parseNumber(orpMinimum.state) ?? 650;
+  const orpMax = parseNumber(orpMaximum.state) ?? 750;
   const recommendation = rec.state || rec.attributes?.friendly_name || null;
 
-  const phTone = phValue == null ? 'neutral' : (phValue < 7.2 || phValue > 7.8 ? 'bad' : 'neutral');
-  const orpTone = orpValue == null ? 'neutral' : (orpValue < 650 ? 'warn' : 'neutral');
+  const phTone = phValue == null ? 'neutral' : (phValue < phMin || phValue > phMax ? 'bad' : 'neutral');
+  const orpTone = orpValue == null ? 'neutral' : (orpValue < orpMin || orpValue > orpMax ? 'warn' : 'neutral');
 
   return (
     <div className="ds-card h-full flex flex-col" style={{ padding: 16 }}>

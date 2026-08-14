@@ -20,15 +20,15 @@ describe('SpaPage', () => {
   beforeEach(() => {
     stateMap.clear();
     stateMap.set('sensor.spa_current_temperature', { state: '37.4', attributes: {} });
-    stateMap.set('sensor.spa_target_temperature', { state: '38', attributes: {} });
-    stateMap.set('sensor.spa_status', { state: 'Filtering', attributes: {} });
-    stateMap.set('sensor.spa_water_quality_ph', { state: '7.42', attributes: {} });
-    stateMap.set('sensor.spa_water_quality_orp', { state: '705', attributes: {} });
-    stateMap.set('sensor.spa_ico_temperature', { state: '37.1', attributes: {} });
-    stateMap.set('sensor.spa_ico_battery', { state: '92%', attributes: {} });
+    stateMap.set('number.spa_target_desired_temperature', { state: '38', attributes: {} });
+    stateMap.set('select.spa_heater_mode', { state: 'Filtering', attributes: {} });
+    stateMap.set('sensor.hot_tub_ph', { state: '7.42', attributes: {} });
+    stateMap.set('sensor.hot_tub_oxydo_reduction_potential', { state: '705', attributes: {} });
+    stateMap.set('sensor.hot_tub_temperature', { state: '37.1', attributes: {} });
+    stateMap.set('sensor.hot_tub_battery', { state: '92', attributes: {} });
     stateMap.set('sensor.spa_ico_recommendation', { state: 'Good', attributes: {} });
-    stateMap.set('switch.spa_jets_1', { state: 'off', attributes: {} });
-    stateMap.set('switch.spa_jets_2', { state: 'on', attributes: {} });
+    stateMap.set('switch.spa_pump_1', { state: 'off', attributes: {} });
+    stateMap.set('switch.spa_pump_2', { state: 'on', attributes: {} });
     stateMap.set('switch.spa_blower', { state: 'off', attributes: {} });
     stateMap.set('switch.spa_lights', { state: 'off', attributes: {} });
     stateMap.set('media_player.spa_sonos_port', {
@@ -52,6 +52,8 @@ describe('SpaPage', () => {
     expect(screen.getByText('Sonos')).toBeInTheDocument();
     expect(screen.getByText('History')).toBeInTheDocument();
     expect(screen.getByText('37.4°')).toBeInTheDocument();
+    expect(screen.getByText('7.42')).toBeInTheDocument();
+    expect(screen.getByText('705 mV')).toBeInTheDocument();
     expect(screen.getByText('Ready')).toBeInTheDocument();
   });
 
@@ -63,4 +65,3 @@ describe('SpaPage', () => {
     expect(screen.queryByText('Spa needs attention')).not.toBeInTheDocument();
   });
 });
-
