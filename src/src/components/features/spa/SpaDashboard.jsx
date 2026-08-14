@@ -40,6 +40,16 @@ function getRecommendationList(entity) {
   return Array.isArray(recommendations) ? recommendations : [];
 }
 
+function isRecommendationRelevant(item, { phValue, phMin, phMax, orpValue, orpMin, orpMax }) {
+  const title = `${item?.title || ''} ${item?.action || ''}`.toLowerCase();
+  if (title.includes('ph minus')) return phValue == null || phValue > phMax;
+  if (title.includes('ph plus')) return phValue == null || phValue < phMin;
+  if (title.includes('bromine') || title.includes('shock') || title.includes('disinfection')) {
+    return orpValue == null || orpValue < orpMin;
+  }
+  return true;
+}
+
 function conciseRecommendation(item) {
   const message = String(item?.message || '').trim();
   if (!message) return item?.action || '';
@@ -158,7 +168,10 @@ function WaterQualityCard() {
   const phMax = parseNumber(phMaximum.state) ?? 7.6;
   const orpMin = parseNumber(orpMinimum.state) ?? 550;
   const orpMax = parseNumber(orpMaximum.state) ?? 650;
-  const recommendation = rec.attributes?.summary || null;
+  const recommendationCount = getRecommendationList(rec).filter((item) => isRecommendationRelevant(item, {
+    phValue, phMin, phMax, orpValue, orpMin, orpMax,
+  })).length;
+  const recommendation = recommendationCount > 0 ? `ICO: ${recommendationCount} current recommendation${recommendationCount === 1 ? '' : 's'}` : null;
 
   const phTone = phValue == null ? 'neutral' : (phValue < phMin || phValue > phMax ? 'bad' : 'neutral');
   const orpTone = orpValue == null ? 'neutral' : (orpValue < orpMin || orpValue > orpMax ? 'warn' : 'neutral');
@@ -221,7 +234,9 @@ function IcoActionCard() {
   const phMax = parseNumber(phMaximum.state) ?? 7.6;
   const orpMin = parseNumber(orpMinimum.state) ?? 550;
   const orpMax = parseNumber(orpMaximum.state) ?? 650;
-  const recommendations = getRecommendationList(rec);
+  const recommendations = getRecommendationList(rec).filter((item) => isRecommendationRelevant(item, {
+    phValue, phMin, phMax, orpValue, orpMin, orpMax,
+  }));
   const fallbackActions = [];
 
   if (phValue != null && phValue > phMax) fallbackActions.push({ title: 'Lower pH gradually', action: `pH is ${formatDifference(phValue - phMax)} outside your target. Add pH Minus gradually, following the product label.` });
@@ -297,8 +312,13 @@ function SpaControlsCard() {
   );
 }
 
-function QuickActionsCard() {
+function SpaSnapshotCard() {
+  const { state: currentTemp } = useEntity(SPA_ENTITIES.currentTemp);
+  const { state: targetTemp } = useEntity(SPA_ENTITIES.targetTemp);
+  const { state: status } = useEntity(SPA_ENTITIES.status);
+  const { state: heater } = useEntity(SPA_ENTITIES.heaterState);
   const { state: standbyTemp } = useEntity(SPA_ENTITIES.standbyTemp);
+  const { state: online } = useEntity(SPA_ENTITIES.online);
   const { callService } = useServiceCall();
 
   const setReady = async () => {
@@ -318,7 +338,16 @@ function QuickActionsCard() {
 
   return (
     <div className="ds-card h-full flex flex-col" style={{ padding: 16 }}>
-      <h3 className="text-base font-bold text-[var(--ds-text)] pb-3 border-b border-[var(--ds-border)]">Quick Actions</h3>
+      <div className="flex items-center justify-between pb-3 border-b border-[var(--ds-border)]">
+        <h3 className="text-base font-bold text-[var(--ds-text)]">Spa Snapshot</h3>
+        <StatusChip label={online === 'on' ? 'Online' : 'Check link'} active tone={online === 'on' ? 'neutral' : 'warn'} />
+      </div>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 pt-3">
+        <div><div className="text-[11px] uppercase tracking-wider text-[var(--ds-text-secondary)]">Water</div><div className="text-base font-bold text-[var(--ds-text)]">{formatTemp(currentTemp)}</div></div>
+        <div><div className="text-[11px] uppercase tracking-wider text-[var(--ds-text-secondary)]">Target</div><div className="text-base font-bold text-[var(--ds-text)]">{formatTemp(targetTemp)}</div></div>
+        <div><div className="text-[11px] uppercase tracking-wider text-[var(--ds-text-secondary)]">Mode</div><div className="truncate text-sm font-semibold text-[var(--ds-text)]">{status || 'Unknown'}</div></div>
+        <div><div className="text-[11px] uppercase tracking-wider text-[var(--ds-text-secondary)]">Heater</div><div className="truncate text-sm font-semibold text-[var(--ds-text)]">{heater || 'Unknown'}</div></div>
+      </div>
       <div className="grid grid-cols-2 gap-2.5 pt-3">
         <button onClick={setReady} className="rounded-xl px-3 py-3 text-sm font-semibold transition-all" style={{ backgroundColor: 'var(--ds-state-on-bg)', color: 'var(--ds-state-on)' }}>
           Ready
@@ -328,7 +357,7 @@ function QuickActionsCard() {
         </button>
       </div>
       <div className="mt-3 text-xs leading-relaxed text-[var(--ds-text-secondary)]">
-        Ready sets the spa to 38°C. Eco uses the configured standby temperature and REST mode without disabling safety functions.
+        Ready sets 38°C. Eco returns to {standbyTemp ? `${Number.parseFloat(standbyTemp).toFixed(0)}°C` : 'standby'} and REST mode without disabling safety functions.
       </div>
     </div>
   );
@@ -420,7 +449,7 @@ export function SpaDashboard() {
   const hasSonos = sonosState != null && !['unknown', 'unavailable'].includes(String(sonosState));
   const rightPanels = useMemo(() => [
     { key: 'controls', node: <SpaControlsCard /> },
-    { key: 'actions', node: <QuickActionsCard /> },
+    { key: 'actions', node: <SpaSnapshotCard /> },
     { key: 'outdoor', node: <OutdoorLightsCard /> },
     { key: 'sonos', node: hasSonos ? <SonosCard /> : null },
   ].filter((item) => item.node), [hasSonos]);

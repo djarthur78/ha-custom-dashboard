@@ -70,10 +70,10 @@ describe('SpaPage', () => {
     expect(screen.getByText('Spa')).toBeInTheDocument();
     expect(screen.getByText('Water Quality')).toBeInTheDocument();
     expect(screen.getByText('Spa Controls')).toBeInTheDocument();
-    expect(screen.getByText('Quick Actions')).toBeInTheDocument();
+    expect(screen.getByText('Spa Snapshot')).toBeInTheDocument();
     expect(screen.getByText('Sonos')).toBeInTheDocument();
     expect(screen.getByText('Spa History')).toBeInTheDocument();
-    expect(screen.getByText('37.4°')).toBeInTheDocument();
+    expect(screen.getAllByText('37.4°')).toHaveLength(2);
     expect(screen.getByText('7.42')).toBeInTheDocument();
     expect(screen.getByText('705 mV')).toBeInTheDocument();
     expect(screen.getByText('Ready')).toBeInTheDocument();
@@ -99,11 +99,30 @@ describe('SpaPage', () => {
         }],
       },
     });
+    stateMap.set('sensor.hot_tub_oxydo_reduction_potential', { state: '500', attributes: {} });
 
     render(<SpaPage />);
 
     expect(screen.getByText('ICO action')).toBeInTheDocument();
     expect(screen.getByText('Add 22 g of bromine shock')).toBeInTheDocument();
     expect(screen.getByText((text) => text.includes('Adjust pH first and run filtration for a few hours.'))).toBeInTheDocument();
+  });
+
+  it('hides a stale completed-style recommendation when the live reading is back in range', () => {
+    stateMap.set('sensor.spa_ico_recommendation', {
+      state: '1',
+      attributes: {
+        recommendations: [{
+          title: 'Add 36 g of pH Minus - Gradual correction',
+          message: 'This old action should not be shown while pH is in range.',
+        }],
+      },
+    });
+    stateMap.set('sensor.hot_tub_oxydo_reduction_potential', { state: '600', attributes: {} });
+
+    render(<SpaPage />);
+
+    expect(screen.queryByText('ICO action')).not.toBeInTheDocument();
+    expect(screen.queryByText('This old action should not be shown while pH is in range.')).not.toBeInTheDocument();
   });
 });

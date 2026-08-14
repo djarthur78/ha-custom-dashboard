@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Activity, Clock3, Droplets, Thermometer } from 'lucide-react';
+import { useEntity } from '../../../hooks/useEntity';
 import { useSpaHistory } from './hooks/useSpaHistory';
 import { SPA_HISTORY_ENTITIES } from './spaConfig';
 
@@ -61,6 +62,12 @@ function LineChart({ title, icon: Icon, unit, series, band, decimals = 1 }) {
         </div>
         <span className="text-[11px] text-[var(--ds-text-secondary)]">24 hours</span>
       </div>
+      <div className="flex flex-wrap gap-x-3 gap-y-0.5 pb-1">
+        {series.map((item) => {
+          const latest = item.current ?? item.points[item.points.length - 1]?.value;
+          return <span key={`${item.label}-current`} className="text-xs font-semibold" style={{ color: item.color }}>{item.label}: {formatAxisValue(latest, decimals)}{unit}</span>;
+        })}
+      </div>
       <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="w-full h-[112px]" role="img" aria-label={`${title} over the last 24 hours`}>
         <line x1={PAD.left} x2={CHART_WIDTH - PAD.right} y1={PAD.top + plotHeight} y2={PAD.top + plotHeight} stroke="var(--ds-border)" />
         <line x1={PAD.left} x2={PAD.left} y1={PAD.top} y2={PAD.top + plotHeight} stroke="var(--ds-border)" />
@@ -90,14 +97,23 @@ function LineChart({ title, icon: Icon, unit, series, band, decimals = 1 }) {
 
 export function SpaHistoryCharts() {
   const { history, loading, error } = useSpaHistory(24);
+  const balboaTemperature = useEntity(SPA_HISTORY_ENTITIES.balboaTemperature);
+  const icoTemperature = useEntity(SPA_HISTORY_ENTITIES.icoTemperature);
+  const targetTemperature = useEntity(SPA_HISTORY_ENTITIES.targetTemperature);
+  const ph = useEntity(SPA_HISTORY_ENTITIES.ph);
+  const orp = useEntity(SPA_HISTORY_ENTITIES.orp);
   const end = Date.now();
   const start = end - 24 * 60 * 60 * 1000;
   const points = (entityId) => historyPoints(history, entityId, start, end);
+  const current = (entity, decimals = 1) => {
+    const value = numberValue(entity.state);
+    return value == null ? null : Number(value.toFixed(decimals));
+  };
 
   const temperatureSeries = [
-    { label: 'Balboa', color: '#c56b54', points: points(SPA_HISTORY_ENTITIES.balboaTemperature) },
-    { label: 'ICO', color: '#4d89a8', points: points(SPA_HISTORY_ENTITIES.icoTemperature) },
-    { label: 'Target', color: '#8b7a68', points: points(SPA_HISTORY_ENTITIES.targetTemperature) },
+    { label: 'Balboa', color: '#c56b54', points: points(SPA_HISTORY_ENTITIES.balboaTemperature), current: current(balboaTemperature) },
+    { label: 'ICO', color: '#4d89a8', points: points(SPA_HISTORY_ENTITIES.icoTemperature), current: current(icoTemperature) },
+    { label: 'Target', color: '#8b7a68', points: points(SPA_HISTORY_ENTITIES.targetTemperature), current: current(targetTemperature) },
   ];
 
   return (
@@ -111,8 +127,8 @@ export function SpaHistoryCharts() {
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 pt-3 overflow-y-auto pr-1 lg:grid-cols-3 lg:overflow-hidden">
         <LineChart title="Temperature" icon={Thermometer} unit="°C" series={temperatureSeries} decimals={1} />
-        <LineChart title="pH" icon={Droplets} unit="" band={{ min: 7.2, max: 7.6 }} series={[{ label: 'ICO pH', color: '#7b6aa8', points: points(SPA_HISTORY_ENTITIES.ph) }]} decimals={2} />
-        <LineChart title="Disinfection (ORP)" icon={Activity} unit="mV" band={{ min: 550, max: 650 }} series={[{ label: 'ICO ORP', color: '#4e9b7b', points: points(SPA_HISTORY_ENTITIES.orp) }]} decimals={0} />
+        <LineChart title="pH" icon={Droplets} unit="" band={{ min: 7.2, max: 7.6 }} series={[{ label: 'ICO pH', color: '#7b6aa8', points: points(SPA_HISTORY_ENTITIES.ph), current: current(ph, 2) }]} decimals={2} />
+        <LineChart title="Disinfection (ORP)" icon={Activity} unit="mV" band={{ min: 550, max: 650 }} series={[{ label: 'ICO ORP', color: '#4e9b7b', points: points(SPA_HISTORY_ENTITIES.orp), current: current(orp, 0) }]} decimals={0} />
       </div>
       {loading && <div className="pt-2 text-xs text-[var(--ds-text-secondary)]">Updating history...</div>}
       {error && <div className="pt-2 text-xs text-[var(--ds-health-warn)]">History temporarily unavailable.</div>}
