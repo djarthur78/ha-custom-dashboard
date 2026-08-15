@@ -1,9 +1,7 @@
 import { createElement, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import {
-  AlertTriangle,
   Bath,
-  CheckCircle2,
   Clock3,
   Droplets,
   Minus,
@@ -29,12 +27,6 @@ function parseNumber(value) {
 function formatTemp(value, decimals = 1) {
   const parsed = parseNumber(value);
   return parsed == null ? '--' : `${parsed.toFixed(decimals)}°C`;
-}
-
-function formatDelta(value, unit = '', decimals = 2) {
-  if (value == null) return '--';
-  const direction = value > 0 ? 'high' : 'low';
-  return `${Math.abs(value).toFixed(decimals)}${unit} ${direction}`;
 }
 
 function formatMeasurementTime(timestamps) {
@@ -101,6 +93,15 @@ function TonePill({ label, tone = 'neutral' }) {
   );
 }
 
+function MiniStat({ label, value }) {
+  return (
+    <div className="rounded-2xl border px-3 py-2" style={{ borderColor: 'var(--ds-border)', backgroundColor: 'var(--ds-warm-inactive-bg)' }}>
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">{label}</div>
+      <div className="mt-1 text-sm font-semibold text-[var(--ds-text)]">{value}</div>
+    </div>
+  );
+}
+
 function MetricBlock({ label, value, subtext, tone = 'neutral', icon: Icon = null }) {
   const toneMap = {
     good: 'var(--ds-health-good)',
@@ -124,67 +125,25 @@ function MetricBlock({ label, value, subtext, tone = 'neutral', icon: Icon = nul
   );
 }
 
-function deriveChemistrySummary({ phValue, phMin, phMax, orpValue, orpMin, orpMax, relevantRecommendations }) {
+function deriveChemistrySummary({ relevantRecommendations }) {
   const primaryRecommendation = relevantRecommendations[0] || null;
-  const recommendationAction = primaryRecommendation ? conciseRecommendation(primaryRecommendation) : null;
-  const recommendationTitle = primaryRecommendation?.title || primaryRecommendation?.action || null;
 
-  if (phValue != null && phValue < phMin) {
+  if (primaryRecommendation) {
     return {
-      verdict: 'Needs pH',
-      tone: 'bad',
-      icon: AlertTriangle,
-      actionTitle: recommendationTitle || 'Raise pH',
-      actionText: recommendationAction || 'Add pH Plus gradually, following the product label. Let ICO reassess after circulation.',
-    };
-  }
-
-  if (phValue != null && phValue > phMax) {
-    return {
-      verdict: 'Needs pH',
-      tone: 'bad',
-      icon: AlertTriangle,
-      actionTitle: recommendationTitle || 'Lower pH',
-      actionText: recommendationAction || 'Add pH Minus gradually, following the product label. Let ICO reassess after circulation.',
-    };
-  }
-
-  if (orpValue != null && orpValue < orpMin) {
-    return {
-      verdict: 'Needs disinfectant',
-      tone: 'warn',
-      icon: AlertTriangle,
-      actionTitle: recommendationTitle || 'Raise ORP',
-      actionText: recommendationAction || 'Follow ICO or the product instructions for bromine treatment, then recheck after circulation.',
-    };
-  }
-
-  if (orpValue != null && orpValue > orpMax) {
-    return {
-      verdict: 'Check ICO',
-      tone: 'warn',
-      icon: AlertTriangle,
-      actionTitle: recommendationTitle || 'Pause dosing',
-      actionText: recommendationAction || 'Do not add more disinfectant until ORP returns to range.',
-    };
-  }
-
-  if (relevantRecommendations.length > 0) {
-    return {
-      verdict: 'Check ICO',
+      verdict: 'ICO action',
       tone: 'info',
       icon: Clock3,
-      actionTitle: relevantRecommendations[0].title || 'Review recommendation',
-      actionText: conciseRecommendation(relevantRecommendations[0]),
+      actionTitle: primaryRecommendation.title || primaryRecommendation.action || 'Review recommendation',
+      actionText: conciseRecommendation(primaryRecommendation),
     };
   }
 
   return {
-    verdict: 'Good to go',
-    tone: 'good',
-    icon: CheckCircle2,
+    verdict: 'No ICO action',
+    tone: 'neutral',
+    icon: Clock3,
     actionTitle: null,
-    actionText: null,
+    actionText: '',
   };
 }
 
@@ -235,7 +194,7 @@ function TempHeroCard() {
   };
 
   return (
-    <div className="ds-card flex h-full flex-col overflow-hidden" style={{ padding: 16 }}>
+    <div className="ds-card flex h-full flex-col overflow-hidden" style={{ padding: 14 }}>
       <div className="flex items-start justify-between gap-3 pb-3 border-b border-[var(--ds-border)]">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">Spa</div>
@@ -253,22 +212,10 @@ function TempHeroCard() {
         <div className="space-y-2">
           <div className="flex flex-wrap gap-2">
             <TonePill label={statusLabel} tone={isHeating ? 'warn' : 'good'} />
-            <TonePill label={`Target ${formatTemp(targetTemp, 0)}`} tone="info" />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-2xl border px-3 py-2" style={{ borderColor: 'var(--ds-border)', backgroundColor: 'var(--ds-warm-inactive-bg)' }}>
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">Target</div>
-              <div className="mt-1 text-2xl font-bold text-[var(--ds-text)]">
-                {targetValue == null ? '--' : `${targetValue.toFixed(0)}°`}
-              </div>
-            </div>
-            <div className="rounded-2xl border px-3 py-2" style={{ borderColor: 'var(--ds-border)', backgroundColor: 'var(--ds-warm-inactive-bg)' }}>
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">State</div>
-              <div className="mt-1 text-sm font-semibold text-[var(--ds-text)]">{statusLabel}</div>
-              <div className="mt-1 text-xs text-[var(--ds-text-secondary)]">
-                {isHeating ? 'Heating toward target' : 'Ready, filtering, or idle'}
-              </div>
-            </div>
+            <MiniStat label="Mode" value={statusLabel} />
+            <MiniStat label="Heater" value={isHeating ? 'Heating' : 'Idle'} />
           </div>
         </div>
 
@@ -283,10 +230,10 @@ function TempHeroCard() {
             <Minus size={24} />
           </button>
           <div className="min-w-[128px] text-center">
-            <div className="text-xs font-medium uppercase tracking-wider text-[var(--ds-text-secondary)]">Target temp</div>
             <div className="text-3xl font-bold leading-none text-[var(--ds-text)]">
               {targetValue == null ? '--' : `${targetValue.toFixed(0)}°`}
             </div>
+            <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">Target</div>
           </div>
           <button
             type="button"
@@ -365,15 +312,13 @@ function ChemistryCard() {
   });
 
   const lastMeasurement = formatMeasurementTime([ph.lastUpdated, orp.lastUpdated, icoTemp.lastUpdated]);
-  const phDelta = phValue == null ? null : (phValue < phMin ? phValue - phMin : phValue > phMax ? phValue - phMax : 0);
-  const orpDelta = orpValue == null ? null : (orpValue < orpMin ? orpValue - orpMin : orpValue > orpMax ? orpValue - orpMax : 0);
 
   return (
     <div className="ds-card flex h-full flex-col overflow-hidden" style={{ padding: 16 }}>
       <div className="flex items-center justify-between gap-3 pb-3 border-b border-[var(--ds-border)]">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">Chemistry</div>
-          <h3 className="mt-1 text-base font-bold text-[var(--ds-text)]">ICO verdict</h3>
+          <h3 className="mt-1 text-base font-bold text-[var(--ds-text)]">ICO guidance</h3>
         </div>
         <div className="flex items-center gap-2">
           <TonePill label={summary.verdict} tone={summary.tone} />
@@ -384,7 +329,7 @@ function ChemistryCard() {
       <div className="mt-3 rounded-2xl border px-3 py-3" style={{ borderColor: 'var(--ds-border)', backgroundColor: 'var(--ds-warm-inactive-bg)' }}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">What ICO says</div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">Current state</div>
             <div className="mt-1 text-xl font-bold text-[var(--ds-text)]">{summary.verdict}</div>
           </div>
           <summary.icon size={20} className="mt-0.5 shrink-0 text-[var(--ds-text-secondary)]" />
@@ -398,15 +343,15 @@ function ChemistryCard() {
         <MetricBlock
           label="pH"
           value={phValue == null ? '--' : phValue.toFixed(2)}
-          tone={phValue == null ? 'neutral' : phValue < phMin || phValue > phMax ? 'bad' : 'good'}
-          subtext={`Target ${phMin.toFixed(1)}–${phMax.toFixed(1)}${phDelta != null && phDelta !== 0 ? ` · ${formatDelta(phDelta)}` : ''}`}
+          tone={phValue == null ? 'neutral' : phValue < phMin || phValue > phMax ? 'warn' : 'good'}
+          subtext={`Target ${phMin.toFixed(1)}–${phMax.toFixed(1)}`}
           icon={Droplets}
         />
         <MetricBlock
           label="ORP"
           value={orpValue == null ? '--' : `${orpValue.toFixed(0)} mV`}
           tone={orpValue == null ? 'neutral' : orpValue < orpMin || orpValue > orpMax ? 'warn' : 'good'}
-          subtext={`Target ${orpMin.toFixed(0)}–${orpMax.toFixed(0)} mV${orpDelta != null && orpDelta !== 0 ? ` · ${formatDelta(orpDelta, ' mV', 0)}` : ''}`}
+          subtext={`Target ${orpMin.toFixed(0)}–${orpMax.toFixed(0)} mV`}
         />
         <MetricBlock
           label="ICO temp"
@@ -423,19 +368,13 @@ function ChemistryCard() {
         />
       </div>
 
-      <div className="mt-3 flex-1 min-h-0 rounded-2xl border px-3 py-3" style={{ borderColor: 'var(--ds-border)' }}>
-        {summary.actionTitle ? (
-          <div className="h-full">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">Next step</div>
-            <div className="mt-1 text-base font-bold text-[var(--ds-text)]">{summary.actionTitle}</div>
-            <div className="mt-2 text-sm leading-relaxed text-[var(--ds-text-secondary)]">{summary.actionText}</div>
-          </div>
-        ) : (
-          <div className="flex h-full items-center text-sm text-[var(--ds-text-secondary)]">
-            No action needed right now.
-          </div>
-        )}
-      </div>
+      {summary.actionTitle && (
+        <div className="mt-3 rounded-2xl border px-3 py-3" style={{ borderColor: 'var(--ds-border)' }}>
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">Next step</div>
+          <div className="mt-1 text-base font-bold text-[var(--ds-text)]">{summary.actionTitle}</div>
+          <div className="mt-2 text-sm leading-relaxed text-[var(--ds-text-secondary)]">{summary.actionText}</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -497,8 +436,13 @@ function OutdoorLightButton({ icon: ButtonIcon, label, entityId, note }) {
 }
 
 function SpaControlsCard() {
+  const { state: targetTemp } = useEntity(SPA_ENTITIES.targetTemp);
+  const { state: heaterState } = useEntity(SPA_ENTITIES.heaterState);
+  const { state: status } = useEntity(SPA_ENTITIES.status);
+  const isHeating = String(heaterState || '').toLowerCase().includes('heat') || String(status || '').toLowerCase().includes('heat');
+
   return (
-    <div className="ds-card flex h-full flex-col" style={{ padding: 16 }}>
+    <div className="ds-card flex h-full flex-col" style={{ padding: 14 }}>
       <div className="flex items-center justify-between pb-3 border-b border-[var(--ds-border)]">
         <h3 className="text-base font-bold text-[var(--ds-text)]">Spa Controls</h3>
         <Waves size={18} className="text-[var(--ds-text-secondary)]" />
@@ -508,6 +452,10 @@ function SpaControlsCard() {
         <ControlButton icon={Sparkles} label="Jets 2" entityId={SPA_ENTITIES.jets2} />
         <ControlButton icon={Wind} label="Blower" entityId={SPA_ENTITIES.blower} />
         <ControlButton icon={SunMedium} label="Lights" entityId={SPA_ENTITIES.lights} />
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <MiniStat label="Heater" value={isHeating ? 'Heating' : 'Idle'} />
+        <MiniStat label="Target" value={targetTemp ? `${Number.parseFloat(targetTemp).toFixed(0)}°` : '--'} />
       </div>
     </div>
   );
@@ -525,7 +473,7 @@ function OutdoorLightsCard() {
   ];
 
   return (
-    <div className="ds-card flex h-full flex-col" style={{ padding: 16 }}>
+    <div className="ds-card flex h-full flex-col" style={{ padding: 14 }}>
       <div className="flex items-center justify-between pb-3 border-b border-[var(--ds-border)]">
         <h3 className="text-base font-bold text-[var(--ds-text)]">Outdoor Lights</h3>
         <Trees size={18} className="text-[var(--ds-text-secondary)]" />
@@ -539,12 +487,36 @@ function OutdoorLightsCard() {
   );
 }
 
+function SpaSystemCard() {
+  const { state: heaterState } = useEntity(SPA_ENTITIES.heaterState);
+  const { state: status } = useEntity(SPA_ENTITIES.status);
+  const { state: online } = useEntity(SPA_ENTITIES.online);
+  const { state: standbyTemp } = useEntity(SPA_ENTITIES.standbyTemp);
+  const { state: icoBattery } = useEntity(SPA_ENTITIES.icoBattery);
+  const isHeating = String(heaterState || '').toLowerCase().includes('heat') || String(status || '').toLowerCase().includes('heat');
+
+  return (
+    <div className="ds-card flex h-full flex-col" style={{ padding: 14 }}>
+      <div className="flex items-center justify-between pb-3 border-b border-[var(--ds-border)]">
+        <h3 className="text-base font-bold text-[var(--ds-text)]">Spa System</h3>
+        <Clock3 size={18} className="text-[var(--ds-text-secondary)]" />
+      </div>
+      <div className="grid grid-cols-2 gap-2 pt-3">
+        <MiniStat label="Online" value={online === 'on' ? 'Yes' : 'No'} />
+        <MiniStat label="Heater" value={isHeating ? 'Heating' : 'Idle'} />
+        <MiniStat label="Standby" value={standbyTemp ? `${Number.parseFloat(standbyTemp).toFixed(0)}°` : '--'} />
+        <MiniStat label="ICO battery" value={icoBattery || '--'} />
+      </div>
+    </div>
+  );
+}
+
 export function SpaDashboard() {
   return (
-    <div className="flex flex-col gap-2 p-2 md:h-[calc(100vh-72px)] md:overflow-hidden">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 md:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.82fr)]">
+    <div className="flex flex-col gap-1.5 p-2 md:h-[calc(100vh-72px)] md:overflow-hidden">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 md:grid-cols-[minmax(0,1.32fr)_minmax(320px,0.9fr)]">
         <div className="grid min-h-0 gap-2">
-          <div className="grid min-h-0 gap-2 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <div className="grid min-h-0 gap-2 xl:grid-cols-[minmax(0,1.06fr)_minmax(0,0.94fr)]">
             <TempHeroCard />
             <ChemistryCard />
           </div>
@@ -553,9 +525,10 @@ export function SpaDashboard() {
           </div>
         </div>
 
-        <div className="grid min-h-0 content-start gap-2">
+        <div className="grid min-h-0 grid-rows-[minmax(0,1fr)_minmax(0,1fr)_minmax(140px,0.72fr)] gap-2">
           <SpaControlsCard />
           <OutdoorLightsCard />
+          <SpaSystemCard />
         </div>
       </div>
     </div>

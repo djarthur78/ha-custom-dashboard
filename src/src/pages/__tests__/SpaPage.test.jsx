@@ -77,14 +77,14 @@ describe('SpaPage', () => {
     expect(screen.getByText('Spa Controls')).toBeInTheDocument();
     expect(screen.getByText('Outdoor Lights')).toBeInTheDocument();
     expect(screen.getByText('Spa History')).toBeInTheDocument();
-    expect(screen.getAllByText('Good to go')).toHaveLength(2);
+    expect(screen.getAllByText('No ICO action')).toHaveLength(2);
     expect(screen.getAllByText('37.4')).toHaveLength(1);
     expect(screen.getByText('7.42')).toBeInTheDocument();
-    expect(screen.getByText('No action needed right now.')).toBeInTheDocument();
     expect(screen.getByText(/Last ICO measurement:/)).toBeInTheDocument();
     expect(screen.getByText('Ready')).toBeInTheDocument();
     expect(screen.getByText('Eco')).toBeInTheDocument();
     expect(screen.queryByText('Sonos')).not.toBeInTheDocument();
+    expect(screen.queryByText('Next step')).not.toBeInTheDocument();
     expect(document.querySelectorAll('svg[role="img"] path').length).toBeGreaterThan(0);
   });
 

@@ -5,8 +5,8 @@ import { useSpaHistory } from './hooks/useSpaHistory';
 import { SPA_ENTITIES, SPA_HISTORY_ENTITIES } from './spaConfig';
 
 const CHART_WIDTH = 640;
-const CHART_HEIGHT = 148;
-const PAD = { left: 42, right: 12, top: 14, bottom: 24 };
+const CHART_HEIGHT = 142;
+const PAD = { left: 40, right: 12, top: 12, bottom: 22 };
 
 function numberValue(value) {
   const parsed = Number.parseFloat(value);
@@ -67,18 +67,18 @@ function LineChart({ title, icon: Icon, unit, series, band, decimals = 1, height
 
   return (
     <div className="rounded-xl border px-3 py-2" style={{ borderColor: 'var(--ds-border)', backgroundColor: 'var(--ds-warm-inactive-bg)' }}>
-      <div className="flex items-center justify-between gap-2 mb-1">
+      <div className="mb-1 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <Icon size={16} className="text-[var(--ds-accent)] flex-shrink-0" />
           <span className="text-sm font-bold text-[var(--ds-text)]">{title}</span>
-          {band && <span className="text-[11px] text-[var(--ds-text-secondary)]">target {formatAxisValue(band.min, decimals)}–{formatAxisValue(band.max, decimals)} {unit}</span>}
+          {band && <span className="text-[13px] text-[var(--ds-text-secondary)]">target {formatAxisValue(band.min, decimals)}–{formatAxisValue(band.max, decimals)} {unit}</span>}
         </div>
-        <span className="text-[11px] text-[var(--ds-text-secondary)]">24 hours</span>
+        <span className="text-[13px] text-[var(--ds-text-secondary)]">24 hours</span>
       </div>
       <div className="flex flex-wrap gap-x-3 gap-y-0.5 pb-1">
         {series.map((item) => {
           const latest = item.current ?? item.points[item.points.length - 1]?.value;
-          return <span key={`${item.label}-current`} className="text-xs font-semibold" style={{ color: item.color }}>{item.label}: {formatAxisValue(latest, decimals)}{unit}</span>;
+          return <span key={`${item.label}-current`} className="text-[13px] font-semibold" style={{ color: item.color }}>{item.label}: {formatAxisValue(latest, decimals)}{unit}</span>;
         })}
       </div>
       <svg viewBox={`0 0 ${CHART_WIDTH} ${height}`} className="w-full" style={{ height: `${height}px` }} role="img" aria-label={`${title} over the last 24 hours`}>
@@ -90,17 +90,17 @@ function LineChart({ title, icon: Icon, unit, series, band, decimals = 1, height
           const lineY = PAD.top + plotHeight * fraction;
           return <g key={fraction}>
             <line x1={PAD.left} x2={CHART_WIDTH - PAD.right} y1={lineY} y2={lineY} stroke="var(--ds-border)" strokeDasharray="3 4" opacity="0.65" />
-            <text x={PAD.left - 6} y={lineY + 4} textAnchor="end" fontSize="11" fill="var(--ds-text-secondary)">{formatAxisValue(value, decimals)}</text>
+            <text x={PAD.left - 6} y={lineY + 4} textAnchor="end" fontSize="13" fill="var(--ds-text-secondary)">{formatAxisValue(value, decimals)}</text>
           </g>;
         })}
-        <text x={PAD.left} y={height - 4} fontSize="11" fill="var(--ds-text-secondary)">24h ago</text>
-        <text x={CHART_WIDTH - PAD.right} y={height - 4} textAnchor="end" fontSize="11" fill="var(--ds-text-secondary)">Now</text>
+        <text x={PAD.left} y={height - 3} fontSize="13" fill="var(--ds-text-secondary)">24h ago</text>
+        <text x={CHART_WIDTH - PAD.right} y={height - 3} textAnchor="end" fontSize="13" fill="var(--ds-text-secondary)">Now</text>
         {chart.pointsBySeries.map((item) => item.points.length > 1 && (
           <path key={item.label} d={pathFor(item.points)} fill="none" stroke={item.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         ))}
-        {!hasData && <text x={CHART_WIDTH / 2} y={labelTop + plotHeight / 2 + 4} textAnchor="middle" fontSize="12" fill="var(--ds-text-secondary)">History is collecting</text>}
+        {!hasData && <text x={CHART_WIDTH / 2} y={labelTop + plotHeight / 2 + 4} textAnchor="middle" fontSize="13" fill="var(--ds-text-secondary)">History is collecting</text>}
       </svg>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[var(--ds-text-secondary)]">
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-[var(--ds-text-secondary)]">
         {series.map((item) => <span key={item.label} className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />{item.label}</span>)}
         {band && <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: 'rgba(69,151,120,0.35)' }} />ICO target band</span>}
       </div>
@@ -152,7 +152,7 @@ export function SpaHistoryCharts() {
         </div>
         <Clock3 size={18} className="text-[var(--ds-text-secondary)]" />
       </div>
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 pt-3 overflow-y-auto pr-1 lg:grid-cols-2 lg:overflow-hidden">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 pt-2 pr-1 lg:grid-cols-2 lg:overflow-hidden">
         <div className="lg:col-span-2">
           <LineChart
             title="Temperature"
@@ -160,7 +160,7 @@ export function SpaHistoryCharts() {
             unit="°C"
             series={temperatureSeries}
             decimals={1}
-            height={186}
+            height={168}
             focus={tempFocus}
           />
         </div>
@@ -171,7 +171,7 @@ export function SpaHistoryCharts() {
           band={{ min: 7.2, max: 7.6 }}
           series={[{ label: 'ICO pH', color: '#7b6aa8', points: points(SPA_HISTORY_ENTITIES.ph), current: current(ph, 2) }]}
           decimals={2}
-          height={168}
+          height={148}
           focus={phFocus}
         />
         <LineChart
@@ -181,7 +181,7 @@ export function SpaHistoryCharts() {
           band={{ min: 550, max: 650 }}
           series={[{ label: 'ICO ORP', color: '#4e9b7b', points: points(SPA_HISTORY_ENTITIES.orp), current: current(orp, 0) }]}
           decimals={0}
-          height={168}
+          height={148}
           focus={orpFocus}
         />
       </div>
