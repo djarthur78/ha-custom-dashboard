@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 import { Activity, Clock3, Droplets, Thermometer } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import { useSpaHistory } from './hooks/useSpaHistory';
-import { SPA_HISTORY_ENTITIES } from './spaConfig';
+import { SPA_ENTITIES, SPA_HISTORY_ENTITIES } from './spaConfig';
 
 const CHART_WIDTH = 640;
-const CHART_HEIGHT = 142;
-const PAD = { left: 36, right: 10, top: 12, bottom: 22 };
+const CHART_HEIGHT = 148;
+const PAD = { left: 42, right: 12, top: 14, bottom: 24 };
 
 function numberValue(value) {
   const parsed = Number.parseFloat(value);
@@ -26,7 +26,7 @@ function formatAxisValue(value, decimals = 1) {
   return Number.isFinite(value) ? value.toFixed(decimals) : '--';
 }
 
-function LineChart({ title, icon: Icon, unit, series, band, decimals = 1 }) {
+function LineChart({ title, icon: Icon, unit, series, band, decimals = 1, height = CHART_HEIGHT, focus = null }) {
   const chart = useMemo(() => {
     const end = Date.now();
     const start = end - 24 * 60 * 60 * 1000;
@@ -39,18 +39,31 @@ function LineChart({ title, icon: Icon, unit, series, band, decimals = 1 }) {
     if (values.length === 0) return { start, end, pointsBySeries, min: 0, max: 1 };
     const rawMin = Math.min(...values);
     const rawMax = Math.max(...values);
-    const padding = Math.max((rawMax - rawMin) * 0.16, unit === 'pH' ? 0.08 : 1);
-    return { start, end, pointsBySeries, min: rawMin - padding, max: rawMax + padding };
-  }, [band, series, unit]);
+    const range = Math.max(rawMax - rawMin, 0.001);
+    const bandSpan = band ? Math.max(band.max - band.min, 0.001) : 0;
+    const defaultCenter = band ? (band.min + band.max) / 2 : (rawMin + rawMax) / 2;
+    const center = focus?.center ?? defaultCenter;
+    const minSpan = focus?.span ?? Math.max(
+      range * 1.4,
+      bandSpan * 1.8,
+      unit === 'pH' ? 0.8 : unit === 'mV' ? 180 : 2.8,
+    );
+    let min = center - minSpan / 2;
+    let max = center + minSpan / 2;
+    if (rawMin < min) min = rawMin - Math.max(range * 0.08, unit === 'pH' ? 0.04 : 0.8);
+    if (rawMax > max) max = rawMax + Math.max(range * 0.08, unit === 'pH' ? 0.04 : 0.8);
+    return { start, end, pointsBySeries, min, max };
+  }, [band, focus, series, unit]);
 
   const plotWidth = CHART_WIDTH - PAD.left - PAD.right;
-  const plotHeight = CHART_HEIGHT - PAD.top - PAD.bottom;
+  const plotHeight = height - PAD.top - PAD.bottom;
   const y = (value) => PAD.top + ((chart.max - value) / (chart.max - chart.min || 1)) * plotHeight;
   const x = (time) => PAD.left + ((time - chart.start) / (chart.end - chart.start)) * plotWidth;
   const pathFor = (points) => points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(point.time).toFixed(1)} ${y(point.value).toFixed(1)}`).join(' ');
   const hasData = chart.pointsBySeries.some((item) => item.points.length > 0);
   const bandY = band ? y(band.max) : null;
   const bandHeight = band ? Math.max(0, y(band.min) - bandY) : 0;
+  const labelTop = PAD.top + 4;
 
   return (
     <div className="rounded-xl border px-3 py-2" style={{ borderColor: 'var(--ds-border)', backgroundColor: 'var(--ds-warm-inactive-bg)' }}>
@@ -68,7 +81,7 @@ function LineChart({ title, icon: Icon, unit, series, band, decimals = 1 }) {
           return <span key={`${item.label}-current`} className="text-xs font-semibold" style={{ color: item.color }}>{item.label}: {formatAxisValue(latest, decimals)}{unit}</span>;
         })}
       </div>
-      <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} className="w-full h-[112px]" role="img" aria-label={`${title} over the last 24 hours`}>
+      <svg viewBox={`0 0 ${CHART_WIDTH} ${height}`} className="w-full" style={{ height: `${height}px` }} role="img" aria-label={`${title} over the last 24 hours`}>
         <line x1={PAD.left} x2={CHART_WIDTH - PAD.right} y1={PAD.top + plotHeight} y2={PAD.top + plotHeight} stroke="var(--ds-border)" />
         <line x1={PAD.left} x2={PAD.left} y1={PAD.top} y2={PAD.top + plotHeight} stroke="var(--ds-border)" />
         {band && <rect x={PAD.left} y={bandY} width={plotWidth} height={bandHeight} fill="rgba(69,151,120,0.12)" />}
@@ -80,12 +93,12 @@ function LineChart({ title, icon: Icon, unit, series, band, decimals = 1 }) {
             <text x={PAD.left - 6} y={lineY + 4} textAnchor="end" fontSize="11" fill="var(--ds-text-secondary)">{formatAxisValue(value, decimals)}</text>
           </g>;
         })}
-        <text x={PAD.left} y={CHART_HEIGHT - 4} fontSize="11" fill="var(--ds-text-secondary)">24h ago</text>
-        <text x={CHART_WIDTH - PAD.right} y={CHART_HEIGHT - 4} textAnchor="end" fontSize="11" fill="var(--ds-text-secondary)">Now</text>
+        <text x={PAD.left} y={height - 4} fontSize="11" fill="var(--ds-text-secondary)">24h ago</text>
+        <text x={CHART_WIDTH - PAD.right} y={height - 4} textAnchor="end" fontSize="11" fill="var(--ds-text-secondary)">Now</text>
         {chart.pointsBySeries.map((item) => item.points.length > 1 && (
           <path key={item.label} d={pathFor(item.points)} fill="none" stroke={item.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         ))}
-        {!hasData && <text x={CHART_WIDTH / 2} y={PAD.top + plotHeight / 2 + 4} textAnchor="middle" fontSize="12" fill="var(--ds-text-secondary)">History is collecting</text>}
+        {!hasData && <text x={CHART_WIDTH / 2} y={labelTop + plotHeight / 2 + 4} textAnchor="middle" fontSize="12" fill="var(--ds-text-secondary)">History is collecting</text>}
       </svg>
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[var(--ds-text-secondary)]">
         {series.map((item) => <span key={item.label} className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />{item.label}</span>)}
@@ -102,6 +115,8 @@ export function SpaHistoryCharts() {
   const targetTemperature = useEntity(SPA_HISTORY_ENTITIES.targetTemperature);
   const ph = useEntity(SPA_HISTORY_ENTITIES.ph);
   const orp = useEntity(SPA_HISTORY_ENTITIES.orp);
+  const phMinimum = useEntity(SPA_ENTITIES.phMinimum);
+  const phMaximum = useEntity(SPA_ENTITIES.phMaximum);
   const end = Date.now();
   const start = end - 24 * 60 * 60 * 1000;
   const points = (entityId) => historyPoints(history, entityId, start, end);
@@ -115,20 +130,60 @@ export function SpaHistoryCharts() {
     { label: 'ICO', color: '#4d89a8', points: points(SPA_HISTORY_ENTITIES.icoTemperature), current: current(icoTemperature) },
     { label: 'Target', color: '#8b7a68', points: points(SPA_HISTORY_ENTITIES.targetTemperature), current: current(targetTemperature) },
   ];
+  const tempFocus = {
+    center: current(targetTemperature) ?? current(balboaTemperature) ?? 38,
+    span: 3.6,
+  };
+  const phFocus = {
+    center: ((numberValue(phMinimum.state) ?? 7.2) + (numberValue(phMaximum.state) ?? 7.6)) / 2,
+    span: 0.8,
+  };
+  const orpFocus = {
+    center: (550 + 650) / 2,
+    span: 220,
+  };
 
   return (
     <div className="ds-card flex min-h-0 flex-col" style={{ padding: 16 }}>
       <div className="flex items-center justify-between pb-3 border-b border-[var(--ds-border)]">
         <div>
           <h3 className="text-base font-bold text-[var(--ds-text)]">Spa History</h3>
-          <p className="mt-0.5 text-xs text-[var(--ds-text-secondary)]">Live readings against the configured ICO targets</p>
+          <p className="mt-0.5 text-xs text-[var(--ds-text-secondary)]">24-hour view, centred on the useful range</p>
         </div>
         <Clock3 size={18} className="text-[var(--ds-text-secondary)]" />
       </div>
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 pt-3 overflow-y-auto pr-1 lg:grid-cols-3 lg:overflow-hidden">
-        <LineChart title="Temperature" icon={Thermometer} unit="°C" series={temperatureSeries} decimals={1} />
-        <LineChart title="pH" icon={Droplets} unit="" band={{ min: 7.2, max: 7.6 }} series={[{ label: 'ICO pH', color: '#7b6aa8', points: points(SPA_HISTORY_ENTITIES.ph), current: current(ph, 2) }]} decimals={2} />
-        <LineChart title="Disinfection (ORP)" icon={Activity} unit="mV" band={{ min: 550, max: 650 }} series={[{ label: 'ICO ORP', color: '#4e9b7b', points: points(SPA_HISTORY_ENTITIES.orp), current: current(orp, 0) }]} decimals={0} />
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 pt-3 overflow-y-auto pr-1 lg:grid-cols-2 lg:overflow-hidden">
+        <div className="lg:col-span-2">
+          <LineChart
+            title="Temperature"
+            icon={Thermometer}
+            unit="°C"
+            series={temperatureSeries}
+            decimals={1}
+            height={186}
+            focus={tempFocus}
+          />
+        </div>
+        <LineChart
+          title="pH"
+          icon={Droplets}
+          unit=""
+          band={{ min: 7.2, max: 7.6 }}
+          series={[{ label: 'ICO pH', color: '#7b6aa8', points: points(SPA_HISTORY_ENTITIES.ph), current: current(ph, 2) }]}
+          decimals={2}
+          height={168}
+          focus={phFocus}
+        />
+        <LineChart
+          title="Disinfection (ORP)"
+          icon={Activity}
+          unit="mV"
+          band={{ min: 550, max: 650 }}
+          series={[{ label: 'ICO ORP', color: '#4e9b7b', points: points(SPA_HISTORY_ENTITIES.orp), current: current(orp, 0) }]}
+          decimals={0}
+          height={168}
+          focus={orpFocus}
+        />
       </div>
       {loading && <div className="pt-2 text-xs text-[var(--ds-text-secondary)]">Updating history...</div>}
       {error && <div className="pt-2 text-xs text-[var(--ds-health-warn)]">History temporarily unavailable.</div>}
