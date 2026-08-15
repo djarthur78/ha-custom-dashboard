@@ -33,12 +33,12 @@ function domainForSeries(pointsBySeries, band, focus, unit) {
 
   if (band) {
     const bandSpan = Math.max(band.max - band.min, 0.001);
-    const padding = bandSpan * 0.35;
+    const padding = bandSpan * 0.2;
     const currentMin = currentValues.length ? Math.min(...currentValues) : band.min;
     const currentMax = currentValues.length ? Math.max(...currentValues) : band.max;
     return {
-      min: Math.min(band.min - padding, currentMin - bandSpan * 0.18),
-      max: Math.max(band.max + padding, currentMax + bandSpan * 0.18),
+      min: Math.min(band.min - padding, currentMin - bandSpan * 0.1),
+      max: Math.max(band.max + padding, currentMax + bandSpan * 0.1),
     };
   }
 
@@ -78,6 +78,9 @@ function LineChart({ title, icon, unit, series, band, decimals = 1, focus = null
   const bandY = band ? Math.max(PAD.top, y(band.max)) : null;
   const bandBottom = band ? Math.min(PAD.top + plotHeight, y(band.min)) : null;
   const bandHeight = band ? Math.max(0, bandBottom - bandY) : 0;
+  const ticks = band
+    ? [chart.max, band.max, (band.min + band.max) / 2, band.min, chart.min]
+    : [0, 0.25, 0.5, 0.75, 1].map((fraction) => chart.max - (chart.max - chart.min) * fraction);
 
   return (
     <article className="flex h-full min-h-0 flex-col rounded-xl border px-4 py-3" style={{ borderColor: 'var(--ds-border)', backgroundColor: 'var(--ds-warm-inactive-bg)' }}>
@@ -121,11 +124,10 @@ function LineChart({ title, icon, unit, series, band, decimals = 1, focus = null
             )}
           </g>
         )}
-        {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
-          const value = chart.max - (chart.max - chart.min) * fraction;
-          const lineY = PAD.top + plotHeight * fraction;
+        {ticks.map((value) => {
+          const lineY = y(value);
           return (
-            <g key={fraction}>
+            <g key={value}>
               <line x1={PAD.left} x2={CHART_WIDTH - PAD.right} y1={lineY} y2={lineY} stroke="var(--ds-border)" strokeDasharray="4 5" opacity="0.9" />
               <text x={PAD.left - 10} y={lineY + 5} textAnchor="end" fontSize="16" fontWeight="600" fill="var(--ds-text-secondary)">
                 {formatAxisValue(value, decimals)}

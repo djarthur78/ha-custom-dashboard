@@ -230,7 +230,7 @@ function TempHeroCard() {
     { icon: Sparkles, label: 'Jets 2', entityId: SPA_ENTITIES.jets2 },
     { icon: Wind, label: 'Blower', entityId: SPA_ENTITIES.blower },
     { icon: SunMedium, label: 'Spa lights', entityId: SPA_ENTITIES.lights },
-    { icon: Trees, label: 'Games Room', entityId: SPA_ENTITIES.outdoorGamesRoom, note: 'Outdoor' },
+    { icon: Trees, label: 'Games Room Lights', entityId: SPA_ENTITIES.outdoorGamesRoom, note: 'Outdoor' },
   ];
 
   return (
@@ -404,7 +404,7 @@ function ChemistryCard() {
 export function SpaDashboard() {
   return (
     <main className="flex flex-col gap-2 p-2 lg:h-[calc(100vh-72px)] lg:overflow-hidden">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 lg:grid-rows-[minmax(0,0.98fr)_minmax(0,1.02fr)]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 lg:grid-rows-[minmax(0,0.88fr)_minmax(0,1.12fr)]">
         <div className="grid min-h-0 grid-cols-1 gap-2 xl:grid-cols-2">
           <TempHeroCard />
           <ChemistryCard />

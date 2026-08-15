@@ -83,6 +83,7 @@ describe('SpaPage', () => {
     expect(screen.getByText(/Last reading/)).toBeInTheDocument();
     expect(screen.getByText('Ready 38°')).toBeInTheDocument();
     expect(screen.getByText('Eco')).toBeInTheDocument();
+    expect(screen.getByText('Games Room Lights')).toBeInTheDocument();
     expect(screen.queryByText('Sonos')).not.toBeInTheDocument();
     expect(screen.queryByText('Next step')).not.toBeInTheDocument();
     expect(document.querySelectorAll('svg[role="img"] path').length).toBeGreaterThan(0);
