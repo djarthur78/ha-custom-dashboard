@@ -175,4 +175,15 @@ describe('SpaPage', () => {
     expect(screen.queryByText('Carry out weekly maintenance')).not.toBeInTheDocument();
     expect(screen.queryByText('Active ICO tasks')).not.toBeInTheDocument();
   });
+
+  it('warns about out-of-range readings without inventing an ICO task', () => {
+    stateMap.set('sensor.hot_tub_ph', { state: '7.78', attributes: {} });
+    stateMap.set('sensor.hot_tub_oxydo_reduction_potential', { state: '662', attributes: {} });
+
+    render(<SpaPage />);
+
+    expect(screen.getByText('Watch levels')).toBeInTheDocument();
+    expect(screen.getByText('No ICO task')).toBeInTheDocument();
+    expect(screen.queryByText('Active ICO tasks')).not.toBeInTheDocument();
+  });
 });
