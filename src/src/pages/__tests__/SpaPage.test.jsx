@@ -184,7 +184,7 @@ describe('SpaPage', () => {
     render(<SpaPage />);
 
     expect(screen.getByText('Watch levels')).toBeInTheDocument();
-    expect(screen.getByText('No ICO task')).toBeInTheDocument();
+    expect(screen.getByText('No Chemicals to Add')).toBeInTheDocument();
     expect(screen.queryByText('Active ICO tasks')).not.toBeInTheDocument();
   });
 });

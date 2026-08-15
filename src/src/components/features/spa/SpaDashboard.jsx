@@ -339,7 +339,7 @@ function ChemistryCard() {
   const chemistryLabel = !recommendationFresh ? 'Checking ICO' : (hasAction ? 'Action needed' : (readingsOutsideRange ? 'Watch levels' : 'Good to use'));
   const chemistryValue = !recommendationFresh
     ? 'Refreshing'
-    : (hasAction ? `${relevantRecommendations.length} ${relevantRecommendations.length === 1 ? 'task' : 'tasks'}` : (readingsOutsideRange ? 'No ICO task' : 'No tasks'));
+    : (hasAction ? `${relevantRecommendations.length} ${relevantRecommendations.length === 1 ? 'task' : 'tasks'}` : (readingsOutsideRange ? 'No Chemicals to Add' : 'No tasks'));
 
   return (
     <section className="ds-card flex h-full min-h-0 flex-col overflow-hidden" style={{ padding: 18 }}>
