@@ -101,19 +101,27 @@ describe('SpaPage', () => {
       state: '1',
       attributes: {
         recommendations: [{
-          title: 'Add 22 g of bromine shock',
-          action: 'Add 22 g of bromine shock',
-          message: 'Adjust pH first and run filtration for a few hours.',
+          title: 'Add 24 g of pH Plus',
+          action: 'Add 24 g of pH Plus',
+          message: 'Raise pH by 0.1 with careful dosing.',
+        }, {
+          title: 'Add 8 g of bromine shock',
+          action: 'Add 8 g of bromine shock',
+          message: 'Increase disinfection after the pH correction.',
         }],
       },
     });
     stateMap.set('sensor.hot_tub_oxydo_reduction_potential', { state: '500', attributes: {} });
+    stateMap.set('sensor.hot_tub_ph', { state: '7.08', attributes: {}, lastUpdated: '2026-08-14T18:37:16.485Z' });
 
     render(<SpaPage />);
 
-    expect(screen.getByText('Next step')).toBeInTheDocument();
-    expect(screen.getByText('Add 22 g of bromine shock')).toBeInTheDocument();
-    expect(screen.getByText((text) => text.includes('Adjust pH first and run filtration for a few hours.'))).toBeInTheDocument();
+    expect(screen.getByText('Next steps')).toBeInTheDocument();
+    expect(screen.getByText('2 shown')).toBeInTheDocument();
+    expect(screen.getAllByText('pH').length).toBeGreaterThan(0);
+    expect(screen.getByText('Bromine')).toBeInTheDocument();
+    expect(screen.getByText((text) => text.includes('Raise pH by 0.1 with careful dosing.'))).toBeInTheDocument();
+    expect(screen.getByText((text) => text.includes('Increase disinfection after the pH correction.'))).toBeInTheDocument();
   });
 
   it('hides a stale completed-style recommendation when the live reading is back in range', () => {

@@ -5,8 +5,8 @@ import { useSpaHistory } from './hooks/useSpaHistory';
 import { SPA_ENTITIES, SPA_HISTORY_ENTITIES } from './spaConfig';
 
 const CHART_WIDTH = 640;
-const CHART_HEIGHT = 142;
-const PAD = { left: 40, right: 12, top: 12, bottom: 22 };
+const CHART_HEIGHT = 136;
+const PAD = { left: 40, right: 12, top: 10, bottom: 20 };
 
 function numberValue(value) {
   const parsed = Number.parseFloat(value);
@@ -84,7 +84,7 @@ function LineChart({ title, icon: Icon, unit, series, band, decimals = 1, height
       <svg viewBox={`0 0 ${CHART_WIDTH} ${height}`} className="w-full" style={{ height: `${height}px` }} role="img" aria-label={`${title} over the last 24 hours`}>
         <line x1={PAD.left} x2={CHART_WIDTH - PAD.right} y1={PAD.top + plotHeight} y2={PAD.top + plotHeight} stroke="var(--ds-border)" />
         <line x1={PAD.left} x2={PAD.left} y1={PAD.top} y2={PAD.top + plotHeight} stroke="var(--ds-border)" />
-        {band && <rect x={PAD.left} y={bandY} width={plotWidth} height={bandHeight} fill="rgba(69,151,120,0.12)" />}
+        {band && <rect x={PAD.left} y={bandY} width={plotWidth} height={bandHeight} fill="rgba(69,151,120,0.18)" />}
         {[0, 0.5, 1].map((fraction) => {
           const value = chart.max - (chart.max - chart.min) * fraction;
           const lineY = PAD.top + plotHeight * fraction;
@@ -132,15 +132,15 @@ export function SpaHistoryCharts() {
   ];
   const tempFocus = {
     center: current(targetTemperature) ?? current(balboaTemperature) ?? 38,
-    span: 3.6,
+    span: 2.4,
   };
   const phFocus = {
     center: ((numberValue(phMinimum.state) ?? 7.2) + (numberValue(phMaximum.state) ?? 7.6)) / 2,
-    span: 0.8,
+    span: 0.42,
   };
   const orpFocus = {
     center: (550 + 650) / 2,
-    span: 220,
+    span: 130,
   };
 
   return (
@@ -160,7 +160,7 @@ export function SpaHistoryCharts() {
             unit="°C"
             series={temperatureSeries}
             decimals={1}
-            height={168}
+            height={154}
             focus={tempFocus}
           />
         </div>
@@ -171,7 +171,7 @@ export function SpaHistoryCharts() {
           band={{ min: 7.2, max: 7.6 }}
           series={[{ label: 'ICO pH', color: '#7b6aa8', points: points(SPA_HISTORY_ENTITIES.ph), current: current(ph, 2) }]}
           decimals={2}
-          height={148}
+          height={136}
           focus={phFocus}
         />
         <LineChart
@@ -181,7 +181,7 @@ export function SpaHistoryCharts() {
           band={{ min: 550, max: 650 }}
           series={[{ label: 'ICO ORP', color: '#4e9b7b', points: points(SPA_HISTORY_ENTITIES.orp), current: current(orp, 0) }]}
           decimals={0}
-          height={148}
+          height={136}
           focus={orpFocus}
         />
       </div>

@@ -73,6 +73,28 @@ function conciseRecommendation(item) {
   return firstParagraph;
 }
 
+function recommendationCategory(item) {
+  const text = `${item?.title || ''} ${item?.action || ''} ${item?.message || ''}`.toLowerCase();
+  if (text.includes('bromine') || text.includes('shock') || text.includes('disinfection')) return 'Bromine';
+  if (text.includes('weekly')) return 'Weekly maintenance';
+  if (text.includes('orp')) return 'ORP';
+  if (text.includes('ph plus') || text.includes('ph minus') || text.includes('ph ')) return 'pH';
+  return 'Recommendation';
+}
+
+function RecommendationRow({ item }) {
+  return (
+    <div className="rounded-xl border px-3 py-2" style={{ borderColor: 'var(--ds-border)', backgroundColor: 'var(--ds-warm-inactive-bg)' }}>
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">
+        {recommendationCategory(item)}
+      </div>
+      <div className="mt-1 text-sm font-semibold text-[var(--ds-text)]">
+        {conciseRecommendation(item)}
+      </div>
+    </div>
+  );
+}
+
 function TonePill({ label, tone = 'neutral' }) {
   const palette = {
     good: { bg: 'rgba(74,154,74,0.12)', fg: 'var(--ds-health-good)' },
@@ -370,9 +392,17 @@ function ChemistryCard() {
 
       {summary.actionTitle && (
         <div className="mt-3 rounded-2xl border px-3 py-3" style={{ borderColor: 'var(--ds-border)' }}>
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">Next step</div>
-          <div className="mt-1 text-base font-bold text-[var(--ds-text)]">{summary.actionTitle}</div>
-          <div className="mt-2 text-sm leading-relaxed text-[var(--ds-text-secondary)]">{summary.actionText}</div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">Next steps</div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">
+              {Math.min(relevantRecommendations.length, 3)} shown
+            </div>
+          </div>
+          <div className="mt-2 max-h-[108px] space-y-2 overflow-y-auto pr-1">
+            {relevantRecommendations.slice(0, 3).map((item, index) => (
+              <RecommendationRow key={`${item.title || item.action || index}`} item={item} />
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -436,13 +466,8 @@ function OutdoorLightButton({ icon: ButtonIcon, label, entityId, note }) {
 }
 
 function SpaControlsCard() {
-  const { state: targetTemp } = useEntity(SPA_ENTITIES.targetTemp);
-  const { state: heaterState } = useEntity(SPA_ENTITIES.heaterState);
-  const { state: status } = useEntity(SPA_ENTITIES.status);
-  const isHeating = String(heaterState || '').toLowerCase().includes('heat') || String(status || '').toLowerCase().includes('heat');
-
   return (
-    <div className="ds-card flex h-full flex-col" style={{ padding: 14 }}>
+    <div className="ds-card flex flex-col" style={{ padding: 14 }}>
       <div className="flex items-center justify-between pb-3 border-b border-[var(--ds-border)]">
         <h3 className="text-base font-bold text-[var(--ds-text)]">Spa Controls</h3>
         <Waves size={18} className="text-[var(--ds-text-secondary)]" />
@@ -452,10 +477,6 @@ function SpaControlsCard() {
         <ControlButton icon={Sparkles} label="Jets 2" entityId={SPA_ENTITIES.jets2} />
         <ControlButton icon={Wind} label="Blower" entityId={SPA_ENTITIES.blower} />
         <ControlButton icon={SunMedium} label="Lights" entityId={SPA_ENTITIES.lights} />
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <MiniStat label="Heater" value={isHeating ? 'Heating' : 'Idle'} />
-        <MiniStat label="Target" value={targetTemp ? `${Number.parseFloat(targetTemp).toFixed(0)}°` : '--'} />
       </div>
     </div>
   );
@@ -473,7 +494,7 @@ function OutdoorLightsCard() {
   ];
 
   return (
-    <div className="ds-card flex h-full flex-col" style={{ padding: 14 }}>
+    <div className="ds-card flex flex-col" style={{ padding: 14 }}>
       <div className="flex items-center justify-between pb-3 border-b border-[var(--ds-border)]">
         <h3 className="text-base font-bold text-[var(--ds-text)]">Outdoor Lights</h3>
         <Trees size={18} className="text-[var(--ds-text-secondary)]" />
@@ -496,7 +517,7 @@ function SpaSystemCard() {
   const isHeating = String(heaterState || '').toLowerCase().includes('heat') || String(status || '').toLowerCase().includes('heat');
 
   return (
-    <div className="ds-card flex h-full flex-col" style={{ padding: 14 }}>
+    <div className="ds-card flex flex-col flex-1 min-h-0" style={{ padding: 14 }}>
       <div className="flex items-center justify-between pb-3 border-b border-[var(--ds-border)]">
         <h3 className="text-base font-bold text-[var(--ds-text)]">Spa System</h3>
         <Clock3 size={18} className="text-[var(--ds-text-secondary)]" />
@@ -514,18 +535,18 @@ function SpaSystemCard() {
 export function SpaDashboard() {
   return (
     <div className="flex flex-col gap-1.5 p-2 md:h-[calc(100vh-72px)] md:overflow-hidden">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 md:grid-cols-[minmax(0,1.32fr)_minmax(320px,0.9fr)]">
-        <div className="grid min-h-0 gap-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 md:flex-row">
+        <div className="flex min-h-0 flex-[60] flex-col gap-2">
           <div className="grid min-h-0 gap-2 xl:grid-cols-[minmax(0,1.06fr)_minmax(0,0.94fr)]">
             <TempHeroCard />
             <ChemistryCard />
           </div>
-          <div className="min-h-0">
+          <div className="min-h-0 flex-1">
             <SpaHistoryCharts />
           </div>
         </div>
 
-        <div className="grid min-h-0 grid-rows-[minmax(0,1fr)_minmax(0,1fr)_minmax(140px,0.72fr)] gap-2">
+        <div className="flex min-h-0 flex-[40] flex-col gap-2">
           <SpaControlsCard />
           <OutdoorLightsCard />
           <SpaSystemCard />
