@@ -74,14 +74,14 @@ describe('SpaPage', () => {
 
     expect(screen.getByText('Spa')).toBeInTheDocument();
     expect(screen.getByText('Chemistry')).toBeInTheDocument();
-    expect(screen.getByText('Spa Controls')).toBeInTheDocument();
-    expect(screen.getByText('Outdoor Lights')).toBeInTheDocument();
-    expect(screen.getByText('Spa History')).toBeInTheDocument();
+    expect(screen.getByText('Temperature & controls')).toBeInTheDocument();
+    expect(screen.getByText('ICO water quality')).toBeInTheDocument();
+    expect(screen.getByText('Spa history')).toBeInTheDocument();
     expect(screen.getAllByText('Good to use').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('37.4')).toHaveLength(1);
+    expect(screen.getAllByText('37.4°C')).toHaveLength(1);
     expect(screen.getByText('7.42')).toBeInTheDocument();
-    expect(screen.getByText(/Last ICO measurement:/)).toBeInTheDocument();
-    expect(screen.getByText('Ready')).toBeInTheDocument();
+    expect(screen.getByText(/Last reading/)).toBeInTheDocument();
+    expect(screen.getByText('Ready 38°')).toBeInTheDocument();
     expect(screen.getByText('Eco')).toBeInTheDocument();
     expect(screen.queryByText('Sonos')).not.toBeInTheDocument();
     expect(screen.queryByText('Next step')).not.toBeInTheDocument();
@@ -116,7 +116,7 @@ describe('SpaPage', () => {
 
     render(<SpaPage />);
 
-    expect(screen.getByText('Next steps')).toBeInTheDocument();
+    expect(screen.getByText('Active ICO tasks')).toBeInTheDocument();
     expect(screen.getByText('2 shown')).toBeInTheDocument();
     expect(screen.getByText('Add 24 g of pH Plus')).toBeInTheDocument();
     expect(screen.getByText('Add 8 g of bromine shock')).toBeInTheDocument();
@@ -138,5 +138,41 @@ describe('SpaPage', () => {
 
     expect(screen.queryByText('Next step')).not.toBeInTheDocument();
     expect(screen.queryByText('This old action should not be shown while pH is in range.')).not.toBeInTheDocument();
+  });
+
+  it('hides recommendations when the ICO task list is stale', () => {
+    stateMap.set('sensor.spa_ico_recommendation', {
+      state: '1',
+      lastUpdated: new Date(Date.now() - 31 * 60 * 1000).toISOString(),
+      attributes: {
+        recommendations: [{
+          title: 'Add 8 g of slow bromine',
+          status: 'waiting',
+        }],
+      },
+    });
+    stateMap.set('sensor.hot_tub_oxydo_reduction_potential', { state: '450', attributes: {} });
+
+    render(<SpaPage />);
+
+    expect(screen.getByText('Checking ICO')).toBeInTheDocument();
+    expect(screen.queryByText('Add 8 g of slow bromine')).not.toBeInTheDocument();
+  });
+
+  it('does not render recommendations already marked completed by ICO', () => {
+    stateMap.set('sensor.spa_ico_recommendation', {
+      state: '1',
+      attributes: {
+        recommendations: [{
+          title: 'Carry out weekly maintenance',
+          status: 'ok',
+        }],
+      },
+    });
+
+    render(<SpaPage />);
+
+    expect(screen.queryByText('Carry out weekly maintenance')).not.toBeInTheDocument();
+    expect(screen.queryByText('Active ICO tasks')).not.toBeInTheDocument();
   });
 });

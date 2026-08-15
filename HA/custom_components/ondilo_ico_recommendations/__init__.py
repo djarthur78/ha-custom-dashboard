@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 from typing import Any
 
@@ -13,7 +13,17 @@ from homeassistant.helpers.event import async_track_time_interval
 
 DOMAIN = "ondilo_ico_recommendations"
 API_BASE = "https://interop.ondilo.com/api/customer/v1"
-POLL_INTERVAL = timedelta(minutes=15)
+POLL_INTERVAL = timedelta(minutes=5)
+COMPLETED_STATUSES = {
+    "cancelled",
+    "closed",
+    "complete",
+    "completed",
+    "done",
+    "ok",
+    "resolved",
+    "validated",
+}
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -38,7 +48,17 @@ def _normalise_recommendation(item: dict[str, Any]) -> dict[str, Any]:
         "title": str(title),
         "action": str(title),
         "message": str(message),
+        "status": item.get("status"),
+        "created_at": item.get("created_at"),
+        "updated_at": item.get("updated_at"),
+        "deadline": item.get("deadline"),
     }
+
+
+def _is_active(recommendation: dict[str, Any]) -> bool:
+    """Exclude completed recommendations if the API includes them."""
+    status = str(recommendation.get("status") or "").strip().lower()
+    return not status or status not in COMPLETED_STATUSES
 
 
 class RecommendationBridge:
@@ -51,11 +71,18 @@ class RecommendationBridge:
         self.pool_id: str | None = None
 
     async def async_start(self) -> None:
-        """Start after config entries have finished loading."""
+        """Start polling and perform an immediate refresh."""
+        if self.remove_interval is None:
+            self.remove_interval = async_track_time_interval(
+                self.hass, self.async_update, POLL_INTERVAL
+            )
+        await self.async_update()
+
+    def _resolve_native_runtime(self) -> bool:
+        """Resolve the native integration runtime when it becomes available."""
         entries: list[ConfigEntry] = self.hass.config_entries.async_entries("ondilo_ico")
         if not entries:
-            _LOGGER.warning("Native Ondilo ICO integration is not configured")
-            return
+            return False
 
         native_entry = entries[0]
         runtime_data = getattr(native_entry, "runtime_data", None)
@@ -63,18 +90,24 @@ class RecommendationBridge:
         self.session = getattr(api, "session", None)
         data = getattr(runtime_data, "data", None) or {}
         self.pool_id = next(iter(data), None)
-        if self.session is None or self.pool_id is None:
-            _LOGGER.warning("Ondilo ICO runtime data is not ready")
-            return
-
-        await self.async_update()
-        self.remove_interval = async_track_time_interval(
-            self.hass, self.async_update, POLL_INTERVAL
-        )
+        return self.session is not None and self.pool_id is not None
 
     async def async_update(self, _now=None) -> None:
         """Fetch recommendations and the live ICO configuration."""
-        if self.session is None or self.pool_id is None:
+        if not self._resolve_native_runtime():
+            _LOGGER.warning("Ondilo ICO runtime data is not ready; retrying next poll")
+            self.hass.states.async_set(
+                "sensor.spa_ico_recommendation",
+                "unavailable",
+                {
+                    "friendly_name": "ICO recommendations",
+                    "recommendations": [],
+                    "summary": "Waiting for the native Ondilo ICO integration",
+                    "source": "Ondilo ICO Customer API",
+                    "available": False,
+                    "last_attempt_at": datetime.now(UTC).isoformat(),
+                },
+            )
             return
 
         try:
@@ -90,7 +123,11 @@ class RecommendationBridge:
                 )
             recommendations_payload = await recommendations_response.json()
             configuration_payload = await configuration_response.json()
-            recommendations = [_normalise_recommendation(item) for item in _items(recommendations_payload)]
+            recommendations = [
+                recommendation
+                for item in _items(recommendations_payload)
+                if _is_active(recommendation := _normalise_recommendation(item))
+            ]
             configuration = configuration_payload.get("data", configuration_payload) if isinstance(configuration_payload, dict) else {}
             attributes = {
                 "friendly_name": "ICO recommendations",
@@ -98,12 +135,26 @@ class RecommendationBridge:
                 "summary": f"{len(recommendations)} active recommendation(s)" if recommendations else "No active recommendations",
                 "configuration": configuration,
                 "source": "Ondilo ICO Customer API",
+                "refreshed_at": datetime.now(UTC).isoformat(),
+                "available": True,
             }
             self.hass.states.async_set(
                 "sensor.spa_ico_recommendation", str(len(recommendations)), attributes
             )
         except Exception as err:  # noqa: BLE001 - keep dashboard available if cloud API is down
             _LOGGER.warning("Unable to update ICO recommendations: %s", err)
+            self.hass.states.async_set(
+                "sensor.spa_ico_recommendation",
+                "unavailable",
+                {
+                    "friendly_name": "ICO recommendations",
+                    "recommendations": [],
+                    "summary": "ICO recommendations temporarily unavailable",
+                    "source": "Ondilo ICO Customer API",
+                    "available": False,
+                    "last_attempt_at": datetime.now(UTC).isoformat(),
+                },
+            )
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
@@ -114,7 +165,10 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     async def start(_event) -> None:
         await bridge.async_start()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start)
+    if hass.is_running:
+        hass.async_create_task(bridge.async_start())
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start)
     return True
 
 
