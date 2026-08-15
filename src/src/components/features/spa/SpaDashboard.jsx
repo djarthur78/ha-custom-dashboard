@@ -56,23 +56,6 @@ function isRecommendationRelevant(item, { phValue, phMin, phMax, orpValue, orpMi
   return true;
 }
 
-function conciseRecommendation(item) {
-  const message = String(item?.message || '').trim();
-  if (!message) return item?.action || '';
-
-  const firstParagraph = message.split(/\n\s*\n/)[0].trim();
-  if (/pH Minus/i.test(item?.title || '') || /pH Minus/i.test(item?.action || '')) {
-    return `${firstParagraph} Add gradually and let ICO reassess before adding more.`;
-  }
-  if (/pH Plus/i.test(item?.title || '') || /pH Plus/i.test(item?.action || '')) {
-    return `${firstParagraph} Add gradually and let ICO reassess before adding more.`;
-  }
-  if (/bromine shock/i.test(item?.title || '') || /bromine shock/i.test(item?.action || '')) {
-    return `${firstParagraph} Adjust pH first, then run filtration for a few hours.`;
-  }
-  return firstParagraph;
-}
-
 function recommendationCategory(item) {
   const text = `${item?.title || ''} ${item?.action || ''} ${item?.message || ''}`.toLowerCase();
   if (text.includes('bromine') || text.includes('shock') || text.includes('disinfection')) return 'Bromine';
@@ -88,9 +71,7 @@ function RecommendationRow({ item }) {
       <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">
         {recommendationCategory(item)}
       </div>
-      <div className="mt-1 text-sm font-semibold text-[var(--ds-text)]">
-        {conciseRecommendation(item)}
-      </div>
+      <div className="mt-1 text-sm font-semibold text-[var(--ds-text)]">{item?.title || item?.action || 'Recommendation'}</div>
     </div>
   );
 }
@@ -156,7 +137,6 @@ function deriveChemistrySummary({ relevantRecommendations }) {
       tone: 'info',
       icon: Clock3,
       actionTitle: primaryRecommendation.title || primaryRecommendation.action || 'Review recommendation',
-      actionText: conciseRecommendation(primaryRecommendation),
     };
   }
 
@@ -181,6 +161,8 @@ function TempHeroCard() {
   const targetValue = parseNumber(targetTemp);
   const isHeating = String(heaterState || '').toLowerCase().includes('heat') || String(status || '').toLowerCase().includes('heat');
   const statusLabel = isHeating ? 'Heating' : (status || 'Ready / Filtering / Idle');
+  const tempRag = currentValue != null && targetValue != null && Math.abs(currentValue - targetValue) <= 1 ? 'good' : (isHeating ? 'warn' : 'neutral');
+  const tempRagLabel = currentValue != null && targetValue != null && Math.abs(currentValue - targetValue) <= 1 ? 'Good to use' : (isHeating ? 'Heating' : 'Adjust temp');
 
   const handleAdjust = async (delta) => {
     if (targetValue == null) return;
@@ -227,7 +209,10 @@ function TempHeroCard() {
             <div className="pb-1 text-2xl font-bold leading-none text-[var(--ds-text-secondary)]">°C</div>
           </div>
         </div>
-        <Bath size={34} className={isHeating ? 'text-[var(--ds-state-on)]' : 'text-[var(--ds-text-secondary)]'} />
+        <div className="flex flex-col items-end gap-2">
+          <TonePill label={tempRagLabel} tone={tempRag} />
+          <Bath size={34} className={isHeating ? 'text-[var(--ds-state-on)]' : 'text-[var(--ds-text-secondary)]'} />
+        </div>
       </div>
 
       <div className="flex flex-1 min-h-0 flex-col justify-between gap-3 pt-3">
@@ -334,6 +319,8 @@ function ChemistryCard() {
   });
 
   const lastMeasurement = formatMeasurementTime([ph.lastUpdated, orp.lastUpdated, icoTemp.lastUpdated]);
+  const chemistryTone = relevantRecommendations.length > 0 ? 'warn' : 'good';
+  const chemistryLabel = relevantRecommendations.length > 0 ? 'Action needed' : 'Good to use';
 
   return (
     <div className="ds-card flex h-full flex-col overflow-hidden" style={{ padding: 16 }}>
@@ -343,7 +330,7 @@ function ChemistryCard() {
           <h3 className="mt-1 text-base font-bold text-[var(--ds-text)]">ICO guidance</h3>
         </div>
         <div className="flex items-center gap-2">
-          <TonePill label={summary.verdict} tone={summary.tone} />
+          <TonePill label={chemistryLabel} tone={chemistryTone} />
           <Clock3 size={18} className="text-[var(--ds-text-secondary)]" />
         </div>
       </div>
@@ -391,14 +378,14 @@ function ChemistryCard() {
       </div>
 
       {summary.actionTitle && (
-        <div className="mt-3 rounded-2xl border px-3 py-3" style={{ borderColor: 'var(--ds-border)' }}>
+        <div className="mt-3 flex-1 min-h-0 rounded-2xl border px-3 py-3" style={{ borderColor: 'var(--ds-border)' }}>
           <div className="flex items-center justify-between gap-2">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">Next steps</div>
             <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ds-text-secondary)]">
               {Math.min(relevantRecommendations.length, 3)} shown
             </div>
           </div>
-          <div className="mt-2 max-h-[108px] space-y-2 overflow-y-auto pr-1">
+          <div className="mt-2 max-h-[120px] space-y-2 overflow-y-auto pr-1">
             {relevantRecommendations.slice(0, 3).map((item, index) => (
               <RecommendationRow key={`${item.title || item.action || index}`} item={item} />
             ))}
@@ -517,7 +504,7 @@ function SpaSystemCard() {
   const isHeating = String(heaterState || '').toLowerCase().includes('heat') || String(status || '').toLowerCase().includes('heat');
 
   return (
-    <div className="ds-card flex flex-col flex-1 min-h-0" style={{ padding: 14 }}>
+    <div className="ds-card flex flex-col" style={{ padding: 14 }}>
       <div className="flex items-center justify-between pb-3 border-b border-[var(--ds-border)]">
         <h3 className="text-base font-bold text-[var(--ds-text)]">Spa System</h3>
         <Clock3 size={18} className="text-[var(--ds-text-secondary)]" />

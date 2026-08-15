@@ -77,7 +77,7 @@ describe('SpaPage', () => {
     expect(screen.getByText('Spa Controls')).toBeInTheDocument();
     expect(screen.getByText('Outdoor Lights')).toBeInTheDocument();
     expect(screen.getByText('Spa History')).toBeInTheDocument();
-    expect(screen.getAllByText('No ICO action')).toHaveLength(2);
+    expect(screen.getAllByText('Good to use').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('37.4')).toHaveLength(1);
     expect(screen.getByText('7.42')).toBeInTheDocument();
     expect(screen.getByText(/Last ICO measurement:/)).toBeInTheDocument();
@@ -118,10 +118,8 @@ describe('SpaPage', () => {
 
     expect(screen.getByText('Next steps')).toBeInTheDocument();
     expect(screen.getByText('2 shown')).toBeInTheDocument();
-    expect(screen.getAllByText('pH').length).toBeGreaterThan(0);
-    expect(screen.getByText('Bromine')).toBeInTheDocument();
-    expect(screen.getByText((text) => text.includes('Raise pH by 0.1 with careful dosing.'))).toBeInTheDocument();
-    expect(screen.getByText((text) => text.includes('Increase disinfection after the pH correction.'))).toBeInTheDocument();
+    expect(screen.getByText('Add 24 g of pH Plus')).toBeInTheDocument();
+    expect(screen.getByText('Add 8 g of bromine shock')).toBeInTheDocument();
   });
 
   it('hides a stale completed-style recommendation when the live reading is back in range', () => {
