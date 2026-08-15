@@ -4,6 +4,8 @@ export const SPA_ENTITIES = {
   currentTemp: 'sensor.spa_current_temperature',
   targetTemp: 'number.spa_target_desired_temperature',
   heaterState: 'sensor.spa_heater',
+  filterCycle1: 'sensor.spa_filter_1',
+  filterCycle2: 'sensor.spa_filter_2',
   waterQualityPh: 'sensor.hot_tub_ph',
   waterQualityOrp: 'sensor.hot_tub_oxydo_reduction_potential',
   icoTemp: 'sensor.hot_tub_temperature',

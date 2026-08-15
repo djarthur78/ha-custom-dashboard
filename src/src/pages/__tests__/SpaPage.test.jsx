@@ -43,7 +43,9 @@ describe('SpaPage', () => {
     stateMap.clear();
     stateMap.set('sensor.spa_current_temperature', { state: '37.4', attributes: {} });
     stateMap.set('number.spa_target_desired_temperature', { state: '38', attributes: {} });
-    stateMap.set('select.spa_heater_mode', { state: 'Filtering', attributes: {} });
+    stateMap.set('select.spa_heater_mode', { state: 'READY', attributes: {} });
+    stateMap.set('sensor.spa_filter_1', { state: 'ON', attributes: { 'Start time': '13 : 00', 'Duration ': 120 } });
+    stateMap.set('sensor.spa_filter_2', { state: 'OFF', attributes: { 'Start time': '4 : 00', 'Duration ': 120 } });
     stateMap.set('input_number.spa_standby_temperature', { state: '30', attributes: {} });
     stateMap.set('input_number.spa_ph_minimum', { state: '7.2', attributes: {} });
     stateMap.set('input_number.spa_ph_maximum', { state: '7.6', attributes: {} });
@@ -84,6 +86,8 @@ describe('SpaPage', () => {
     expect(screen.getByText('Ready 38°')).toBeInTheDocument();
     expect(screen.getByText('Eco')).toBeInTheDocument();
     expect(screen.getByText('Games Room Lights')).toBeInTheDocument();
+    expect(screen.getByText('Filtering')).toBeInTheDocument();
+    expect(screen.getByText(/Cycle 1 until 15:00/)).toBeInTheDocument();
     expect(screen.queryByText('Sonos')).not.toBeInTheDocument();
     expect(screen.queryByText('Next step')).not.toBeInTheDocument();
     expect(document.querySelectorAll('svg[role="img"] path').length).toBeGreaterThan(0);

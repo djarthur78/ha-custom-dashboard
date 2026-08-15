@@ -42,6 +42,22 @@ function formatTemp(value, decimals = 1) {
   return parsed == null ? '--' : `${parsed.toFixed(decimals)}°C`;
 }
 
+function filterCycleIsActive(value) {
+  return ['on', 'active', 'running', 'high'].includes(String(value || '').trim().toLowerCase());
+}
+
+function filterCycleEndTime(attributes) {
+  const start = attributes?.['Start time'] || attributes?.start_time;
+  const duration = parseNumber(attributes?.['Duration '] ?? attributes?.Duration ?? attributes?.duration);
+  const match = String(start || '').match(/^(\d{1,2})\s*:\s*(\d{2})$/);
+  if (!match || duration == null) return null;
+
+  const totalMinutes = ((Number(match[1]) * 60) + Number(match[2]) + duration) % (24 * 60);
+  const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+  const minutes = String(totalMinutes % 60).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
 function formatMeasurementTime(timestamps) {
   const latest = timestamps
     .map((value) => (value ? new Date(value) : null))
@@ -181,6 +197,8 @@ function TempHeroCard() {
   const { state: standbyTemp } = useEntity(SPA_ENTITIES.standbyTemp);
   const { state: heaterState } = useEntity(SPA_ENTITIES.heaterState);
   const { state: status } = useEntity(SPA_ENTITIES.status);
+  const filterCycle1 = useEntity(SPA_ENTITIES.filterCycle1);
+  const filterCycle2 = useEntity(SPA_ENTITIES.filterCycle2);
   const { state: online } = useEntity(SPA_ENTITIES.online);
   const { callService, loading } = useServiceCall();
 
@@ -191,6 +209,14 @@ function TempHeroCard() {
   const statusLabel = isHeating ? 'Heating' : (status || 'Ready');
   const temperatureTone = isReady ? 'good' : (isHeating ? 'warn' : 'info');
   const temperatureLabel = isReady ? 'Good to use' : (isHeating ? 'Heating' : 'Temperature');
+  const activeFilterCycles = [filterCycle1, filterCycle2]
+    .map((cycle, index) => ({ ...cycle, number: index + 1 }))
+    .filter((cycle) => filterCycleIsActive(cycle.state));
+  const isFiltering = activeFilterCycles.length > 0;
+  const filterDetail = activeFilterCycles.map((cycle) => {
+    const endTime = filterCycleEndTime(cycle.attributes);
+    return `Cycle ${cycle.number}${endTime ? ` until ${endTime}` : ''}`;
+  }).join(' + ');
 
   const handleAdjust = async (delta) => {
     if (targetValue == null) return;
@@ -254,8 +280,19 @@ function TempHeroCard() {
             tone={temperatureTone}
             icon={Bath}
           />
-          <div className="mt-3 flex items-center justify-between gap-3 px-1 text-sm text-[var(--ds-text-secondary)]">
-            <span><strong className="text-[var(--ds-text)]">{statusLabel}</strong> · Heater {isHeating ? 'active' : 'idle'}</span>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-1 text-sm text-[var(--ds-text-secondary)]">
+            <span className="flex flex-wrap items-center gap-2">
+              {isFiltering ? (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-bold"
+                  style={{ backgroundColor: 'rgba(90,143,184,0.15)', borderColor: 'rgba(90,143,184,0.35)', color: 'var(--ds-health-info)' }}
+                >
+                  <Waves size={15} />
+                  Filtering
+                </span>
+              ) : <strong className="text-[var(--ds-text)]">{statusLabel}</strong>}
+              <span>{isFiltering && `${filterDetail} · `}Heater {isHeating ? 'active' : 'idle'}</span>
+            </span>
             <span>{isReady ? 'Within 1°C of target' : 'Outside ready range'}</span>
           </div>
         </div>
