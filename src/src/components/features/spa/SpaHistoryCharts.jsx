@@ -26,24 +26,49 @@ function formatAxisValue(value, decimals = 1) {
   return Number.isFinite(value) ? value.toFixed(decimals) : '--';
 }
 
-function domainForSeries(pointsBySeries, band, focus, unit) {
+function decimalPlaces(value) {
+  const text = String(value);
+  return text.includes('.') ? text.split('.')[1].length : 0;
+}
+
+function steppedDomain(values, band, baseStep) {
+  const dataMin = values.length ? Math.min(...values) : band.min;
+  const dataMax = values.length ? Math.max(...values) : band.max;
+  const lowerBound = Math.min(dataMin, band.min - baseStep);
+  const upperBound = Math.max(dataMax, band.max + baseStep);
+  let step = baseStep;
+  let min = Math.floor(lowerBound / step) * step;
+  let max = Math.ceil(upperBound / step) * step;
+
+  while ((max - min) / step > 7) {
+    step *= 2;
+    min = Math.floor(lowerBound / step) * step;
+    max = Math.ceil(upperBound / step) * step;
+  }
+
+  const precision = decimalPlaces(step);
+  return {
+    min: Number(min.toFixed(precision)),
+    max: Number(max.toFixed(precision)),
+    tickStep: step,
+  };
+}
+
+function steppedTicks(min, max, step) {
+  const precision = decimalPlaces(step);
+  const count = Math.round((max - min) / step);
+  return Array.from({ length: count + 1 }, (_, index) => Number((max - (index * step)).toFixed(precision)));
+}
+
+function domainForSeries(pointsBySeries, band, focus, unit, axisStep) {
   const currentValues = pointsBySeries
     .map((item) => item.current ?? item.points[item.points.length - 1]?.value)
     .filter(Number.isFinite);
+  const historyValues = pointsBySeries.flatMap((item) => item.points.map((point) => point.value));
+  const values = [...historyValues, ...currentValues];
 
-  if (band) {
-    const bandSpan = Math.max(band.max - band.min, 0.001);
-    const padding = bandSpan * 0.2;
-    const currentMin = currentValues.length ? Math.min(...currentValues) : band.min;
-    const currentMax = currentValues.length ? Math.max(...currentValues) : band.max;
-    return {
-      min: Math.min(band.min - padding, currentMin - bandSpan * 0.1),
-      max: Math.max(band.max + padding, currentMax + bandSpan * 0.1),
-    };
-  }
+  if (band && axisStep) return steppedDomain(values, band, axisStep);
 
-  const values = pointsBySeries.flatMap((item) => item.points.map((point) => point.value));
-  values.push(...currentValues);
   if (values.length === 0) return { min: 0, max: 1 };
   const rawMin = Math.min(...values);
   const rawMax = Math.max(...values);
@@ -57,7 +82,7 @@ function domainForSeries(pointsBySeries, band, focus, unit) {
   };
 }
 
-function LineChart({ title, icon, unit, series, band, decimals = 1, focus = null, now }) {
+function LineChart({ title, icon, unit, series, band, decimals = 1, focus = null, axisStep = null, now }) {
   const clipId = useId().replace(/:/g, '');
   const chart = useMemo(() => {
     const end = now;
@@ -66,8 +91,8 @@ function LineChart({ title, icon, unit, series, band, decimals = 1, focus = null
       ...item,
       points: item.points.filter((point) => point.time >= start && point.time <= end),
     }));
-    return { start, end, pointsBySeries, ...domainForSeries(pointsBySeries, band, focus, unit) };
-  }, [band, focus, now, series, unit]);
+    return { start, end, pointsBySeries, ...domainForSeries(pointsBySeries, band, focus, unit, axisStep) };
+  }, [axisStep, band, focus, now, series, unit]);
 
   const plotWidth = CHART_WIDTH - PAD.left - PAD.right;
   const plotHeight = CHART_HEIGHT - PAD.top - PAD.bottom;
@@ -78,8 +103,8 @@ function LineChart({ title, icon, unit, series, band, decimals = 1, focus = null
   const bandY = band ? Math.max(PAD.top, y(band.max)) : null;
   const bandBottom = band ? Math.min(PAD.top + plotHeight, y(band.min)) : null;
   const bandHeight = band ? Math.max(0, bandBottom - bandY) : 0;
-  const ticks = band
-    ? [chart.max, band.max, (band.min + band.max) / 2, band.min, chart.min]
+  const ticks = chart.tickStep
+    ? steppedTicks(chart.min, chart.max, chart.tickStep)
     : [0, 0.25, 0.5, 0.75, 1].map((fraction) => chart.max - (chart.max - chart.min) * fraction);
 
   return (
@@ -204,6 +229,7 @@ export function SpaHistoryCharts() {
           series={temperatureSeries}
           band={targetValue == null ? null : { min: targetValue - 1, max: targetValue + 1 }}
           decimals={1}
+          axisStep={0.5}
           focus={{ center: targetValue ?? current(balboaTemperature) ?? 38, span: 3.2 }}
           now={end}
         />
@@ -214,6 +240,7 @@ export function SpaHistoryCharts() {
           band={{ min: phMin, max: phMax }}
           series={[{ label: 'ICO pH', color: '#7b6aa8', points: points(SPA_HISTORY_ENTITIES.ph), current: current(ph, 2) }]}
           decimals={2}
+          axisStep={0.2}
           now={end}
         />
         <LineChart
@@ -223,6 +250,7 @@ export function SpaHistoryCharts() {
           band={{ min: orpMin, max: orpMax }}
           series={[{ label: 'ICO ORP', color: '#4e9b7b', points: points(SPA_HISTORY_ENTITIES.orp), current: current(orp, 0) }]}
           decimals={0}
+          axisStep={50}
           now={end}
         />
       </div>
