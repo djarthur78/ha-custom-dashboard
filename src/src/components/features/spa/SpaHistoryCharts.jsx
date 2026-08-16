@@ -129,7 +129,7 @@ function LineChart({ title, icon, unit, series, band, decimals = 1, focus = null
           return (
             <g key={value}>
               <line x1={PAD.left} x2={CHART_WIDTH - PAD.right} y1={lineY} y2={lineY} stroke="var(--ds-border)" strokeDasharray="4 5" opacity="0.9" />
-              <text x={PAD.left - 10} y={lineY + 5} textAnchor="end" fontSize="16" fontWeight="600" fill="var(--ds-text-secondary)">
+              <text x={PAD.left - 10} y={lineY + 6} textAnchor="end" fontSize="18" fontWeight="700" fill="var(--ds-text-secondary)">
                 {formatAxisValue(value, decimals)}
               </text>
             </g>
