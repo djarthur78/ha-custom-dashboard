@@ -51,8 +51,12 @@ describe('SpaPage', () => {
     stateMap.set('input_number.spa_standby_temperature', { state: '30', attributes: {} });
     stateMap.set('input_number.spa_ph_minimum', { state: '7.2', attributes: {} });
     stateMap.set('input_number.spa_ph_maximum', { state: '7.6', attributes: {} });
+    stateMap.set('input_number.spa_ph_watch_minimum', { state: '7.0', attributes: {} });
+    stateMap.set('input_number.spa_ph_watch_maximum', { state: '7.8', attributes: {} });
     stateMap.set('input_number.spa_orp_minimum', { state: '550', attributes: {} });
     stateMap.set('input_number.spa_orp_maximum', { state: '650', attributes: {} });
+    stateMap.set('input_number.spa_orp_watch_minimum', { state: '500', attributes: {} });
+    stateMap.set('input_number.spa_orp_watch_maximum', { state: '700', attributes: {} });
     stateMap.set('sensor.hot_tub_ph', { state: '7.42', attributes: {}, lastUpdated: '2026-08-14T18:37:16.485Z' });
     stateMap.set('sensor.hot_tub_oxydo_reduction_potential', { state: '600', attributes: {} });
     stateMap.set('sensor.hot_tub_temperature', { state: '37.1', attributes: {}, lastUpdated: '2026-08-14T18:37:16.485Z' });
@@ -117,11 +121,12 @@ describe('SpaPage', () => {
 
     const phChart = screen.getByRole('img', { name: 'pH over the last 24 hours' });
     const phTicks = [...phChart.querySelectorAll('text[text-anchor="end"][x="52"]')].map((node) => node.textContent);
-    expect(phTicks).toEqual(['7.80', '7.60', '7.40', '7.20', '7.00']);
+    expect(phTicks).toEqual(['8.00', '7.80', '7.60', '7.40', '7.20', '7.00', '6.80']);
 
     const orpChart = screen.getByRole('img', { name: 'Disinfection (ORP) over the last 24 hours' });
     const orpTicks = [...orpChart.querySelectorAll('text[text-anchor="end"][x="52"]')].map((node) => node.textContent);
-    expect(orpTicks).toEqual(['750', '700', '650', '600', '550', '500']);
+    expect(orpTicks).toEqual(['750', '700', '650', '600', '550', '500', '450']);
+    expect(screen.getAllByText('Watch range')).toHaveLength(3);
   });
 
   it('hides the attention banner when no alert is present', () => {

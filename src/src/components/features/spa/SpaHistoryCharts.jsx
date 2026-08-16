@@ -31,11 +31,12 @@ function decimalPlaces(value) {
   return text.includes('.') ? text.split('.')[1].length : 0;
 }
 
-function steppedDomain(values, band, baseStep) {
+function steppedDomain(values, band, watchBand, baseStep) {
   const dataMin = values.length ? Math.min(...values) : band.min;
   const dataMax = values.length ? Math.max(...values) : band.max;
-  const lowerBound = Math.min(dataMin, band.min - baseStep);
-  const upperBound = Math.max(dataMax, band.max + baseStep);
+  const outerBand = watchBand || band;
+  const lowerBound = Math.min(dataMin, outerBand.min - baseStep);
+  const upperBound = Math.max(dataMax, outerBand.max + baseStep);
   let step = baseStep;
   let min = Math.floor(lowerBound / step) * step;
   let max = Math.ceil(upperBound / step) * step;
@@ -60,14 +61,14 @@ function steppedTicks(min, max, step) {
   return Array.from({ length: count + 1 }, (_, index) => Number((max - (index * step)).toFixed(precision)));
 }
 
-function domainForSeries(pointsBySeries, band, focus, unit, axisStep) {
+function domainForSeries(pointsBySeries, band, watchBand, focus, unit, axisStep) {
   const currentValues = pointsBySeries
     .map((item) => item.current ?? item.points[item.points.length - 1]?.value)
     .filter(Number.isFinite);
   const historyValues = pointsBySeries.flatMap((item) => item.points.map((point) => point.value));
   const values = [...historyValues, ...currentValues];
 
-  if (band && axisStep) return steppedDomain(values, band, axisStep);
+  if (band && axisStep) return steppedDomain(values, band, watchBand, axisStep);
 
   if (values.length === 0) return { min: 0, max: 1 };
   const rawMin = Math.min(...values);
@@ -82,7 +83,7 @@ function domainForSeries(pointsBySeries, band, focus, unit, axisStep) {
   };
 }
 
-function LineChart({ title, icon, unit, series, band, decimals = 1, focus = null, axisStep = null, now }) {
+function LineChart({ title, icon, unit, series, band, watchBand = null, decimals = 1, focus = null, axisStep = null, now }) {
   const clipId = useId().replace(/:/g, '');
   const chart = useMemo(() => {
     const end = now;
@@ -91,8 +92,8 @@ function LineChart({ title, icon, unit, series, band, decimals = 1, focus = null
       ...item,
       points: item.points.filter((point) => point.time >= start && point.time <= end),
     }));
-    return { start, end, pointsBySeries, ...domainForSeries(pointsBySeries, band, focus, unit, axisStep) };
-  }, [axisStep, band, focus, now, series, unit]);
+    return { start, end, pointsBySeries, ...domainForSeries(pointsBySeries, band, watchBand, focus, unit, axisStep) };
+  }, [axisStep, band, focus, now, series, unit, watchBand]);
 
   const plotWidth = CHART_WIDTH - PAD.left - PAD.right;
   const plotHeight = CHART_HEIGHT - PAD.top - PAD.bottom;
@@ -103,6 +104,9 @@ function LineChart({ title, icon, unit, series, band, decimals = 1, focus = null
   const bandY = band ? Math.max(PAD.top, y(band.max)) : null;
   const bandBottom = band ? Math.min(PAD.top + plotHeight, y(band.min)) : null;
   const bandHeight = band ? Math.max(0, bandBottom - bandY) : 0;
+  const watchY = watchBand ? Math.max(PAD.top, y(watchBand.max)) : null;
+  const watchBottom = watchBand ? Math.min(PAD.top + plotHeight, y(watchBand.min)) : null;
+  const watchHeight = watchBand ? Math.max(0, watchBottom - watchY) : 0;
   const ticks = chart.tickStep
     ? steppedTicks(chart.min, chart.max, chart.tickStep)
     : [0, 0.25, 0.5, 0.75, 1].map((fraction) => chart.max - (chart.max - chart.min) * fraction);
@@ -141,6 +145,9 @@ function LineChart({ title, icon, unit, series, band, decimals = 1, focus = null
             <rect x={PAD.left} y={PAD.top} width={plotWidth} height={plotHeight} />
           </clipPath>
         </defs>
+        {watchBand && (
+          <rect x={PAD.left} y={watchY} width={plotWidth} height={watchHeight} rx="5" fill="rgba(212,148,76,0.25)" />
+        )}
         {band && (
           <g>
             <rect x={PAD.left} y={bandY} width={plotWidth} height={bandHeight} rx="5" fill="rgba(74,154,74,0.24)" />
@@ -174,6 +181,7 @@ function LineChart({ title, icon, unit, series, band, decimals = 1, focus = null
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-[var(--ds-text-secondary)]">
         {series.map((item) => <span key={item.label} className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />{item.label}</span>)}
         {band && <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: 'rgba(74,154,74,0.45)' }} />Good range</span>}
+        {watchBand && <span className="inline-flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: 'rgba(212,148,76,0.55)' }} />Watch range</span>}
       </div>
     </article>
   );
@@ -189,8 +197,12 @@ export function SpaHistoryCharts() {
   const orp = useEntity(SPA_HISTORY_ENTITIES.orp);
   const phMinimum = useEntity(SPA_ENTITIES.phMinimum);
   const phMaximum = useEntity(SPA_ENTITIES.phMaximum);
+  const phWatchMinimum = useEntity(SPA_ENTITIES.phWatchMinimum);
+  const phWatchMaximum = useEntity(SPA_ENTITIES.phWatchMaximum);
   const orpMinimum = useEntity(SPA_ENTITIES.orpMinimum);
   const orpMaximum = useEntity(SPA_ENTITIES.orpMaximum);
+  const orpWatchMinimum = useEntity(SPA_ENTITIES.orpWatchMinimum);
+  const orpWatchMaximum = useEntity(SPA_ENTITIES.orpWatchMaximum);
   const start = end - 24 * 60 * 60 * 1000;
   const points = (entityId) => historyPoints(history, entityId, start, end);
   const current = (entity, decimals = 1) => {
@@ -201,8 +213,12 @@ export function SpaHistoryCharts() {
   const targetValue = current(targetTemperature);
   const phMin = numberValue(phMinimum.state) ?? 7.2;
   const phMax = numberValue(phMaximum.state) ?? 7.6;
+  const phWatchMin = Math.min(numberValue(phWatchMinimum.state) ?? 7.0, phMin);
+  const phWatchMax = Math.max(numberValue(phWatchMaximum.state) ?? 7.8, phMax);
   const orpMin = numberValue(orpMinimum.state) ?? 550;
   const orpMax = numberValue(orpMaximum.state) ?? 650;
+  const orpWatchMin = Math.min(numberValue(orpWatchMinimum.state) ?? 500, orpMin);
+  const orpWatchMax = Math.max(numberValue(orpWatchMaximum.state) ?? 700, orpMax);
   const temperatureSeries = [
     { label: 'Balboa', color: '#c56b54', points: points(SPA_HISTORY_ENTITIES.balboaTemperature), current: current(balboaTemperature) },
     { label: 'ICO', color: '#4d89a8', points: points(SPA_HISTORY_ENTITIES.icoTemperature), current: current(icoTemperature) },
@@ -228,6 +244,7 @@ export function SpaHistoryCharts() {
           unit="°C"
           series={temperatureSeries}
           band={targetValue == null ? null : { min: targetValue - 1, max: targetValue + 1 }}
+          watchBand={targetValue == null ? null : { min: targetValue - 2, max: targetValue + 2 }}
           decimals={1}
           axisStep={0.5}
           focus={{ center: targetValue ?? current(balboaTemperature) ?? 38, span: 3.2 }}
@@ -238,6 +255,7 @@ export function SpaHistoryCharts() {
           icon={Droplets}
           unit=""
           band={{ min: phMin, max: phMax }}
+          watchBand={{ min: phWatchMin, max: phWatchMax }}
           series={[{ label: 'ICO pH', color: '#7b6aa8', points: points(SPA_HISTORY_ENTITIES.ph), current: current(ph, 2) }]}
           decimals={2}
           axisStep={0.2}
@@ -248,6 +266,7 @@ export function SpaHistoryCharts() {
           icon={Activity}
           unit="mV"
           band={{ min: orpMin, max: orpMax }}
+          watchBand={{ min: orpWatchMin, max: orpWatchMax }}
           series={[{ label: 'ICO ORP', color: '#4e9b7b', points: points(SPA_HISTORY_ENTITIES.orp), current: current(orp, 0) }]}
           decimals={0}
           axisStep={50}
