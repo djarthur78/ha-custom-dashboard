@@ -42,6 +42,12 @@ function formatTemp(value, decimals = 1) {
   return parsed == null ? '--' : `${parsed.toFixed(decimals)}°C`;
 }
 
+function formatTargetTemp(value) {
+  const parsed = parseNumber(value);
+  if (parsed == null) return '--';
+  return `${parsed.toFixed(Number.isInteger(parsed) ? 0 : 1)}°`;
+}
+
 function filterCycleIsActive(value) {
   return ['on', 'active', 'running', 'high'].includes(String(value || '').trim().toLowerCase());
 }
@@ -193,7 +199,7 @@ function ControlButton({ icon: ButtonIcon, label, entityId, note }) {
 
 function TempHeroCard() {
   const { state: currentTemp } = useEntity(SPA_ENTITIES.currentTemp);
-  const { state: targetTemp } = useEntity(SPA_ENTITIES.targetTemp);
+  const { state: targetTemp, attributes: targetAttributes } = useEntity(SPA_ENTITIES.targetTemp);
   const { state: standbyTemp } = useEntity(SPA_ENTITIES.standbyTemp);
   const { state: heaterState } = useEntity(SPA_ENTITIES.heaterState);
   const { state: status } = useEntity(SPA_ENTITIES.status);
@@ -204,6 +210,9 @@ function TempHeroCard() {
 
   const currentValue = parseNumber(currentTemp);
   const targetValue = parseNumber(targetTemp);
+  const targetStep = parseNumber(targetAttributes?.step) ?? 0.5;
+  const targetMinimum = parseNumber(targetAttributes?.min) ?? 10;
+  const targetMaximum = parseNumber(targetAttributes?.max) ?? 40;
   const isHeating = String(heaterState || '').toLowerCase().includes('heat') || String(status || '').toLowerCase().includes('heat');
   const isReady = currentValue != null && targetValue != null && Math.abs(currentValue - targetValue) <= 1;
   const statusLabel = isHeating ? 'Heating' : (status || 'Ready');
@@ -218,11 +227,11 @@ function TempHeroCard() {
     return `Cycle ${cycle.number}${endTime ? ` until ${endTime}` : ''}`;
   }).join(' + ');
 
-  const handleAdjust = async (delta) => {
+  const handleAdjust = async (direction) => {
     if (targetValue == null) return;
     await callService('climate', 'set_temperature', {
       entity_id: SPA_ENTITIES.climate,
-      temperature: Math.max(5, Math.min(42, targetValue + delta)),
+      temperature: Math.max(targetMinimum, Math.min(targetMaximum, targetValue + (targetStep * direction))),
     });
   };
 
@@ -311,7 +320,7 @@ function TempHeroCard() {
               <Minus size={25} />
             </button>
             <div className="min-w-[86px] text-center text-[38px] font-bold leading-none tracking-normal text-[var(--ds-text)]">
-              {targetValue == null ? '--' : `${targetValue.toFixed(0)}°`}
+              {formatTargetTemp(targetValue)}
             </div>
             <button
               type="button"

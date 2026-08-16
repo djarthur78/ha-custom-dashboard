@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import SpaPage from '../SpaPage';
 
 const stateMap = new Map();
+const mockCallService = vi.fn();
 
 vi.mock('../../hooks/useEntity', () => ({
   useEntity: vi.fn((entityId) => stateMap.get(entityId) || { state: undefined, attributes: {} }),
@@ -10,7 +11,7 @@ vi.mock('../../hooks/useEntity', () => ({
 
 vi.mock('../../hooks/useServiceCall', () => ({
   useServiceCall: vi.fn(() => ({
-    callService: vi.fn(),
+    callService: mockCallService,
     toggle: vi.fn(),
     loading: false,
   })),
@@ -41,8 +42,9 @@ vi.mock('../../components/features/spa/hooks/useSpaHistory', () => ({
 describe('SpaPage', () => {
   beforeEach(() => {
     stateMap.clear();
+    mockCallService.mockReset();
     stateMap.set('sensor.spa_current_temperature', { state: '37.4', attributes: {} });
-    stateMap.set('number.spa_target_desired_temperature', { state: '38', attributes: {} });
+    stateMap.set('number.spa_target_desired_temperature', { state: '37.5', attributes: { min: 10, max: 40, step: 0.5 } });
     stateMap.set('select.spa_heater_mode', { state: 'READY', attributes: {} });
     stateMap.set('sensor.spa_filter_1', { state: 'ON', attributes: { 'Start time': '13 : 00', 'Duration ': 120 } });
     stateMap.set('sensor.spa_filter_2', { state: 'OFF', attributes: { 'Start time': '4 : 00', 'Duration ': 120 } });
@@ -86,11 +88,28 @@ describe('SpaPage', () => {
     expect(screen.getByText('Ready 38°')).toBeInTheDocument();
     expect(screen.getByText('Eco')).toBeInTheDocument();
     expect(screen.getByText('Games Room Lights')).toBeInTheDocument();
+    expect(screen.getByText('37.5°')).toBeInTheDocument();
     expect(screen.getByText('Filtering')).toBeInTheDocument();
     expect(screen.getByText(/Cycle 1 until 15:00/)).toBeInTheDocument();
     expect(screen.queryByText('Sonos')).not.toBeInTheDocument();
     expect(screen.queryByText('Next step')).not.toBeInTheDocument();
     expect(document.querySelectorAll('svg[role="img"] path').length).toBeGreaterThan(0);
+  });
+
+  it('adjusts the target using the entity half-degree step', () => {
+    render(<SpaPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Raise spa target temperature' }));
+    expect(mockCallService).toHaveBeenCalledWith('climate', 'set_temperature', {
+      entity_id: 'climate.spa_thermostat',
+      temperature: 38,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Lower spa target temperature' }));
+    expect(mockCallService).toHaveBeenCalledWith('climate', 'set_temperature', {
+      entity_id: 'climate.spa_thermostat',
+      temperature: 37,
+    });
   });
 
   it('hides the attention banner when no alert is present', () => {
