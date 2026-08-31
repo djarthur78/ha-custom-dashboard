@@ -1,11 +1,10 @@
 /**
  * StatusHero Component
- * Left panel: Alfred status, task stats, memory, Discord, restart button
+ * Left panel: Alfred status, task stats, memory, and Discord
  */
 
-import { useState } from 'react';
 import { createElement } from 'react';
-import { AlertTriangle, Bot, Database, Brain, RefreshCw, RotateCcw, Loader2, MessageCircle } from 'lucide-react';
+import { AlertTriangle, Bot, Database, Brain, RefreshCw, MessageCircle } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import { ALFRED_GATEWAY, ALFRED_DATA, ALFRED_OPS, getOpsBg, getOpsColor } from './alfredConfig';
 
@@ -46,9 +45,6 @@ export function StatusHero({ refreshing, error, onRefresh }) {
   const memory = useEntity(ALFRED_DATA.memoryStatus);
   const taskStats = useEntity('sensor.alfred_task_stats');
 
-  const [restarting, setRestarting] = useState(false);
-  const [restartResult, setRestartResult] = useState(null); // 'ok' | 'error' | null
-
   const opsAttrs = ops.attributes || {};
   const hasOps = ops.state && ops.state !== 'unknown' && ops.state !== 'unavailable';
   const legacyOnline = health.state && health.state !== 'unavailable' && health.state !== 'unknown' && health.state !== 'offline';
@@ -67,21 +63,6 @@ export function StatusHero({ refreshing, error, onRefresh }) {
   const tasks = taskStats.attributes || {};
   const tokenEntity = useEntity('sensor.alfred_token_usage');
   const rolling14d = tokenEntity.attributes?.rolling14d || {};
-
-  async function handleRestart() {
-    setRestarting(true);
-    setRestartResult(null);
-    try {
-      const resp = await fetch('http://192.168.1.150:18800/alfred/restart');
-      const data = await resp.json();
-      setRestartResult(data.ok ? 'ok' : 'error');
-    } catch {
-      setRestartResult('error');
-    } finally {
-      setRestarting(false);
-      setTimeout(() => setRestartResult(null), 4000);
-    }
-  }
 
   return (
     <div
@@ -196,44 +177,6 @@ export function StatusHero({ refreshing, error, onRefresh }) {
         </div>
 
       </div>
-
-      {/* Restart Button */}
-      <button
-        onClick={handleRestart}
-        disabled={restarting}
-        className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        style={{
-          backgroundColor: restartResult === 'ok'
-            ? 'var(--ds-state-on-bg)'
-            : restartResult === 'error'
-              ? 'var(--ds-state-off-bg)'
-              : 'transparent',
-          color: restartResult === 'ok'
-            ? 'var(--ds-state-on)'
-            : restartResult === 'error'
-              ? 'var(--ds-state-off)'
-              : 'var(--ds-text-secondary)',
-          border: `1px solid ${restartResult === 'ok' ? 'var(--ds-state-on)' : restartResult === 'error' ? 'var(--ds-state-off)' : 'var(--ds-accent)'}`,
-          cursor: restarting ? 'wait' : 'pointer',
-          opacity: restarting ? 0.7 : 1,
-        }}
-      >
-        {restarting ? (
-          <>
-            <Loader2 size={14} className="animate-spin" />
-            Running doctor...
-          </>
-        ) : restartResult === 'ok' ? (
-          'Doctor completed'
-        ) : restartResult === 'error' ? (
-          'Doctor failed'
-        ) : (
-          <>
-            <RotateCcw size={14} />
-            Run Doctor
-          </>
-        )}
-      </button>
     </div>
   );
 }

@@ -711,52 +711,42 @@ function collectData() {
   return data;
 }
 
-const server = http.createServer((req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+function createAlfredApiServer({ collectDataFn = collectData } = {}) {
+  return http.createServer((req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+    if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
-  if (req.url === '/alfred/restart') {
-    try {
-      const output = execSync(`${OPENCLAW} doctor --fix --non-interactive`, {
-        timeout: 60000,
-        encoding: 'utf8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env, PATH: `${process.env.HOME}/.npm-global/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin` },
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, output: output.trim() }));
-    } catch (err) {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, output: (err.stdout || '') + (err.stderr || '') }));
+    if (req.url === '/alfred' || req.url === '/alfred/refresh') {
+      try {
+        const data = collectDataFn();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, timestamp: Date.now(), ...data }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      }
+      return;
     }
-    return;
-  }
 
-  if (req.url === '/alfred' || req.url === '/alfred/refresh') {
-    try {
-      const data = collectData();
+    if (req.url === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, timestamp: Date.now(), ...data }));
-    } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err.message }));
+      res.end(JSON.stringify({ ok: true }));
+      return;
     }
-    return;
-  }
 
-  if (req.url === '/health') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: true }));
-    return;
-  }
+    res.writeHead(404);
+    res.end('Not found');
+  });
+}
 
-  res.writeHead(404);
-  res.end('Not found');
-});
+if (require.main === module) {
+  const server = createAlfredApiServer();
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Alfred API listening on http://0.0.0.0:${PORT}`);
+  });
+}
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Alfred API listening on http://0.0.0.0:${PORT}`);
-});
+module.exports = { createAlfredApiServer };
