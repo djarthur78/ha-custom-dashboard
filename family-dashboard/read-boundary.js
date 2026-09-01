@@ -2,6 +2,7 @@
 /** Fixed read-only bridge for HA WebSocket commands used by the dashboard. */
 
 const http = require('node:http');
+const WebSocketClient = globalThis.WebSocket || require('ws');
 
 const PORT = Number(process.env.READ_BOUNDARY_PORT || 8098);
 const HA_WS_URL = process.env.HA_WS_URL || 'ws://supervisor/core/api/websocket';
@@ -72,7 +73,7 @@ function validateReadCommand(input) {
 function runHAReadCommand(command, { token = HA_READ_TOKEN, wsUrl = HA_WS_URL, timeoutMs = 15000 } = {}) {
   if (!token) return Promise.reject(new Error('read boundary is not configured'));
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(wsUrl);
+    const ws = new WebSocketClient(wsUrl);
     const timer = setTimeout(() => finish(new Error('read command timeout')), timeoutMs);
     let sent = false;
 
@@ -130,7 +131,8 @@ function createReadBoundaryServer({ runCommand = runHAReadCommand } = {}) {
         const result = await runCommand(command);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(result ?? null));
-      } catch {
+      } catch (error) {
+        console.error(`[WARN] HA read command rejected: ${error.message}`);
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'read command rejected' }));
       }
