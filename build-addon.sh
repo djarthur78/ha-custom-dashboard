@@ -28,7 +28,7 @@ cp -rf src/dist family-dashboard/build
 # Step 3: Inject config.js script into index.html
 echo "🔧 Injecting runtime config loader..."
 sed_inplace 's|<head>|<head>\n    <script src="./config.js"></script>|' family-dashboard/build/index.html
-sed_inplace 's|<head>|<head>\n    <script src="/config.js"></script>|' family-dashboard/build/mobile.html
+sed_inplace 's|<head>|<head>\n    <script src="../config.js"></script>|' family-dashboard/build/mobile.html
 
 # Keep relative paths in mobile.html — nginx alias at /mobile/assets/ handles resolution
 # for both direct access (/mobile/) and HA ingress paths

@@ -16,7 +16,9 @@ fi
 chmod -R 755 /usr/share/nginx/html /var/lib/nginx /var/log/nginx /run/nginx
 
 # Browser-visible runtime configuration intentionally contains no credential.
-printf '%s\n' 'window.HA_CONFIG={apiBase:"/ha-read",readOnly:true};' > /usr/share/nginx/html/config.js
+# It keeps the boundary inside the Supervisor ingress prefix when the dashboard
+# is opened from Home Assistant, while direct/mobile access stays at /ha-read.
+cp -f /opt/read-boundary/browser-config.js /usr/share/nginx/html/config.js
 
 sed -i "s|%%HA_READ_TOKEN%%|${READ_TOKEN}|g" /etc/nginx/nginx.conf
 sed -i "s|%%HA_PUBLISH_TOKEN%%|${PUBLISHER_TOKEN}|g" /etc/nginx/nginx.conf

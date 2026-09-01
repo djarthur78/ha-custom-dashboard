@@ -2,9 +2,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { test } = require('node:test');
+const vm = require('node:vm');
 
 const nginx = fs.readFileSync(path.join(__dirname, 'nginx.conf'), 'utf8');
 const run = fs.readFileSync(path.join(__dirname, 'run.sh'), 'utf8');
+const browserConfig = fs.readFileSync(path.join(__dirname, 'browser-config.js'), 'utf8');
+const mobileHtml = fs.readFileSync(path.join(__dirname, 'build/mobile.html'), 'utf8');
 
 const IRRIGATION_TARGETS = [
   'sensor.openclaw_irrigation_today_max_temperature',
@@ -37,6 +40,28 @@ test('publishers require component secrets and cannot select an HA target', () =
 test('browser HA REST access is GET-only and receives no runtime credential', () => {
   assert.match(nginx, /location \^~ \/ha-read\/api\/[\s\S]*?request_method !~ \^\(GET\|HEAD\)\$/);
   assert.doesNotMatch(nginx, /location \/api\//);
-  assert.match(run, /window\.HA_CONFIG=\{apiBase:"\/ha-read",readOnly:true\}/);
+  assert.match(run, /browser-config\.js/);
   assert.doesNotMatch(run, /window\.HA_CONFIG[^\n]*(token|secret)/i);
+});
+
+test('browser read boundary resolves inside Home Assistant ingress', () => {
+  const cases = [
+    ['/', '/ha-read'],
+    ['/mobile/', '/ha-read'],
+    ['/api/hassio_ingress/session-id/', '/api/hassio_ingress/session-id/ha-read'],
+    ['/api/hassio_ingress/session-id/mobile/', '/api/hassio_ingress/session-id/ha-read'],
+  ];
+
+  for (const [pathname, expected] of cases) {
+    const context = { window: { location: { pathname } } };
+    vm.runInNewContext(browserConfig, context);
+    assert.equal(context.window.HA_CONFIG.apiBase, expected, pathname);
+    assert.equal(context.window.HA_CONFIG.readOnly, true, pathname);
+    assert.equal('token' in context.window.HA_CONFIG, false, pathname);
+  }
+});
+
+test('mobile runtime config remains relative to the add-on ingress root', () => {
+  assert.match(mobileHtml, /<script src="\.\.\/config\.js"><\/script>/);
+  assert.doesNotMatch(mobileHtml, /<script src="\/config\.js"><\/script>/);
 });

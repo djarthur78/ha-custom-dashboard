@@ -15,8 +15,8 @@ RUN mkdir -p /var/lib/nginx/tmp /var/log/nginx /run/nginx \
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Cache bust v3.9.4
-RUN echo "v3.9.4" > /tmp/build-version
+# Cache bust v3.9.5
+RUN echo "v3.9.5" > /tmp/build-version
 
 # Copy the built React app
 COPY build /usr/share/nginx/html
@@ -27,6 +27,7 @@ COPY run.sh /
 RUN chmod a+x /run.sh
 
 COPY read-boundary.js /opt/read-boundary/read-boundary.js
+COPY browser-config.js /opt/read-boundary/browser-config.js
 
 # Expose port
 EXPOSE 8099
