@@ -24,7 +24,7 @@ sed -i "s|%%IRRIGATION_PUBLISHER_SECRET%%|${IRRIGATION_SECRET}|g" /etc/nginx/ngi
 sed -i "s|%%ALFRED_PUBLISHER_SECRET%%|${ALFRED_SECRET}|g" /etc/nginx/nginx.conf
 
 export HA_READ_TOKEN="$READ_TOKEN"
-export HA_WS_URL="ws://supervisor/core/api/websocket"
+export HA_WS_URL="ws://192.168.1.2:8123/api/websocket"
 node /read-boundary.js &
 
 nginx -t
