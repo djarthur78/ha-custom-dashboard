@@ -23,7 +23,7 @@ cd ..
 # Step 2: Copy build to family-dashboard directory
 echo "📋 Copying build to family-dashboard directory..."
 rm -rf family-dashboard/build
-cp -r src/dist family-dashboard/build
+cp -rf src/dist family-dashboard/build
 
 # Step 3: Inject config.js script into index.html
 echo "🔧 Injecting runtime config loader..."

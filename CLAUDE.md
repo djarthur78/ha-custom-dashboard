@@ -49,11 +49,9 @@ npm run lint         # Run ESLint
 - **Home Assistant:** http://192.168.1.2:8123
 
 ### Environment Setup
-The `.env` file (gitignored) must contain:
-```env
-VITE_HA_URL=http://192.168.1.2:8123
-VITE_HA_TOKEN=<long-lived-access-token>
-```
+The browser uses the same-origin `/ha-read` server boundary. Never place a
+Home Assistant bearer credential in Vite environment variables or frontend
+configuration.
 
 ### Deployment (Add-on)
 ```bash
@@ -223,16 +221,10 @@ Navigation is handled by the `Navigation` component in `MainLayout`.
 
 ## Home Assistant Integration
 
-### MCP Server
-The project has an MCP server configured for Home Assistant (`hass-mcp`) providing tools for:
-- Getting entity state and version info
-- Controlling entities (on/off/toggle with parameters)
-- Listing/searching entities and domains
-- Getting system overview and domain summaries
-- Managing automations
-- Viewing entity history and error logs
-
-Use these MCP tools when you need to query or control Home Assistant entities directly.
+### Authority boundary
+Dashboard reads go through the add-on's server-side HA read-only identity.
+Browser mutation controls are disabled. Do not add an HA MCP credential or a
+frontend bearer-token fallback.
 
 ### Entity IDs
 All entity IDs are documented in `config/entities.json`. Common patterns:

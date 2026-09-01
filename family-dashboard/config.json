@@ -1,6 +1,6 @@
 {
   "name": "Family Dashboard",
-  "version": "3.8.50",
+  "version": "3.9.0",
   "slug": "family-dashboard",
   "description": "Modern family calendar and dashboard for Home Assistant",
   "url": "https://github.com/djarthur78/ha-custom-dashboard",
@@ -25,12 +25,14 @@
     "8099/tcp": "Direct HTTP access (local network only)"
   },
   "options": {
-    "ha_url": "http://192.168.1.2:8123",
-    "ha_token": ""
+    "read_token": "",
+    "irrigation_publisher_secret": "",
+    "alfred_publisher_secret": ""
   },
   "schema": {
-    "ha_url": "str",
-    "ha_token": "password"
+    "read_token": "password",
+    "irrigation_publisher_secret": "password",
+    "alfred_publisher_secret": "password"
   },
   "homeassistant_api": true
 }

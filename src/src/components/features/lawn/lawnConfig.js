@@ -92,8 +92,8 @@ export const ALL_SENSOR_IDS = IRRIGATION_AREAS.flatMap(a => a.sensors.map(s => s
 import { getHAConfig } from '../../../utils/ha-config';
 
 export function getPlanUrl() {
-  const { url } = getHAConfig({ useProxy: true });
-  return `${url}/local/lawn-plan.json`;
+  const { apiBase } = getHAConfig();
+  return `${apiBase}/local/lawn-plan.json`;
 }
 
 // Duration options per area type (minutes)

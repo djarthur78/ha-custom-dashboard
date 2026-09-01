@@ -40,8 +40,8 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      '/api': {
-        target: 'http://192.168.1.2:8123',
+      '/ha-read': {
+        target: 'http://192.168.1.2:8099',
         changeOrigin: true,
       },
       '/remux-api': {

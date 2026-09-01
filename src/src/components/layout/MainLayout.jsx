@@ -100,6 +100,7 @@ export function MainLayout() {
           <div className="flex items-center gap-2 text-white/70 text-sm font-medium">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
             <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
+            <span className="rounded bg-amber-400/20 px-2 py-1 text-[10px] font-semibold text-amber-200">READ ONLY</span>
           </div>
         </div>
       </header>

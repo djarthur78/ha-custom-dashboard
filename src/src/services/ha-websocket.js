@@ -1,518 +1,157 @@
 /**
- * Home Assistant WebSocket Service
- * Manages WebSocket connection to Home Assistant with auto-reconnect
+ * Compatibility service backed by the server-side HA read boundary.
+ * State changes are polled and only four explicitly read-only WebSocket
+ * commands are bridged. All mutation requests fail closed in the browser.
  */
 
 import { getHAConfig } from '../utils/ha-config';
+import haRest from './ha-rest';
 import createLogger from '../utils/logger';
 
-const log = createLogger('HA WebSocket');
-const weatherLog = createLogger('Weather');
+const log = createLogger('HA Read Boundary');
+const POLL_INTERVAL_MS = 10000;
+const READ_COMMANDS = new Set([
+  'history/history_during_period',
+  'media_player/browse_media',
+  'todo/item/list',
+  'weather/subscribe_forecast',
+]);
 
-class HAWebSocket {
+class HAReadBoundary {
   constructor() {
-    this.ws = null;
-    this.messageId = 1;
-    this.listeners = new Map();
     this.stateSubscribers = new Map();
     this.connectionListeners = new Set();
-    this.isAuthenticated = false;
-    this.isConnecting = false;
-    this.reconnectAttempts = 0;
-    this.maxReconnectAttempts = 10;
-    this.reconnectTimeout = null;
-    this.stateCache = new Map(); // entity_id → full state object
+    this.stateCache = new Map();
     this.stateCacheReady = false;
     this.stateCacheReadyCallbacks = [];
-
-    const config = getHAConfig();
-    this.url = config.url;
-    this.token = config.token;
+    this.status = 'disconnected';
+    this.connectPromise = null;
+    this.pollTimer = null;
   }
 
-  /**
-   * Connect to Home Assistant WebSocket
-   */
-  connect() {
-    if (this.isConnecting || (this.ws && this.ws.readyState === WebSocket.OPEN)) {
-      return Promise.resolve();
-    }
-
-    this.isConnecting = true;
-    this.notifyConnectionListeners('connecting');
-
-    // Simple WebSocket URL construction
-    // Add-on mode: ws://supervisor/core/api/websocket
-    // Dev mode: ws://192.168.1.2:8123/api/websocket
-    const wsUrl = `${this.url.replace('http://', 'ws://').replace('https://', 'wss://')}/api/websocket`;
-
-    log.info(`Connecting to WebSocket: ${wsUrl}`);
-    log.info(`Using token: ${this.token ? 'SET' : 'MISSING'}`);
-
-    return new Promise((resolve, reject) => {
-      try {
-        this.ws = new WebSocket(wsUrl);
-
-        this.ws.onopen = () => {
-          log.debug('Connection opened');
-        };
-
-        this.ws.onmessage = async (event) => {
-          const message = JSON.parse(event.data);
-          await this.handleMessage(message, resolve, reject);
-        };
-
-        this.ws.onerror = (error) => {
-          log.error('WebSocket error:', error);
-          this.isConnecting = false;
-          this.notifyConnectionListeners('error', error);
-          reject(error);
-        };
-
-        this.ws.onclose = () => {
-          log.debug('Connection closed');
-          this.isAuthenticated = false;
-          this.isConnecting = false;
-          this.notifyConnectionListeners('disconnected');
-          this.scheduleReconnect();
-        };
-      } catch (error) {
-        this.isConnecting = false;
-        reject(error);
+  async refreshStates() {
+    const states = await haRest.getStates();
+    const next = new Map(states.map((state) => [state.entity_id, state]));
+    for (const [entityId, newState] of next) {
+      const previous = this.stateCache.get(entityId);
+      if (previous?.last_updated !== newState.last_updated || previous?.state !== newState.state) {
+        this.stateSubscribers.get(entityId)?.forEach((callback) => callback(newState));
       }
-    });
-  }
-
-  /**
-   * Handle incoming WebSocket messages
-   */
-  async handleMessage(message, resolve, reject) {
-    switch (message.type) {
-      case 'auth_required':
-        log.debug('Auth required');
-        this.authenticate();
-        break;
-
-      case 'auth_ok':
-        log.info('Authentication successful');
-        this.isAuthenticated = true;
-        this.isConnecting = false;
-        this.reconnectAttempts = 0;
-        this.notifyConnectionListeners('connected');
-        this.subscribeToStates();
-        if (resolve) resolve();
-        break;
-
-      case 'auth_invalid':
-        log.error('Authentication failed');
-        this.isConnecting = false;
-        this.notifyConnectionListeners('auth_failed');
-        if (reject) reject(new Error('Authentication failed'));
-        break;
-
-      case 'result':
-        this.handleResult(message);
-        break;
-
-      case 'event':
-        this.handleEvent(message);
-        break;
-
-      default:
-        log.debug('Unknown message type:', message.type);
     }
-  }
-
-  /**
-   * Authenticate with Home Assistant
-   */
-  authenticate() {
-    this.send({
-      type: 'auth',
-      access_token: this.token,
-    }, false);
-  }
-
-  /**
-   * Subscribe to state changes and populate initial state cache
-   */
-  async subscribeToStates() {
-    // Subscribe to future state changes
-    this.send({
-      type: 'subscribe_events',
-      event_type: 'state_changed',
-    });
-
-    // Fetch all current states to populate cache
-    try {
-      const states = await this.send({ type: 'get_states' });
-      this.stateCache.clear();
-      states.forEach(state => {
-        this.stateCache.set(state.entity_id, state);
-      });
+    this.stateCache = next;
+    if (!this.stateCacheReady) {
       this.stateCacheReady = true;
-      log.debug(`State cache populated with ${states.length} entities`);
-      // Fire any pending cache-ready callbacks
-      this.stateCacheReadyCallbacks.forEach(cb => cb());
+      this.stateCacheReadyCallbacks.forEach((callback) => callback());
       this.stateCacheReadyCallbacks = [];
-    } catch (error) {
-      log.error('Failed to populate state cache:', error);
     }
+    return states;
   }
 
-  /**
-   * Handle result messages
-   */
-  handleResult(message) {
-    const listener = this.listeners.get(message.id);
-    if (listener) {
-      // Clear timeout if it exists
-      if (listener.timeout) {
-        clearTimeout(listener.timeout);
-      }
-
-      if (message.success) {
-        listener.resolve(message.result);
-      } else {
-        listener.reject(new Error(message.error?.message || 'Request failed'));
-      }
-      this.listeners.delete(message.id);
-    }
+  connect() {
+    if (this.status === 'connected') return Promise.resolve();
+    if (this.connectPromise) return this.connectPromise;
+    this.status = 'connecting';
+    this.notifyConnectionListeners('connecting');
+    this.connectPromise = this.refreshStates()
+      .then(() => {
+        this.status = 'connected';
+        this.notifyConnectionListeners('connected');
+        this.pollTimer = window.setInterval(() => {
+          this.refreshStates().catch((error) => {
+            log.warn('State refresh failed:', error.message);
+            this.status = 'error';
+            this.notifyConnectionListeners('error', error);
+          });
+        }, POLL_INTERVAL_MS);
+      })
+      .catch((error) => {
+        this.status = 'error';
+        this.notifyConnectionListeners('error', error);
+        throw error;
+      })
+      .finally(() => { this.connectPromise = null; });
+    return this.connectPromise;
   }
 
-  /**
-   * Handle event messages
-   */
-  handleEvent(message) {
-    // Handle state change events
-    if (message.event?.event_type === 'state_changed') {
-      const entityId = message.event.data?.entity_id;
-      const newState = message.event.data?.new_state;
-
-      if (entityId && newState) {
-        // Update state cache
-        this.stateCache.set(entityId, newState);
-
-        const subscribers = this.stateSubscribers.get(entityId);
-        if (subscribers) {
-          subscribers.forEach(callback => callback(newState));
-        }
-      }
+  async send(message) {
+    if (message?.type === 'get_states') return this.getStates();
+    if (!READ_COMMANDS.has(message?.type)) {
+      throw new Error('Dashboard is read-only; Home Assistant mutation commands are disabled');
     }
-
-    // Handle weather forecast subscription events
-    if (message.event?.forecast && this.weatherSubscribers) {
-      const callback = this.weatherSubscribers.get(message.id);
-      if (callback) {
-        weatherLog.debug(`Received forecast update for subscription ${message.id}`);
-        callback(message.event.forecast);
-      } else {
-        weatherLog.debug(`Received forecast but no callback found for ID ${message.id}`);
-      }
-    }
-  }
-
-  /**
-   * Send a message to Home Assistant
-   */
-  send(message, needsId = true, customTimeout) {
-    return new Promise((resolve, reject) => {
-      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-        reject(new Error('WebSocket not connected'));
-        return;
-      }
-
-      // Check authentication for commands (but not for auth message itself)
-      if (needsId && !this.isAuthenticated) {
-        reject(new Error('Not authenticated'));
-        return;
-      }
-
-      const id = needsId ? this.messageId++ : null;
-      const payload = needsId ? { ...message, id } : message;
-
-      if (needsId) {
-        // Add timeout to prevent hanging promises
-        const timeoutMs = customTimeout || 10000;
-        const timeout = setTimeout(() => {
-          const listener = this.listeners.get(id);
-          if (listener) {
-            this.listeners.delete(id);
-            listener.reject(new Error('Request timeout'));
-          }
-        }, timeoutMs);
-
-        this.listeners.set(id, { resolve, reject, timeout });
-      }
-
-      this.ws.send(JSON.stringify(payload));
-
-      if (!needsId) {
-        resolve();
-      }
+    const { apiBase } = getHAConfig();
+    const response = await fetch(`${apiBase}/ws-command`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(message),
     });
+    if (!response.ok) throw new Error(`HA read command boundary error: ${response.status}`);
+    return response.json();
   }
 
-  /**
-   * Get current state of an entity (from cache, falls back to network)
-   */
+  callService() {
+    return Promise.reject(new Error('Dashboard is read-only; Home Assistant controls are disabled'));
+  }
+
   async getState(entityId) {
-    // Use cache if available
-    if (this.stateCacheReady && this.stateCache.has(entityId)) {
-      return this.stateCache.get(entityId);
-    }
-
-    // Fallback to network fetch
-    const states = await this.send({ type: 'get_states' });
-    return states.find(state => state.entity_id === entityId);
+    if (this.stateCacheReady && this.stateCache.has(entityId)) return this.stateCache.get(entityId);
+    return haRest.getState(entityId);
   }
 
-  /**
-   * Get cached state synchronously (returns null if not cached)
-   */
-  getCachedState(entityId) {
-    return this.stateCache.get(entityId) || null;
-  }
-
-  /**
-   * Register a callback for when the state cache is ready.
-   * If already ready, fires immediately. Otherwise queues it.
-   */
+  getCachedState(entityId) { return this.stateCache.get(entityId) || null; }
   onStateCacheReady(callback) {
-    if (this.stateCacheReady) {
-      callback();
-    } else {
-      this.stateCacheReadyCallbacks.push(callback);
-    }
+    if (this.stateCacheReady) callback();
+    else this.stateCacheReadyCallbacks.push(callback);
   }
-
-  /**
-   * Get all states
-   */
   async getStates() {
-    return this.send({
-      type: 'get_states',
-    });
+    if (this.stateCacheReady) return [...this.stateCache.values()];
+    return this.refreshStates();
   }
-
-  /**
-   * Call a Home Assistant service
-   * @param {string} domain
-   * @param {string} service
-   * @param {object} serviceData
-   * @param {object} [options]
-   * @param {number} [options.timeout] - Custom timeout in ms (default: 10000)
-   */
-  async callService(domain, service, serviceData = {}, options = {}) {
-    return this.send({
-      type: 'call_service',
-      domain,
-      service,
-      service_data: serviceData,
-    }, true, options.timeout);
-  }
-
-  /**
-   * Subscribe to entity state changes
-   */
   subscribeToEntity(entityId, callback) {
-    if (!this.stateSubscribers.has(entityId)) {
-      this.stateSubscribers.set(entityId, new Set());
-    }
+    if (!this.stateSubscribers.has(entityId)) this.stateSubscribers.set(entityId, new Set());
     this.stateSubscribers.get(entityId).add(callback);
-
-    // Return unsubscribe function
     return () => {
       const subscribers = this.stateSubscribers.get(entityId);
-      if (subscribers) {
-        subscribers.delete(callback);
-        if (subscribers.size === 0) {
-          this.stateSubscribers.delete(entityId);
-        }
-      }
+      subscribers?.delete(callback);
+      if (subscribers?.size === 0) this.stateSubscribers.delete(entityId);
     };
   }
-
-  /**
-   * Subscribe to weather forecast updates
-   */
-  subscribeToWeatherForecast(entityId, forecastType = 'daily', callback) {
-    return new Promise((resolve, reject) => {
-      if (!this.ws || this.ws.readyState !== WebSocket.OPEN || !this.isAuthenticated) {
-        reject(new Error('WebSocket not connected or not authenticated'));
-        return;
-      }
-
-      const id = this.messageId++;
-
-      // Initialize weather subscribers map if needed
-      if (!this.weatherSubscribers) {
-        this.weatherSubscribers = new Map();
-      }
-
-      // Store the callback with the message ID
-      this.weatherSubscribers.set(id, callback);
-      weatherLog.debug(`Subscribing with ID ${id} to ${entityId}`);
-
-      // Set up response listener
-      const timeout = setTimeout(() => {
-        const listener = this.listeners.get(id);
-        if (listener) {
-          this.listeners.delete(id);
-          this.weatherSubscribers.delete(id);
-          reject(new Error('Weather subscription timeout'));
-        }
-      }, 10000);
-
-      this.listeners.set(id, {
-        resolve: () => {
-          clearTimeout(timeout);
-          weatherLog.debug(`Subscription ${id} confirmed`);
-          // Return unsubscribe function
-          resolve(() => {
-            if (this.weatherSubscribers) {
-              this.weatherSubscribers.delete(id);
-              weatherLog.debug(`Unsubscribed ${id}`);
-            }
-          });
-        },
-        reject: (error) => {
-          clearTimeout(timeout);
-          this.weatherSubscribers.delete(id);
-          reject(error);
-        },
-        timeout
-      });
-
-      // Send subscription message
-      this.ws.send(JSON.stringify({
-        id,
-        type: 'weather/subscribe_forecast',
-        entity_id: entityId,
-        forecast_type: forecastType,
-      }));
-    });
+  async subscribeToWeatherForecast(entityId, forecastType = 'daily', callback) {
+    let active = true;
+    const update = async () => {
+      const forecast = await this.send({ type: 'weather/subscribe_forecast', entity_id: entityId, forecast_type: forecastType });
+      if (active) callback(forecast);
+    };
+    await update();
+    const timer = window.setInterval(() => update().catch(() => {}), 30 * 60 * 1000);
+    return () => { active = false; window.clearInterval(timer); };
   }
-
-  /**
-   * Subscribe to connection status changes
-   */
   onConnectionChange(callback) {
     this.connectionListeners.add(callback);
-
-    // Return unsubscribe function
-    return () => {
-      this.connectionListeners.delete(callback);
-    };
+    return () => this.connectionListeners.delete(callback);
   }
-
-  /**
-   * Notify connection status listeners
-   */
   notifyConnectionListeners(status, error = null) {
-    this.connectionListeners.forEach(callback => {
-      callback(status, error);
-    });
+    this.connectionListeners.forEach((callback) => callback(status, error));
   }
-
-  /**
-   * Schedule reconnection with exponential backoff
-   */
-  scheduleReconnect() {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-    }
-
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      log.error('Max reconnect attempts reached');
-      this.notifyConnectionListeners('max_retries_reached');
-      return;
-    }
-
-    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-    this.reconnectAttempts++;
-
-    log.info(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
-    this.notifyConnectionListeners('reconnecting', { attempt: this.reconnectAttempts, delay });
-
-    this.reconnectTimeout = setTimeout(() => {
-      this.connect().catch(error => {
-        log.error('Reconnect failed:', error);
-      });
-    }, delay);
-  }
-
-  /**
-   * Disconnect from Home Assistant
-   */
   disconnect() {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
-    }
-
-    // Clear all pending request timeouts
-    this.listeners.forEach((listener) => {
-      if (listener.timeout) {
-        clearTimeout(listener.timeout);
-      }
-      listener.reject(new Error('Connection closed'));
-    });
-
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
-
-    this.isAuthenticated = false;
-    this.isConnecting = false;
-    this.listeners.clear();
-    this.stateSubscribers.clear();
+    if (this.pollTimer) window.clearInterval(this.pollTimer);
+    this.pollTimer = null;
+    this.status = 'disconnected';
     this.stateCache.clear();
     this.stateCacheReady = false;
     this.stateCacheReadyCallbacks = [];
+    this.stateSubscribers.clear();
   }
-
-  /**
-   * Wait for connection to be established.
-   * Resolves immediately if already connected, or waits up to timeout ms.
-   * @param {number} [timeout=5000] - Max wait time in ms
-   * @returns {Promise<void>} Resolves when connected, rejects on timeout
-   */
   waitForConnection(timeout = 5000) {
-    if (this.getStatus() === 'connected') {
-      return Promise.resolve();
-    }
-
+    if (this.status === 'connected') return Promise.resolve();
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        unsubscribe();
-        reject(new Error('Connection timeout'));
-      }, timeout);
-
+      const timer = window.setTimeout(() => { unsubscribe(); reject(new Error('Connection timeout')); }, timeout);
       const unsubscribe = this.onConnectionChange((status) => {
-        if (status === 'connected') {
-          clearTimeout(timer);
-          unsubscribe();
-          resolve();
-        }
+        if (status === 'connected') { window.clearTimeout(timer); unsubscribe(); resolve(); }
       });
     });
   }
-
-  /**
-   * Get connection status
-   */
-  getStatus() {
-    if (!this.ws) return 'disconnected';
-    if (this.isConnecting) return 'connecting';
-    if (this.ws.readyState === WebSocket.OPEN && this.isAuthenticated) return 'connected';
-    if (this.ws.readyState === WebSocket.CONNECTING) return 'connecting';
-    return 'disconnected';
-  }
+  getStatus() { return this.status; }
 }
 
-// Create singleton instance
-const haWebSocket = new HAWebSocket();
-
-export default haWebSocket;
+export const READ_ONLY_COMMAND_TYPES = READ_COMMANDS;
+export default new HAReadBoundary();

@@ -3,7 +3,7 @@ const childProcess = require('node:child_process');
 const { afterEach, mock, test } = require('node:test');
 
 const execSyncMock = mock.method(childProcess, 'execSync', () => 'unexpected command invocation');
-const { createAlfredApiServer } = require('./alfred-api');
+const { ALFRED_PUBLISH_PATHS, createAlfredApiServer, pushToHA } = require('./alfred-api');
 
 let server;
 
@@ -72,4 +72,25 @@ test('Alfred status and refresh remain available through the same HTTP contract'
     { status: 'available' },
   ]);
   assert.equal(execSyncMock.mock.callCount(), 0);
+});
+
+test('Alfred publication is constrained to the thirteen owned targets', async () => {
+  assert.equal(Object.keys(ALFRED_PUBLISH_PATHS).length, 13);
+  const requests = [];
+  const fetchFn = async (url, options) => {
+    requests.push({ url, options });
+    return { ok: true };
+  };
+  const config = { base_url: 'http://boundary.test', alfred_secret: 'narrow-secret' };
+
+  const published = await pushToHA('sensor.alfred_ops_dashboard', { state: 'ok' }, { fetchFn, config });
+
+  assert.equal(published, true);
+  assert.equal(requests[0].url, 'http://boundary.test/publish/alfred/ops-dashboard');
+  assert.equal(requests[0].options.headers['X-Alfred-Publisher-Key'], 'narrow-secret');
+  assert.equal(requests[0].options.headers.Authorization, undefined);
+  assert.throws(
+    () => pushToHA('switch.arbitrary_target', { state: 'on' }, { fetchFn, config }),
+    /not owned/,
+  );
 });

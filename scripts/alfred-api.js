@@ -14,10 +14,23 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = 18800;
-const HA_URL = 'http://192.168.1.2:8123';
-const HA_TOKEN = process.env.HA_TOKEN || require('fs')
-  .readFileSync(require('path').join(__dirname, '../src/.env'), 'utf8')
-  .match(/VITE_HA_TOKEN=(.*)/)?.[1]?.trim();
+const PUBLISHER_CONFIG_PATH = process.env.ALFRED_HA_PUBLISHER_CONFIG
+  || path.join(process.env.HOME, '.config/alfred/ha-publishers.json');
+const ALFRED_PUBLISH_PATHS = Object.freeze({
+  'sensor.alfred_ops_dashboard': '/publish/alfred/ops-dashboard',
+  'sensor.alfred_memory_status': '/publish/alfred/memory-status',
+  'sensor.mac_mini_cpu_usage': '/publish/alfred/mac-mini-cpu-usage',
+  'sensor.mac_mini_ram_usage': '/publish/alfred/mac-mini-ram-usage',
+  'sensor.mac_mini_disk_usage': '/publish/alfred/mac-mini-disk-usage',
+  'binary_sensor.alfred_gateway': '/publish/alfred/gateway',
+  'binary_sensor.alfred_ollama': '/publish/alfred/ollama',
+  'binary_sensor.alfred_location_bridge': '/publish/alfred/location-bridge',
+  'sensor.alfred_gateway_health': '/publish/alfred/gateway-health',
+  'sensor.alfred_gateway_status': '/publish/alfred/gateway-status',
+  'sensor.alfred_task_stats': '/publish/alfred/task-stats',
+  'sensor.alfred_token_usage': '/publish/alfred/token-usage',
+  'sensor.alfred_cron_list': '/publish/alfred/cron-list',
+});
 
 const OPENCLAW = `${process.env.HOME}/.npm-global/bin/openclaw`;
 
@@ -367,15 +380,24 @@ function collectOpsDashboard() {
   };
 }
 
-function pushToHA(entityId, payload) {
-  try {
-    const body = JSON.stringify(payload);
-    const tmpFile = `/tmp/ha-push-${entityId.replace(/\./g, '-')}.json`;
-    fs.writeFileSync(tmpFile, body);
-    execSync(`curl -s -X POST '${HA_URL}/api/states/${entityId}' -H 'Authorization: Bearer ${HA_TOKEN}' -H 'Content-Type: application/json' -d @${tmpFile}`, {
-      timeout: 5000, stdio: ['pipe', 'pipe', 'pipe']
-    });
-  } catch { /* best effort */ }
+function publisherConfig() {
+  const config = readJsonFile(PUBLISHER_CONFIG_PATH);
+  if (!config?.base_url || !config?.alfred_secret) return null;
+  return config;
+}
+
+function pushToHA(entityId, payload, { fetchFn = fetch, config = publisherConfig() } = {}) {
+  const route = ALFRED_PUBLISH_PATHS[entityId];
+  if (!route) throw new Error(`HA publication target is not owned: ${entityId}`);
+  if (!config) return Promise.resolve(false);
+  return fetchFn(`${config.base_url}${route}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Alfred-Publisher-Key': config.alfred_secret,
+    },
+    body: JSON.stringify(payload),
+  }).then((response) => response.ok).catch(() => false);
 }
 
 function collectTokenUsage() {
@@ -749,4 +771,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { createAlfredApiServer };
+module.exports = { ALFRED_PUBLISH_PATHS, createAlfredApiServer, pushToHA };

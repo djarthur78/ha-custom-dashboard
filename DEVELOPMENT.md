@@ -14,11 +14,8 @@ cd ha-custom-dashboard/src
 npm install
 ```
 
-Create `.env` in the `src/` directory:
-```env
-VITE_HA_URL=http://192.168.1.2:8123
-VITE_HA_TOKEN=<your-long-lived-token>
-```
+No HA credential belongs in `src/.env`. Local development proxies `/ha-read`
+to the deployed server-side read boundary.
 
 ## Development
 

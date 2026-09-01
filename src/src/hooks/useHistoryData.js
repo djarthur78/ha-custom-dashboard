@@ -21,7 +21,7 @@ export function useHistoryData(entityId, days = 7) {
       setLoading(true);
       setError(null);
       try {
-        const { url: HA_URL, token: HA_TOKEN } = getHAConfig({ useProxy: true });
+        const { apiBase } = getHAConfig();
         const now = new Date();
         const start = new Date(now);
         start.setDate(start.getDate() - days);
@@ -34,11 +34,10 @@ export function useHistoryData(entityId, days = 7) {
         });
 
         const response = await fetch(
-          `${HA_URL}/api/history/period/${start.toISOString()}?${params}`,
+          `${apiBase}/api/history/period/${start.toISOString()}?${params}`,
           {
             headers: {
-              'Authorization': `Bearer ${HA_TOKEN}`,
-              'Content-Type': 'application/json',
+              Accept: 'application/json',
             },
           }
         );
