@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## Production and credential boundary
 
@@ -303,7 +303,7 @@ Short summary (50 chars or less)
 
 Detailed explanation of changes and why.
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+Co-Authored-By: Codex Sonnet 4.5 <noreply@anthropic.com>
 ```
 
 ## Security Notes
