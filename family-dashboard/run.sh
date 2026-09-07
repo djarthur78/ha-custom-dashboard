@@ -1,15 +1,16 @@
 #!/bin/sh
 set -eu
 
-echo "[INFO] Starting Family Dashboard read-only boundary"
+echo "[INFO] Starting Family Dashboard read/control boundaries"
 
 READ_TOKEN=$(jq --raw-output '.read_token // ""' /data/options.json)
 PUBLISHER_TOKEN=$(jq --raw-output '.publisher_token // ""' /data/options.json)
 IRRIGATION_SECRET=$(jq --raw-output '.irrigation_publisher_secret // ""' /data/options.json)
 ALFRED_SECRET=$(jq --raw-output '.alfred_publisher_secret // ""' /data/options.json)
+CONTROL_TOKEN="${SUPERVISOR_TOKEN:-}"
 
-if [ -z "$READ_TOKEN" ] || [ -z "$PUBLISHER_TOKEN" ] || [ -z "$IRRIGATION_SECRET" ] || [ -z "$ALFRED_SECRET" ]; then
-    echo "[ERROR] Required read/publisher boundary configuration is missing"
+if [ -z "$READ_TOKEN" ] || [ -z "$CONTROL_TOKEN" ] || [ -z "$PUBLISHER_TOKEN" ] || [ -z "$IRRIGATION_SECRET" ] || [ -z "$ALFRED_SECRET" ]; then
+    echo "[ERROR] Required read/control/publisher boundary configuration is missing"
     exit 1
 fi
 
@@ -21,14 +22,17 @@ chmod -R 755 /usr/share/nginx/html /var/lib/nginx /var/log/nginx /run/nginx
 cp -f /opt/read-boundary/browser-config.js /usr/share/nginx/html/config.js
 
 sed -i "s|%%HA_READ_TOKEN%%|${READ_TOKEN}|g" /etc/nginx/nginx.conf
+sed -i "s|%%HA_CONTROL_TOKEN%%|${CONTROL_TOKEN}|g" /etc/nginx/nginx.conf
 sed -i "s|%%HA_PUBLISH_TOKEN%%|${PUBLISHER_TOKEN}|g" /etc/nginx/nginx.conf
 sed -i "s|%%IRRIGATION_PUBLISHER_SECRET%%|${IRRIGATION_SECRET}|g" /etc/nginx/nginx.conf
 sed -i "s|%%ALFRED_PUBLISHER_SECRET%%|${ALFRED_SECRET}|g" /etc/nginx/nginx.conf
 
 export HA_READ_TOKEN="$READ_TOKEN"
-export HA_WS_URL="ws://192.168.1.2:8123/api/websocket"
+export HA_CONTROL_TOKEN="$CONTROL_TOKEN"
+export HA_READ_WS_URL="ws://192.168.1.2:8123/api/websocket"
+export HA_CONTROL_WS_URL="ws://supervisor/core/api/websocket"
 node /opt/read-boundary/read-boundary.js &
 
 nginx -t
-echo "[INFO] Boundaries configured; browser mode is read-only"
+echo "[INFO] Boundaries configured; dashboard controls are enabled"
 exec nginx -g "daemon off;"

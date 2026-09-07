@@ -1,6 +1,10 @@
 (function configureHomeAssistantBoundary() {
   const ingress = window.location.pathname.match(/^\/api\/hassio_ingress\/[^/]+/);
-  const apiBase = ingress ? `${ingress[0]}/ha-read` : '/ha-read';
+  const ingressBase = ingress ? ingress[0] : '';
 
-  window.HA_CONFIG = Object.freeze({ apiBase, readOnly: true });
+  window.HA_CONFIG = Object.freeze({
+    apiBase: `${ingressBase}/ha-read`,
+    controlApiBase: `${ingressBase}/ha-control`,
+    readOnly: false,
+  });
 }());

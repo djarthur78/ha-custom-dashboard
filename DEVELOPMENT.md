@@ -15,7 +15,8 @@ npm install
 ```
 
 No HA credential belongs in `src/.env`. Local development proxies `/ha-read`
-to the deployed server-side read boundary.
+and `/ha-control` to the deployed server-side boundaries. Dashboard control
+actions from the local UI affect the live Home Assistant instance.
 
 ## Development
 

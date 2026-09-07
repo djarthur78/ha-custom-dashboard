@@ -4,17 +4,18 @@ describe('getHAConfig', () => {
   beforeEach(() => { delete window.HA_CONFIG; });
   afterEach(() => { delete window.HA_CONFIG; vi.resetModules(); });
 
-  it('defaults to the same-origin read boundary with no bearer', async () => {
+  it('defaults to same-origin read and control boundaries with no bearer', async () => {
     const { getHAConfig } = await import('../ha-config.js');
     expect(getHAConfig()).toEqual({
-      url: '/ha-read', apiBase: '/ha-read', readOnly: true, token: null,
+      url: '/ha-read', apiBase: '/ha-read', controlApiBase: '/ha-control', readOnly: false, token: null,
     });
   });
 
-  it('accepts only a browser-visible API base', async () => {
-    window.HA_CONFIG = { apiBase: '/custom-read', readOnly: true };
+  it('accepts only browser-visible boundary paths', async () => {
+    window.HA_CONFIG = { apiBase: '/custom-read', controlApiBase: '/custom-control', readOnly: false };
     const { getHAConfig } = await import('../ha-config.js');
     expect(getHAConfig().apiBase).toBe('/custom-read');
+    expect(getHAConfig().controlApiBase).toBe('/custom-control');
     expect(getHAConfig().token).toBeNull();
   });
 
@@ -27,7 +28,7 @@ describe('getHAConfig', () => {
     };
     const { getHAConfig } = await import('../ha-config.js');
     expect(getHAConfig()).toEqual({
-      url: '/ha-read', apiBase: '/ha-read', readOnly: true, token: null,
+      url: '/ha-read', apiBase: '/ha-read', controlApiBase: '/ha-control', readOnly: false, token: null,
     });
   });
 });

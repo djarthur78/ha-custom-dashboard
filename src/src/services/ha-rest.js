@@ -1,14 +1,20 @@
-/** Same-origin Home Assistant read client. The browser never sends a bearer. */
+/** Same-origin Home Assistant client. The browser never sends a bearer. */
 
 import { getHAConfig } from '../utils/ha-config';
 
-async function request(endpoint) {
-  const { apiBase } = getHAConfig();
-  const response = await fetch(`${apiBase}/api${endpoint}`, {
+async function request(endpoint, options = {}, boundary = 'read') {
+  const { apiBase, controlApiBase } = getHAConfig();
+  const base = boundary === 'control' ? controlApiBase : apiBase;
+  const response = await fetch(`${base}/api${endpoint}`, {
     method: 'GET',
-    headers: { Accept: 'application/json' },
+    ...options,
+    headers: {
+      Accept: 'application/json',
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...options.headers,
+    },
   });
-  if (!response.ok) throw new Error(`HA read boundary error: ${response.status}`);
+  if (!response.ok) throw new Error(`HA ${boundary} boundary error: ${response.status}`);
   return response.json();
 }
 
@@ -22,13 +28,27 @@ export function getCalendarEvents(entityId, start, end) {
   return request(`/calendars/${encodeURIComponent(entityId)}?${params}`);
 }
 
-export function callService() {
-  return Promise.reject(new Error('Dashboard is read-only; Home Assistant controls are disabled'));
+export function callService(domain, service, data = {}) {
+  return request(`/services/${encodeURIComponent(domain)}/${encodeURIComponent(service)}`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }, 'control');
 }
 
-export const turnOn = callService;
-export const turnOff = callService;
-export const toggle = callService;
+export function turnOn(entityId, data = {}) {
+  const [domain] = entityId.split('.');
+  return callService(domain, 'turn_on', { entity_id: entityId, ...data });
+}
+
+export function turnOff(entityId) {
+  const [domain] = entityId.split('.');
+  return callService(domain, 'turn_off', { entity_id: entityId });
+}
+
+export function toggle(entityId) {
+  const [domain] = entityId.split('.');
+  return callService(domain, 'toggle', { entity_id: entityId });
+}
 
 export async function ping() {
   try {

@@ -1,20 +1,24 @@
 /**
- * Compatibility service backed by the server-side HA read boundary.
- * State changes are polled and only four explicitly read-only WebSocket
- * commands are bridged. All mutation requests fail closed in the browser.
+ * Compatibility service backed by server-side HA boundaries.
+ * State changes are polled. Reads use the read identity; dashboard controls
+ * use the server-side control identity without exposing either bearer.
  */
 
 import { getHAConfig } from '../utils/ha-config';
 import haRest from './ha-rest';
 import createLogger from '../utils/logger';
 
-const log = createLogger('HA Read Boundary');
+const log = createLogger('HA Boundary');
 const POLL_INTERVAL_MS = 10000;
 const READ_COMMANDS = new Set([
   'history/history_during_period',
   'media_player/browse_media',
   'todo/item/list',
   'weather/subscribe_forecast',
+]);
+const CONTROL_COMMANDS = new Set([
+  'calendar/event/delete',
+  'config_entries/reload',
 ]);
 
 class HAReadBoundary {
@@ -75,21 +79,25 @@ class HAReadBoundary {
 
   async send(message) {
     if (message?.type === 'get_states') return this.getStates();
-    if (!READ_COMMANDS.has(message?.type)) {
-      throw new Error('Dashboard is read-only; Home Assistant mutation commands are disabled');
+    if (message?.type === 'call_service') {
+      return this.callService(message.domain, message.service, message.service_data || {});
     }
-    const { apiBase } = getHAConfig();
-    const response = await fetch(`${apiBase}/ws-command`, {
+    const { apiBase, controlApiBase } = getHAConfig();
+    const boundaryBase = READ_COMMANDS.has(message?.type)
+      ? apiBase
+      : CONTROL_COMMANDS.has(message?.type) ? controlApiBase : null;
+    if (!boundaryBase) throw new Error(`Unsupported Home Assistant command: ${message?.type || 'missing type'}`);
+    const response = await fetch(`${boundaryBase}/ws-command`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify(message),
     });
-    if (!response.ok) throw new Error(`HA read command boundary error: ${response.status}`);
+    if (!response.ok) throw new Error(`HA command boundary error: ${response.status}`);
     return response.json();
   }
 
-  callService() {
-    return Promise.reject(new Error('Dashboard is read-only; Home Assistant controls are disabled'));
+  callService(domain, service, serviceData = {}) {
+    return haRest.callService(domain, service, serviceData);
   }
 
   async getState(entityId) {
@@ -154,4 +162,5 @@ class HAReadBoundary {
 }
 
 export const READ_ONLY_COMMAND_TYPES = READ_COMMANDS;
+export const CONTROL_COMMAND_TYPES = CONTROL_COMMANDS;
 export default new HAReadBoundary();

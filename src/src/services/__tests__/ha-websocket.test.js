@@ -2,12 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const getStates = vi.fn();
 const getState = vi.fn();
+const callService = vi.fn();
 
 vi.mock('../ha-rest.js', () => ({
-  default: { getStates, getState },
+  default: { getStates, getState, callService },
 }));
 vi.mock('../../utils/ha-config', () => ({
-  getHAConfig: () => ({ apiBase: '/ha-read', readOnly: true, token: null }),
+  getHAConfig: () => ({ apiBase: '/ha-read', controlApiBase: '/ha-control', readOnly: false, token: null }),
 }));
 vi.mock('../../utils/logger', () => ({
   default: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -20,6 +21,7 @@ describe('HA read boundary compatibility service', () => {
     vi.resetModules();
     getStates.mockReset();
     getState.mockReset();
+    callService.mockReset();
     service = (await import('../ha-websocket.js')).default;
   });
 
@@ -44,11 +46,10 @@ describe('HA read boundary compatibility service', () => {
     service.disconnect();
   });
 
-  it('rejects service and configuration mutation without making a request', async () => {
-    globalThis.fetch = vi.fn();
-    await expect(service.callService('switch', 'turn_on', { entity_id: 'switch.test' })).rejects.toThrow(/read-only/);
-    await expect(service.send({ type: 'config_entries/reload', entry_id: 'x' })).rejects.toThrow(/read-only/);
-    expect(globalThis.fetch).not.toHaveBeenCalled();
+  it('routes service mutations through the server-side HA control boundary', async () => {
+    callService.mockResolvedValue({ success: true });
+    await expect(service.callService('switch', 'turn_on', { entity_id: 'switch.test' })).resolves.toEqual({ success: true });
+    expect(callService).toHaveBeenCalledWith('switch', 'turn_on', { entity_id: 'switch.test' });
   });
 
   it('forwards an allowlisted read command without an Authorization header', async () => {
@@ -56,6 +57,14 @@ describe('HA read boundary compatibility service', () => {
     await service.send({ type: 'todo/item/list', entity_id: 'todo.family' });
     const [url, options] = globalThis.fetch.mock.calls[0];
     expect(url).toBe('/ha-read/ws-command');
+    expect(options.headers.Authorization).toBeUndefined();
+  });
+
+  it('forwards supported non-service mutations to the control boundary', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ success: true }) });
+    await service.send({ type: 'config_entries/reload', entry_id: 'test-entry' });
+    const [url, options] = globalThis.fetch.mock.calls[0];
+    expect(url).toBe('/ha-control/ws-command');
     expect(options.headers.Authorization).toBeUndefined();
   });
 

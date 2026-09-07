@@ -44,6 +44,10 @@ export default defineConfig({
         target: 'http://192.168.1.2:8099',
         changeOrigin: true,
       },
+      '/ha-control': {
+        target: 'http://192.168.1.2:8099',
+        changeOrigin: true,
+      },
       '/remux-api': {
         target: 'http://192.168.1.150:8765',
         changeOrigin: true,

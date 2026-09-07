@@ -189,8 +189,10 @@ Navigation is handled by the `Navigation` component in `MainLayout`.
 
 ### Authority boundary
 Dashboard reads go through the add-on's server-side HA read-only identity.
-Browser mutation controls are disabled. Do not add an HA MCP credential or a
-frontend bearer-token fallback.
+Dashboard controls go through the add-on's server-held Supervisor control
+identity. Keep both bearers out of browser configuration and use the existing
+same-origin read/control boundaries; an HA MCP or frontend-token fallback is not
+part of this architecture.
 
 ### Entity IDs
 All entity IDs are documented in `config/entities.json`. Common patterns:

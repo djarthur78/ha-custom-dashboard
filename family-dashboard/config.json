@@ -1,6 +1,6 @@
 {
   "name": "Family Dashboard",
-  "version": "3.9.5",
+  "version": "3.9.6",
   "slug": "family-dashboard",
   "description": "Modern family calendar and dashboard for Home Assistant",
   "url": "https://github.com/djarthur78/ha-custom-dashboard",
@@ -16,6 +16,7 @@
   "init": false,
   "ingress": true,
   "ingress_port": 8099,
+  "homeassistant_api": true,
   "panel_icon": "mdi:view-dashboard",
   "panel_title": "Arthur Dashboard",
   "ports": {

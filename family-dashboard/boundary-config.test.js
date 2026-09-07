@@ -8,6 +8,7 @@ const nginx = fs.readFileSync(path.join(__dirname, 'nginx.conf'), 'utf8');
 const run = fs.readFileSync(path.join(__dirname, 'run.sh'), 'utf8');
 const browserConfig = fs.readFileSync(path.join(__dirname, 'browser-config.js'), 'utf8');
 const mobileHtml = fs.readFileSync(path.join(__dirname, 'build/mobile.html'), 'utf8');
+const addonConfig = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8'));
 
 const IRRIGATION_TARGETS = [
   'sensor.openclaw_irrigation_today_max_temperature',
@@ -37,26 +38,32 @@ test('publishers require component secrets and cannot select an HA target', () =
   assert.doesNotMatch(nginx, /api\/states\/\$|proxy_pass[^;]*\$request_uri/);
 });
 
-test('browser HA REST access is GET-only and receives no runtime credential', () => {
+test('browser HA reads are GET-only, controls are POST-only, and neither receives a runtime credential', () => {
   assert.match(nginx, /location \^~ \/ha-read\/api\/[\s\S]*?request_method !~ \^\(GET\|HEAD\)\$/);
+  assert.match(nginx, /location \^~ \/ha-control\/api\/services\/[\s\S]*?request_method != POST/);
+  assert.match(nginx, /HA_CONTROL_TOKEN/);
+  assert.match(nginx, /proxy_pass http:\/\/supervisor\/core\/api\/services\//);
   assert.doesNotMatch(nginx, /location \/api\//);
   assert.match(run, /browser-config\.js/);
   assert.doesNotMatch(run, /window\.HA_CONFIG[^\n]*(token|secret)/i);
+  assert.match(run, /CONTROL_TOKEN="\$\{SUPERVISOR_TOKEN:-\}"/);
+  assert.equal(addonConfig.homeassistant_api, true);
 });
 
-test('browser read boundary resolves inside Home Assistant ingress', () => {
+test('browser read and control boundaries resolve inside Home Assistant ingress', () => {
   const cases = [
-    ['/', '/ha-read'],
-    ['/mobile/', '/ha-read'],
-    ['/api/hassio_ingress/session-id/', '/api/hassio_ingress/session-id/ha-read'],
-    ['/api/hassio_ingress/session-id/mobile/', '/api/hassio_ingress/session-id/ha-read'],
+    ['/', '/ha-read', '/ha-control'],
+    ['/mobile/', '/ha-read', '/ha-control'],
+    ['/api/hassio_ingress/session-id/', '/api/hassio_ingress/session-id/ha-read', '/api/hassio_ingress/session-id/ha-control'],
+    ['/api/hassio_ingress/session-id/mobile/', '/api/hassio_ingress/session-id/ha-read', '/api/hassio_ingress/session-id/ha-control'],
   ];
 
-  for (const [pathname, expected] of cases) {
+  for (const [pathname, expectedRead, expectedControl] of cases) {
     const context = { window: { location: { pathname } } };
     vm.runInNewContext(browserConfig, context);
-    assert.equal(context.window.HA_CONFIG.apiBase, expected, pathname);
-    assert.equal(context.window.HA_CONFIG.readOnly, true, pathname);
+    assert.equal(context.window.HA_CONFIG.apiBase, expectedRead, pathname);
+    assert.equal(context.window.HA_CONFIG.controlApiBase, expectedControl, pathname);
+    assert.equal(context.window.HA_CONFIG.readOnly, false, pathname);
     assert.equal('token' in context.window.HA_CONFIG, false, pathname);
   }
 });
