@@ -48,6 +48,7 @@ test('browser HA reads are GET-only, controls are POST-only, and neither receive
   assert.doesNotMatch(run, /window\.HA_CONFIG[^\n]*(token|secret)/i);
   assert.match(run, /CONTROL_TOKEN="\$PUBLISHER_TOKEN"/);
   assert.match(run, /HA_CONTROL_WS_URL="ws:\/\/192\.168\.1\.2:8123\/api\/websocket"/);
+  assert.match(run, /Required boundary configuration is missing:\$MISSING_FIELDS/);
   assert.equal(addonConfig.homeassistant_api, undefined);
 });
 

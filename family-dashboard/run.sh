@@ -9,8 +9,14 @@ IRRIGATION_SECRET=$(jq --raw-output '.irrigation_publisher_secret // ""' /data/o
 ALFRED_SECRET=$(jq --raw-output '.alfred_publisher_secret // ""' /data/options.json)
 CONTROL_TOKEN="$PUBLISHER_TOKEN"
 
-if [ -z "$READ_TOKEN" ] || [ -z "$CONTROL_TOKEN" ] || [ -z "$PUBLISHER_TOKEN" ] || [ -z "$IRRIGATION_SECRET" ] || [ -z "$ALFRED_SECRET" ]; then
-    echo "[ERROR] Required read/control/publisher boundary configuration is missing"
+MISSING_FIELDS=""
+[ -n "$READ_TOKEN" ] || MISSING_FIELDS="$MISSING_FIELDS read_token"
+[ -n "$CONTROL_TOKEN" ] || MISSING_FIELDS="$MISSING_FIELDS control_token"
+[ -n "$PUBLISHER_TOKEN" ] || MISSING_FIELDS="$MISSING_FIELDS publisher_token"
+[ -n "$IRRIGATION_SECRET" ] || MISSING_FIELDS="$MISSING_FIELDS irrigation_publisher_secret"
+[ -n "$ALFRED_SECRET" ] || MISSING_FIELDS="$MISSING_FIELDS alfred_publisher_secret"
+if [ -n "$MISSING_FIELDS" ]; then
+    echo "[ERROR] Required boundary configuration is missing:$MISSING_FIELDS"
     exit 1
 fi
 
