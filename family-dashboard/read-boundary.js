@@ -6,7 +6,7 @@ const WebSocketClient = globalThis.WebSocket || require('ws');
 
 const PORT = Number(process.env.READ_BOUNDARY_PORT || 8098);
 const HA_READ_WS_URL = process.env.HA_READ_WS_URL || 'ws://192.168.1.2:8123/api/websocket';
-const HA_CONTROL_WS_URL = process.env.HA_CONTROL_WS_URL || 'ws://supervisor/core/api/websocket';
+const HA_CONTROL_WS_URL = process.env.HA_CONTROL_WS_URL || 'ws://192.168.1.2:8123/api/websocket';
 const HA_READ_TOKEN = process.env.HA_READ_TOKEN || '';
 const HA_CONTROL_TOKEN = process.env.HA_CONTROL_TOKEN || '';
 const MAX_BODY_BYTES = 32768;

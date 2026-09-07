@@ -7,7 +7,7 @@ READ_TOKEN=$(jq --raw-output '.read_token // ""' /data/options.json)
 PUBLISHER_TOKEN=$(jq --raw-output '.publisher_token // ""' /data/options.json)
 IRRIGATION_SECRET=$(jq --raw-output '.irrigation_publisher_secret // ""' /data/options.json)
 ALFRED_SECRET=$(jq --raw-output '.alfred_publisher_secret // ""' /data/options.json)
-CONTROL_TOKEN="${SUPERVISOR_TOKEN:-}"
+CONTROL_TOKEN="$PUBLISHER_TOKEN"
 
 if [ -z "$READ_TOKEN" ] || [ -z "$CONTROL_TOKEN" ] || [ -z "$PUBLISHER_TOKEN" ] || [ -z "$IRRIGATION_SECRET" ] || [ -z "$ALFRED_SECRET" ]; then
     echo "[ERROR] Required read/control/publisher boundary configuration is missing"
@@ -30,7 +30,7 @@ sed -i "s|%%ALFRED_PUBLISHER_SECRET%%|${ALFRED_SECRET}|g" /etc/nginx/nginx.conf
 export HA_READ_TOKEN="$READ_TOKEN"
 export HA_CONTROL_TOKEN="$CONTROL_TOKEN"
 export HA_READ_WS_URL="ws://192.168.1.2:8123/api/websocket"
-export HA_CONTROL_WS_URL="ws://supervisor/core/api/websocket"
+export HA_CONTROL_WS_URL="ws://192.168.1.2:8123/api/websocket"
 node /opt/read-boundary/read-boundary.js &
 
 nginx -t

@@ -42,12 +42,13 @@ test('browser HA reads are GET-only, controls are POST-only, and neither receive
   assert.match(nginx, /location \^~ \/ha-read\/api\/[\s\S]*?request_method !~ \^\(GET\|HEAD\)\$/);
   assert.match(nginx, /location \^~ \/ha-control\/api\/services\/[\s\S]*?request_method != POST/);
   assert.match(nginx, /HA_CONTROL_TOKEN/);
-  assert.match(nginx, /proxy_pass http:\/\/supervisor\/core\/api\/services\//);
+  assert.match(nginx, /proxy_pass http:\/\/192\.168\.1\.2:8123\/api\/services\//);
   assert.doesNotMatch(nginx, /location \/api\//);
   assert.match(run, /browser-config\.js/);
   assert.doesNotMatch(run, /window\.HA_CONFIG[^\n]*(token|secret)/i);
-  assert.match(run, /CONTROL_TOKEN="\$\{SUPERVISOR_TOKEN:-\}"/);
-  assert.equal(addonConfig.homeassistant_api, true);
+  assert.match(run, /CONTROL_TOKEN="\$PUBLISHER_TOKEN"/);
+  assert.match(run, /HA_CONTROL_WS_URL="ws:\/\/192\.168\.1\.2:8123\/api\/websocket"/);
+  assert.equal(addonConfig.homeassistant_api, undefined);
 });
 
 test('browser read and control boundaries resolve inside Home Assistant ingress', () => {
