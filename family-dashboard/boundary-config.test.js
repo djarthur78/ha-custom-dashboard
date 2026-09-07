@@ -9,6 +9,8 @@ const run = fs.readFileSync(path.join(__dirname, 'run.sh'), 'utf8');
 const browserConfig = fs.readFileSync(path.join(__dirname, 'browser-config.js'), 'utf8');
 const mobileHtml = fs.readFileSync(path.join(__dirname, 'build/mobile.html'), 'utf8');
 const addonConfig = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8'));
+const desktopLayout = fs.readFileSync(path.join(__dirname, '../src/src/components/layout/MainLayout.jsx'), 'utf8');
+const mobileLayout = fs.readFileSync(path.join(__dirname, '../src/src/components/mobile/MobileLayout.jsx'), 'utf8');
 
 const IRRIGATION_TARGETS = [
   'sensor.openclaw_irrigation_today_max_temperature',
@@ -73,4 +75,9 @@ test('browser read and control boundaries resolve inside Home Assistant ingress'
 test('mobile runtime config remains relative to the add-on ingress root', () => {
   assert.match(mobileHtml, /<script src="\.\.\/config\.js"><\/script>/);
   assert.doesNotMatch(mobileHtml, /<script src="\/config\.js"><\/script>/);
+});
+
+test('writable dashboard layouts do not display a read-only badge', () => {
+  assert.doesNotMatch(desktopLayout, />READ ONLY</);
+  assert.doesNotMatch(mobileLayout, />READ ONLY</);
 });

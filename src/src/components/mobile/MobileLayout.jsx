@@ -46,7 +46,6 @@ export function MobileLayout() {
       >
         <h1 className="text-base font-semibold text-white">{title}</h1>
         <div className="flex items-center gap-2">
-          <span className="text-[9px] font-semibold text-amber-200">READ ONLY</span>
           <div
             className="rounded-full"
             style={{
