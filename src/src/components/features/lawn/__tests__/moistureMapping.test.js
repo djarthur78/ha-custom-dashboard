@@ -42,9 +42,19 @@ describe('soil moisture mapping', () => {
       plants: [
         { id: 'sensor.gw3000a_soil_moisture_1', label: 'Left-Front' },
         { id: 'sensor.gw3000a_soil_moisture_5', label: 'Left-Back' },
-        { id: 'sensor.gw3000a_soil_moisture_6', label: 'Right-Front' },
+        { id: 'sensor.gw3000a_soil_moisture_6', label: 'Right-Front', available: false },
         { id: 'sensor.gw3000a_soil_moisture_8', label: 'Right-Back' },
       ],
+    });
+  });
+
+  it('marks the failed flowerbed right-front probe unavailable', () => {
+    const flowerbedRight = IRRIGATION_AREAS.find((area) => area.key === 'flowerbed-right');
+
+    expect(flowerbedRight.sensors).toContainEqual({
+      id: 'sensor.gw3000a_soil_moisture_6',
+      label: 'Front',
+      available: false,
     });
   });
 });

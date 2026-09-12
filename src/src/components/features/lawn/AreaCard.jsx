@@ -98,7 +98,7 @@ export function AreaCard({ area, compact = false, timer }) {
               className={`${compact ? 'text-lg' : 'text-xl'} font-bold`}
               style={{ color: getSoilMoistureColor(sensor.value) }}
             >
-              {sensor.value != null ? `${Math.round(sensor.value)}%` : '--'}
+              {sensor.available === false ? 'N/A' : sensor.value != null ? `${Math.round(sensor.value)}%` : '--'}
             </div>
           </div>
         ))}

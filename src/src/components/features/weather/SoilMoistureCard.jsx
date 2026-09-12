@@ -3,13 +3,14 @@
  * Grouped soil moisture display: Lawn (4 probes) + Plants (4 probes)
  */
 
+import { createElement } from 'react';
 import { Sprout, TreePine } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import { SOIL_MOISTURE, getSoilMoistureColor } from './weatherConfig';
 
-function ProbeCell({ id, label }) {
+function ProbeCell({ id, label, available = true }) {
   const entity = useEntity(id);
-  const value = entity.state && entity.state !== 'unavailable' ? parseFloat(entity.state) : null;
+  const value = available && entity.state && entity.state !== 'unavailable' ? parseFloat(entity.state) : null;
   const color = getSoilMoistureColor(value);
 
   return (
@@ -22,7 +23,9 @@ function ProbeCell({ id, label }) {
       }}
     >
       <span className="text-[10px] font-medium text-[var(--ds-text-secondary)]">{label}</span>
-      {value != null ? (
+      {!available ? (
+        <span className="text-xs font-bold text-[var(--ds-text-secondary)]">N/A</span>
+      ) : value != null ? (
         <span className="text-lg font-bold" style={{ color }}>{Math.round(value)}%</span>
       ) : (
         <span className="text-xs italic text-[var(--ds-text-secondary)]">--</span>
@@ -31,16 +34,16 @@ function ProbeCell({ id, label }) {
   );
 }
 
-function ProbeGroup({ title, icon: Icon, probes }) {
+function ProbeGroup({ title, icon, probes }) {
   return (
     <div>
       <div className="flex items-center gap-1.5 mb-2">
-        <Icon size={13} style={{ color: 'var(--ds-text-secondary)' }} />
+        {createElement(icon, { size: 13, style: { color: 'var(--ds-text-secondary)' } })}
         <span className="text-[11px] font-semibold text-[var(--ds-text-secondary)] uppercase tracking-wider">{title}</span>
       </div>
       <div className="grid grid-cols-2 gap-1.5">
-        {probes.map(({ id, label }) => (
-          <ProbeCell key={id} id={id} label={label} />
+        {probes.map(({ id, label, available }) => (
+          <ProbeCell key={id} id={id} label={label} available={available} />
         ))}
       </div>
     </div>

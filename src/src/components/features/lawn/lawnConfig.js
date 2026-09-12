@@ -77,7 +77,7 @@ export const IRRIGATION_AREAS = [
     ],
     paired: false,
     sensors: [
-      { id: 'sensor.gw3000a_soil_moisture_6', label: 'Front' },
+      { id: 'sensor.gw3000a_soil_moisture_6', label: 'Front', available: false },
       { id: 'sensor.gw3000a_soil_moisture_8', label: 'Back' },
     ],
   },

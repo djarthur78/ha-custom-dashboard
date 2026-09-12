@@ -40,16 +40,18 @@ export function useLawnData() {
     const sensors = area.sensors.map(s => {
       const entity = sensorStates[s.id];
       const raw = entity?.state;
-      const value = raw != null && raw !== 'unavailable' && raw !== 'unknown'
+      const available = s.available !== false;
+      const value = available && raw != null && raw !== 'unavailable' && raw !== 'unknown'
         ? parseFloat(raw) : null;
       return {
         id: s.id,
         label: s.label,
+        available,
         value,
       };
     });
 
-    const validValues = sensors.map(s => s.value).filter(v => v != null);
+    const validValues = sensors.filter(s => s.available).map(s => s.value).filter(v => v != null);
     const avgMoisture = validValues.length > 0
       ? validValues.reduce((a, b) => a + b, 0) / validValues.length
       : null;
