@@ -3,11 +3,12 @@
  * Full viewport cold plunge page with giant status display + controls
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { createElement, useState, useCallback, useEffect } from 'react';
 import { Power, Snowflake, Waves, Wind, Sparkles, Thermometer } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import haWebSocket from '../../../services/ha-websocket';
 import { getTriggerStats } from '../../../services/ha-rest';
+import { ColdPlungeTemperatureChart } from './ColdPlungeTemperatureChart';
 
 const COLD_PLUNGE = {
   chiller: 'switch.cold_plunge_devices_p304m_cold_plunge_chiller',
@@ -46,7 +47,7 @@ const DEVICES = [
   { key: 'ozone', label: 'Ozone', icon: Sparkles, color: '#9f5644' },
 ];
 
-function DeviceToggleCard({ deviceKey, label, icon: Icon, color }) {
+function DeviceToggleCard({ deviceKey, label, icon, color }) {
   const { state } = useEntity(COLD_PLUNGE[deviceKey]);
   const { state: power } = useEntity(COLD_PLUNGE_POWER[deviceKey]);
   const [toggling, setToggling] = useState(false);
@@ -76,7 +77,7 @@ function DeviceToggleCard({ deviceKey, label, icon: Icon, color }) {
         border: isOn ? '2px solid var(--ds-state-on)' : '1px solid var(--ds-border)',
       }}
     >
-      <Icon size={28} style={{ color: isOn ? color : '#9ca3af' }} />
+      {createElement(icon, { size: 28, style: { color: isOn ? color : '#9ca3af' } })}
       <span className="text-sm font-semibold text-[var(--color-text)]">{label}</span>
       <div className="flex items-center gap-1.5">
         <div className="rounded-full" style={{
@@ -190,12 +191,12 @@ export function ColdPlungeDashboard() {
           }}
         >
           {/* Water Temperature - Hero */}
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <Thermometer size={64} style={{ color: tempColor }} className="mb-2" />
-            <div className="text-[140px] font-bold leading-none mb-1" style={{ color: tempColor }}>
+          <div className="flex-1 flex flex-col items-center justify-center py-3">
+            <Thermometer size={48} style={{ color: tempColor }} className="mb-1" />
+            <div className="text-[104px] font-bold leading-none mb-1" style={{ color: tempColor }}>
               {waterTemp != null ? `${waterTemp.toFixed(1)}°` : '--'}
             </div>
-            <div className="text-2xl font-medium text-[var(--color-text-secondary)] mb-6">
+            <div className="text-xl font-medium text-[var(--color-text-secondary)] mb-4">
               Water Temperature
             </div>
 
@@ -237,8 +238,14 @@ export function ColdPlungeDashboard() {
             </div>
           </div>
 
+          <ColdPlungeTemperatureChart
+            entityId={COLD_PLUNGE_SENSORS.waterTemp}
+            currentTemperature={waterTemp}
+            color={tempColor}
+          />
+
           {/* Motion sensor stats */}
-          <div className="w-full flex-shrink-0 pt-4 mt-4" style={{ borderTop: '1px solid var(--ds-border)' }}>
+          <div className="w-full flex-shrink-0 pt-3 mt-3" style={{ borderTop: '1px solid var(--ds-border)' }}>
             <div className="flex justify-between px-6 text-sm">
               <div className="text-left">
                 <div className="text-xs text-[var(--ds-text-secondary)] uppercase tracking-wider mb-1">Last Triggered</div>

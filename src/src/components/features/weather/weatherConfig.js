@@ -50,20 +50,18 @@ export const PRESSURE = {
   relative: 'sensor.gw3000a_relative_pressure',
 };
 
-// Soil moisture probes grouped by garden area
-// Probes 1-4 = Lawn, Probes 5-8 = Plants
-// To remap: swap entity IDs between positions. Check Ecowitt app for physical probe locations.
+// Soil moisture probes grouped by their Home Assistant physical locations.
 export const SOIL_MOISTURE = {
   lawn: [
-    { id: 'sensor.gw3000a_soil_moisture_1', label: 'Right-Front' },
-    { id: 'sensor.gw3000a_soil_moisture_2', label: 'Right-Back' },
-    { id: 'sensor.gw3000a_soil_moisture_3', label: 'Left-Back' },
-    { id: 'sensor.gw3000a_soil_moisture_4', label: 'Left-Front' },
+    { id: 'sensor.gw3000a_soil_moisture_7', label: 'Left-Front' },
+    { id: 'sensor.gw3000a_soil_moisture_2', label: 'Left-Back' },
+    { id: 'sensor.gw3000a_soil_moisture_3', label: 'Right-Front' },
+    { id: 'sensor.gw3000a_soil_moisture_4', label: 'Right-Back' },
   ],
   plants: [
+    { id: 'sensor.gw3000a_soil_moisture_1', label: 'Left-Front' },
     { id: 'sensor.gw3000a_soil_moisture_5', label: 'Left-Back' },
-    { id: 'sensor.gw3000a_soil_moisture_6', label: 'Left-Front' },
-    { id: 'sensor.gw3000a_soil_moisture_7', label: 'Right-Front' },
+    { id: 'sensor.gw3000a_soil_moisture_6', label: 'Right-Front' },
     { id: 'sensor.gw3000a_soil_moisture_8', label: 'Right-Back' },
   ],
 };

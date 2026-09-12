@@ -37,8 +37,8 @@ export const IRRIGATION_AREAS = [
     ],
     paired: true, // zones alternate A→B
     sensors: [
-      { id: 'sensor.gw3000a_soil_moisture_4', label: 'Front' },
-      { id: 'sensor.gw3000a_soil_moisture_3', label: 'Back' },
+      { id: 'sensor.gw3000a_soil_moisture_7', label: 'Front' },
+      { id: 'sensor.gw3000a_soil_moisture_2', label: 'Back' },
     ],
   },
   {
@@ -51,8 +51,8 @@ export const IRRIGATION_AREAS = [
     ],
     paired: true,
     sensors: [
-      { id: 'sensor.gw3000a_soil_moisture_1', label: 'Front' },
-      { id: 'sensor.gw3000a_soil_moisture_2', label: 'Back' },
+      { id: 'sensor.gw3000a_soil_moisture_3', label: 'Front' },
+      { id: 'sensor.gw3000a_soil_moisture_4', label: 'Back' },
     ],
   },
   {
@@ -64,7 +64,7 @@ export const IRRIGATION_AREAS = [
     ],
     paired: false,
     sensors: [
-      { id: 'sensor.gw3000a_soil_moisture_6', label: 'Front' },
+      { id: 'sensor.gw3000a_soil_moisture_1', label: 'Front' },
       { id: 'sensor.gw3000a_soil_moisture_5', label: 'Back' },
     ],
   },
@@ -77,7 +77,7 @@ export const IRRIGATION_AREAS = [
     ],
     paired: false,
     sensors: [
-      { id: 'sensor.gw3000a_soil_moisture_7', label: 'Front' },
+      { id: 'sensor.gw3000a_soil_moisture_6', label: 'Front' },
       { id: 'sensor.gw3000a_soil_moisture_8', label: 'Back' },
     ],
   },
