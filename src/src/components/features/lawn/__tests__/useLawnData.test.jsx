@@ -24,25 +24,27 @@ const timer = {
 describe('useLawnData', () => {
   beforeEach(() => {
     stateMap.clear();
-    stateMap.set('sensor.gw3000a_soil_moisture_6', '99');
-    stateMap.set('sensor.gw3000a_soil_moisture_8', '35');
+    stateMap.set('sensor.gw3000a_soil_moisture_6', '34');
+    stateMap.set('sensor.gw3000a_soil_moisture_8', '38');
   });
 
-  it('excludes the failed flowerbed right-front probe from its area average', () => {
+  it('includes the repaired flowerbed right-front probe in its area average', () => {
     const { result } = renderHook(() => useLawnData());
     const area = result.current.areas.find((item) => item.key === 'flowerbed-right');
 
-    expect(area.moistureReadings[0]).toMatchObject({ available: false, value: null });
-    expect(area.avgMoisture).toBe(35);
+    expect(area.moistureReadings[0]).toMatchObject({ available: true, value: 34 });
+    expect(area.avgMoisture).toBe(36);
   });
 
-  it('renders the failed probe as N/A', () => {
+  it('renders the repaired probe reading', () => {
     const { result } = renderHook(() => useLawnData());
     const area = result.current.areas.find((item) => item.key === 'flowerbed-right');
 
     render(<AreaCard area={area} compact timer={timer} />);
 
-    expect(screen.getByText('N/A')).toBeInTheDocument();
-    expect(screen.getAllByText('35%')).toHaveLength(2);
+    expect(screen.queryByText('N/A')).not.toBeInTheDocument();
+    expect(screen.getByText('34%')).toBeInTheDocument();
+    expect(screen.getByText('38%')).toBeInTheDocument();
+    expect(screen.getByText('36%')).toBeInTheDocument();
   });
 });
