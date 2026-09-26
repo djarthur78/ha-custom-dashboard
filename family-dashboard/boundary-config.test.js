@@ -49,9 +49,20 @@ test('browser HA reads are GET-only, controls are POST-only, and neither receive
   assert.match(run, /browser-config\.js/);
   assert.doesNotMatch(run, /window\.HA_CONFIG[^\n]*(token|secret)/i);
   assert.match(run, /CONTROL_TOKEN="\$PUBLISHER_TOKEN"/);
+  assert.match(run, /AUTOMATION_CONFIG_TOKEN=.*automation_config_token/);
+  assert.match(run, /HA_AUTOMATION_CONFIG_TOKEN/);
   assert.match(run, /HA_CONTROL_WS_URL="ws:\/\/192\.168\.1\.2:8123\/api\/websocket"/);
   assert.match(run, /Required boundary configuration is missing:\$MISSING_FIELDS/);
   assert.equal(addonConfig.homeassistant_api, undefined);
+});
+
+test('Codex automation configuration is a narrow server-held control route', () => {
+  assert.match(nginx, /location ~ \^\/ha-control\/api\/config\/automation\/config\/\(\?<automation_id>\[A-Za-z0-9_-\]\+\)\$/);
+  assert.match(nginx, /request_method !~ \^\(GET\|POST\)\$/);
+  assert.match(nginx, /proxy_pass http:\/\/192\.168\.1\.2:8123\/api\/config\/automation\/config\/\$automation_id;/);
+  assert.match(nginx, /proxy_set_header Authorization "Bearer %%HA_AUTOMATION_CONFIG_TOKEN%%"/);
+  assert.equal(addonConfig.schema.automation_config_token, 'password');
+  assert.doesNotMatch(nginx, /location \^~ \/ha-control\/api\/config\/\s*\{/);
 });
 
 test('browser read and control boundaries resolve inside Home Assistant ingress', () => {

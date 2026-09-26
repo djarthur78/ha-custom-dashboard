@@ -6,9 +6,18 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 Normal coding and verification use local fixtures, unit tests, builds, and localhost only.
 
+- AUTO: Narrow Home Assistant reads, entity service calls, and configuration
+  edits for automations, scripts, scenes, and helpers. Use the deployed
+  dashboard's server-held `/ha-read` and `/ha-control` boundaries or an existing
+  authenticated HA session, then verify the affected entities/configuration.
+  Codex automation edits must use the named `/ha-control/api/config/automation/config/<id>`
+  route, with a backup before POST and a GET verification after it. That route
+  uses the separate protected add-on option `automation_config_token`; do not
+  reuse the general publisher/control token for configuration writes.
+  Filter broad responses locally before displaying output.
 - Do not request, store, discover, or use Home Assistant or SSH credentials.
-- Do not connect to production Home Assistant, its host, or the deployed dashboard.
-- Production browser verification, SSH, HA APIs, add-on operations, and external messaging are ASK effects with a separate target-specific approval.
+- HA login, SSH, Supervisor/add-on operations, system/integration/network changes,
+  and external messaging remain ASK effects with separate target-specific approval.
 - The repository must remain usable without an HA MCP server or a project `.env` secret.
 
 ## Project Overview
@@ -43,9 +52,11 @@ configuration.
 
 ### Build and deployment boundary
 
-AUTO: local tests, lint, `npm run build`, and `./build-addon.sh` when it only creates project-local artifacts.
+AUTO: local tests, lint, `npm run build`, `./build-addon.sh` when it only creates project-local artifacts, and the scoped HA reads/writes above.
 
-ASK: version changes, Git push, pull request or merge, Home Assistant login, add-on install/update/restart, SSH, production browser verification, or any deployed-system mutation.
+ASK: version changes, Git push, pull request or merge, Home Assistant login,
+add-on install/update/restart, SSH, external messaging, or HA changes outside the
+scoped configuration above.
 
 See `DEPLOYMENT.md` for the human-reviewed deployment procedure. A coding session must stop after producing and reviewing local artifacts unless a separate deployment effect is approved.
 

@@ -5,6 +5,7 @@ echo "[INFO] Starting Family Dashboard read/control boundaries"
 
 READ_TOKEN=$(jq --raw-output '.read_token // ""' /data/options.json)
 PUBLISHER_TOKEN=$(jq --raw-output '.publisher_token // ""' /data/options.json)
+AUTOMATION_CONFIG_TOKEN=$(jq --raw-output '.automation_config_token // ""' /data/options.json)
 IRRIGATION_SECRET=$(jq --raw-output '.irrigation_publisher_secret // ""' /data/options.json)
 ALFRED_SECRET=$(jq --raw-output '.alfred_publisher_secret // ""' /data/options.json)
 CONTROL_TOKEN="$PUBLISHER_TOKEN"
@@ -29,6 +30,7 @@ cp -f /opt/read-boundary/browser-config.js /usr/share/nginx/html/config.js
 
 sed -i "s|%%HA_READ_TOKEN%%|${READ_TOKEN}|g" /etc/nginx/nginx.conf
 sed -i "s|%%HA_CONTROL_TOKEN%%|${CONTROL_TOKEN}|g" /etc/nginx/nginx.conf
+sed -i "s|%%HA_AUTOMATION_CONFIG_TOKEN%%|${AUTOMATION_CONFIG_TOKEN}|g" /etc/nginx/nginx.conf
 sed -i "s|%%HA_PUBLISH_TOKEN%%|${PUBLISHER_TOKEN}|g" /etc/nginx/nginx.conf
 sed -i "s|%%IRRIGATION_PUBLISHER_SECRET%%|${IRRIGATION_SECRET}|g" /etc/nginx/nginx.conf
 sed -i "s|%%ALFRED_PUBLISHER_SECRET%%|${ALFRED_SECRET}|g" /etc/nginx/nginx.conf
