@@ -32,7 +32,7 @@ export const IRRIGATION_AREAS = [
     label: 'Lawn Left',
     type: 'lawn',
     zones: [
-      { id: 'switch.rain_bird_sprinkler_lawn_left', label: 'Left' },
+      { id: 'switch.garden_rain_bird_sprinkler_lawn_left_flowerbed', label: 'Left' },
       { id: 'switch.rain_bird_sprinkler_lawn_left_middle', label: 'Left Middle' },
     ],
     paired: true, // zones alternate A→B
@@ -46,7 +46,7 @@ export const IRRIGATION_AREAS = [
     label: 'Lawn Right',
     type: 'lawn',
     zones: [
-      { id: 'switch.rain_bird_sprinkler_lawn_right', label: 'Right' },
+      { id: 'switch.garden_rain_bird_sprinkler_lawn_right_flowerbed', label: 'Right' },
       { id: 'switch.rain_bird_sprinkler_lawn_right_middle', label: 'Right Middle' },
     ],
     paired: true,
@@ -60,7 +60,7 @@ export const IRRIGATION_AREAS = [
     label: 'Flower Bed Left',
     type: 'flowerbed',
     zones: [
-      { id: 'switch.rain_bird_sprinkler_flower_bed_left', label: 'Left' },
+      { id: 'switch.garden_rain_bird_sprinkler_plants_left', label: 'Left' },
     ],
     paired: false,
     sensors: [
@@ -73,7 +73,7 @@ export const IRRIGATION_AREAS = [
     label: 'Flower Bed Right',
     type: 'flowerbed',
     zones: [
-      { id: 'switch.rain_bird_sprinkler_flower_bed_right', label: 'Right' },
+      { id: 'switch.rain_bird_sprinkler_plants_right', label: 'Right' },
     ],
     paired: false,
     sensors: [

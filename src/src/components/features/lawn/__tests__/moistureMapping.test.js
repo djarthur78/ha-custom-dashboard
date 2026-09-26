@@ -22,6 +22,15 @@ const expectedByArea = {
 };
 
 describe('soil moisture mapping', () => {
+  it('uses the eight current RainBird entities rather than the retired aliases', () => {
+    expect(IRRIGATION_AREAS.map((area) => area.zones.map((zone) => zone.id))).toEqual([
+      ['switch.garden_rain_bird_sprinkler_lawn_left_flowerbed', 'switch.rain_bird_sprinkler_lawn_left_middle'],
+      ['switch.garden_rain_bird_sprinkler_lawn_right_flowerbed', 'switch.rain_bird_sprinkler_lawn_right_middle'],
+      ['switch.garden_rain_bird_sprinkler_plants_left'],
+      ['switch.rain_bird_sprinkler_plants_right'],
+    ]);
+  });
+
   it('groups each probe with the matching irrigation area', () => {
     const actual = Object.fromEntries(IRRIGATION_AREAS.map((area) => [
       area.key,
