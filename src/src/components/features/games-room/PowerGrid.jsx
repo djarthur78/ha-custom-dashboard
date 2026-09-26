@@ -6,13 +6,19 @@
 import * as LucideIcons from 'lucide-react';
 import { usePowerDevices } from './hooks/usePowerDevices';
 import { useServiceCall } from '../../../hooks/useServiceCall';
+import { useGardenLights } from '../garden-lights/hooks/useGardenLights';
 
 export function PowerGrid() {
-  const { toggle } = useServiceCall();
-  const { devices, totalConsumption } = usePowerDevices();
+  const { toggle: toggleEntity } = useServiceCall();
+  const gardenLights = useGardenLights();
+  const { devices } = usePowerDevices();
 
   const handleToggle = (device) => {
-    toggle(device.switchEntity);
+    if (device.id === 'outdoor') {
+      gardenLights.toggle();
+      return;
+    }
+    toggleEntity(device.switchEntity);
   };
 
   return (
@@ -28,13 +34,15 @@ export function PowerGrid() {
       <div className="flex-1 grid grid-cols-2 gap-2">
         {devices.map((device) => {
           const Icon = LucideIcons[device.icon];
-          const isOn = device.switchState === 'on';
+          const isGardenLights = device.id === 'outdoor';
+          const isOn = isGardenLights ? gardenLights.isOn : device.switchState === 'on';
+          const isLoading = isGardenLights ? gardenLights.loading : device.loading;
 
           return (
             <button
               key={device.id}
               onClick={() => handleToggle(device)}
-              disabled={device.loading}
+              disabled={isLoading}
               className={`flex flex-col items-center justify-center gap-1.5 rounded-xl p-2
                         transition-all cursor-pointer border min-h-[60px]
                         hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}

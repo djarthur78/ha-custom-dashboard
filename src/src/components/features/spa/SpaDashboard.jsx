@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useEntity } from '../../../hooks/useEntity';
 import { useServiceCall } from '../../../hooks/useServiceCall';
+import { useGardenLights } from '../garden-lights/hooks/useGardenLights';
 import { SPA_ENTITIES, SPA_TARGET_PRESETS } from './spaConfig';
 import { SpaHistoryCharts } from './SpaHistoryCharts';
 
@@ -173,16 +174,12 @@ function MetricBlock({ label, value, subtext, tone = 'neutral', icon: Icon = nul
   );
 }
 
-function ControlButton({ icon: ButtonIcon, label, entityId, note }) {
-  const { state } = useEntity(entityId);
-  const { toggle, loading } = useServiceCall();
-  const isOn = state === 'on' || state === 'HIGH';
-
+function ControlButtonView({ icon: ButtonIcon, label, note, isOn, loading, onClick, disabled = false }) {
   return (
     <button
       type="button"
-      onClick={() => entityId && toggle(entityId)}
-      disabled={!entityId || loading}
+      onClick={onClick}
+      disabled={disabled || loading}
       className="flex min-h-[82px] flex-col items-center justify-center gap-1.5 rounded-xl border p-3 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-45"
       style={{
         backgroundColor: isOn ? 'var(--ds-state-on)' : 'var(--ds-warm-inactive-bg)',
@@ -194,6 +191,38 @@ function ControlButton({ icon: ButtonIcon, label, entityId, note }) {
       <span className="text-sm font-semibold">{label}</span>
       {note && <span className="text-[11px] font-semibold uppercase tracking-wider opacity-80">{note}</span>}
     </button>
+  );
+}
+
+function ControlButton({ icon, label, entityId, note }) {
+  const { state } = useEntity(entityId);
+  const { toggle, loading } = useServiceCall();
+
+  return (
+    <ControlButtonView
+      icon={icon}
+      label={label}
+      note={note}
+      isOn={state === 'on' || state === 'HIGH'}
+      loading={loading}
+      onClick={() => toggle(entityId)}
+      disabled={!entityId}
+    />
+  );
+}
+
+function GardenLightsControlButton() {
+  const gardenLights = useGardenLights();
+
+  return (
+    <ControlButtonView
+      icon={Trees}
+      label="Garden Lights"
+      note="All outdoor"
+      isOn={gardenLights.isOn}
+      loading={gardenLights.loading}
+      onClick={gardenLights.toggle}
+    />
   );
 }
 
@@ -265,7 +294,6 @@ function TempHeroCard() {
     { icon: Sparkles, label: 'Jets 2', entityId: SPA_ENTITIES.jets2 },
     { icon: Wind, label: 'Blower', entityId: SPA_ENTITIES.blower },
     { icon: SunMedium, label: 'Spa lights', entityId: SPA_ENTITIES.lights },
-    { icon: Trees, label: 'Games Room Lights', entityId: SPA_ENTITIES.outdoorGamesRoom, note: 'Outdoor' },
   ];
 
   return (
@@ -342,6 +370,7 @@ function TempHeroCard() {
 
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
         {controls.map((control) => <ControlButton key={control.label} {...control} />)}
+        <GardenLightsControlButton />
       </div>
     </section>
   );

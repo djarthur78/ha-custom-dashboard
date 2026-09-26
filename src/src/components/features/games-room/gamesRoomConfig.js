@@ -77,7 +77,6 @@ export const GAMES_ROOM_ACTIVITY_LIGHTS = [
   'switch.iport_area_3',
 ];
 
-export const GAMES_ROOM_OUTDOOR_LIGHT = 'switch.iport_area_4';
 export const SUN_ENTITY = 'sun.sun';
 
 // ─── MEDIA PLAYERS ────────────────────────────────────────────────────────────
@@ -119,7 +118,7 @@ export const POWER_DEVICES = [
   },
   {
     id: 'outdoor',
-    label: 'Outdoor',
+    label: 'Garden Lights',
     icon: 'Trees',
     switchEntity: 'switch.iport_area_4',
     consumptionEntity: null,

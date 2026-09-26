@@ -25,7 +25,6 @@ export const SPA_ENTITIES = {
   lights: 'switch.spa_light',
   standbyTemp: 'input_number.spa_standby_temperature',
   sonos: 'media_player.spa_sonos_port',
-  outdoorGamesRoom: 'switch.iport_area_4',
   outdoorGazebo: null,
   alert: 'sensor.spa_total_alerts',
   fault: 'sensor.spa_fault_message',

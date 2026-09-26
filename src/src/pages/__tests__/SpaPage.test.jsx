@@ -66,6 +66,8 @@ describe('SpaPage', () => {
     stateMap.set('switch.spa_pump_2', { state: 'on', attributes: {} });
     stateMap.set('switch.spa_blower', { state: 'off', attributes: {} });
     stateMap.set('switch.spa_lights', { state: 'off', attributes: {} });
+    stateMap.set('switch.iport_area_4', { state: 'off', attributes: {} });
+    stateMap.set('light.back_garden_back_garden', { state: 'off', attributes: {} });
     stateMap.set('media_player.spa_sonos_port', {
       state: 'playing',
       attributes: {
@@ -91,13 +93,40 @@ describe('SpaPage', () => {
     expect(screen.getByText(/Last reading/)).toBeInTheDocument();
     expect(screen.getByText('Ready 38°')).toBeInTheDocument();
     expect(screen.getByText('Eco')).toBeInTheDocument();
-    expect(screen.getByText('Games Room Lights')).toBeInTheDocument();
+    expect(screen.getByText('Garden Lights')).toBeInTheDocument();
     expect(screen.getByText('37.5°')).toBeInTheDocument();
     expect(screen.getByText('Filtering')).toBeInTheDocument();
     expect(screen.getByText(/Cycle 1 until 15:00/)).toBeInTheDocument();
     expect(screen.queryByText('Sonos')).not.toBeInTheDocument();
     expect(screen.queryByText('Next step')).not.toBeInTheDocument();
     expect(document.querySelectorAll('svg[role="img"] path').length).toBeGreaterThan(0);
+  });
+
+  it('turns on both garden lighting systems from the spa controls', () => {
+    render(<SpaPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Garden Lights/ }));
+
+    expect(mockCallService).toHaveBeenCalledWith('homeassistant', 'turn_on', {
+      entity_id: [
+        'switch.iport_area_4',
+        'light.back_garden_back_garden',
+      ],
+    });
+  });
+
+  it('turns off both garden lighting systems when either one is already on', () => {
+    stateMap.set('light.back_garden_back_garden', { state: 'on', attributes: {} });
+    render(<SpaPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Garden Lights/ }));
+
+    expect(mockCallService).toHaveBeenCalledWith('homeassistant', 'turn_off', {
+      entity_id: [
+        'switch.iport_area_4',
+        'light.back_garden_back_garden',
+      ],
+    });
   });
 
   it('adjusts the target using the entity half-degree step', () => {

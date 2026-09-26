@@ -10,11 +10,11 @@ import { useEntity } from '../../../hooks/useEntity';
 import {
   GAMES_ROOM_ACTIVITY_LIGHTS,
   GAMES_ROOM_COMMON_POWER,
-  GAMES_ROOM_OUTDOOR_LIGHT,
   HARMONY_REMOTE_ENTITY,
   SCENES,
   SUN_ENTITY,
 } from './gamesRoomConfig';
+import { GARDEN_LIGHT_ENTITIES } from '../garden-lights/gardenLightsConfig';
 
 function isDuskOrDark(sunState, sunAttributes) {
   if (sunState === 'below_horizon') return true;
@@ -63,10 +63,10 @@ export function SceneButtons() {
       ];
 
       if (isDuskOrDark(sun.state, sun.attributes)) {
-        turnOnEntities.push(GAMES_ROOM_OUTDOOR_LIGHT);
+        turnOnEntities.push(...GARDEN_LIGHT_ENTITIES);
       }
 
-      await callService('switch', 'turn_on', { entity_id: turnOnEntities });
+      await callService('homeassistant', 'turn_on', { entity_id: turnOnEntities });
       await callService('remote', 'turn_on', {
         entity_id: HARMONY_REMOTE_ENTITY,
         activity: scene.harmonyActivity,
