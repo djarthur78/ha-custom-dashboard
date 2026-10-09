@@ -1,12 +1,11 @@
 /**
  * useAlfredRefresh Hook
- * Fetches fresh Alfred data from the Mac Mini API when the Alfred page mounts.
- * The API pushes data to HA sensors, so WebSocket-subscribed components auto-update.
+ * Refreshes Alfred entities through the authenticated Home Assistant boundary.
+ * Local Mac collection and publication run independently of the browser.
  */
 
 import { useState, useEffect, useCallback } from 'react';
-
-const ALFRED_API = 'http://192.168.1.150:18800/alfred';
+import haWebSocket from '../../../../services/ha-websocket';
 
 export function useAlfredRefresh() {
   const [refreshing, setRefreshing] = useState(false);
@@ -17,10 +16,8 @@ export function useAlfredRefresh() {
     setRefreshing(true);
     setError(null);
     try {
-      const res = await fetch(ALFRED_API, { signal: AbortSignal.timeout(20000) });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setLastRefresh(data.timestamp || Date.now());
+      await haWebSocket.refreshStates();
+      setLastRefresh(Date.now());
     } catch (err) {
       setError(err.message);
     } finally {

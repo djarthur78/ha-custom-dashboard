@@ -1,7 +1,7 @@
 /**
  * AlfredDashboard Component
  * Full viewport Alfred Command Centre — left hero + right operations grid
- * Fetches fresh data from Mac Mini API on mount, pushes to HA sensors.
+ * Reads Alfred telemetry from authenticated Home Assistant entities.
  */
 
 import { StatusHero } from './StatusHero';

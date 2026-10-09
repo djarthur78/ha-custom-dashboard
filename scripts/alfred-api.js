@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Alfred Data API — lightweight HTTP server on Mac Mini
- * Serves OpenClaw + system data on-demand when the dashboard requests it.
- * Also pushes data to HA sensors so the WebSocket-subscribed components update.
+ * Alfred telemetry collector and loopback diagnostics on the Mac Mini.
+ * Publishes locally collected data to HA once per minute. The dashboard reads
+ * those entities through its authenticated HA boundary, never from this port.
  *
  * Run: node scripts/alfred-api.js
  * Port: 18800
@@ -14,6 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = 18800;
+const ALFRED_API_HOST = '127.0.0.1';
 const PUBLISHER_CONFIG_PATH = process.env.ALFRED_HA_PUBLISHER_CONFIG
   || path.join(process.env.HOME, '.config/alfred/ha-publishers.json');
 const ALFRED_PUBLISH_PATHS = Object.freeze({
@@ -575,11 +576,12 @@ function collectTokenUsage() {
   }
 }
 
-function collectData() {
+function collectData({ publishFn = null } = {}) {
   const data = {};
+  const publish = publishFn || (() => false);
 
   data.ops = collectOpsDashboard();
-  pushToHA('sensor.alfred_ops_dashboard', {
+  publish('sensor.alfred_ops_dashboard', {
     state: data.ops.overall,
     attributes: {
       friendly_name: 'Alfred Ops Dashboard',
@@ -622,7 +624,7 @@ function collectData() {
       provider: status.provider || 'unknown',
       model: status.model || 'unknown',
     };
-    pushToHA('sensor.alfred_memory_status', {
+    publish('sensor.alfred_memory_status', {
       state: String(data.memory.total_files),
       attributes: { friendly_name: 'Alfred Memory Status', icon: 'mdi:brain', unit_of_measurement: 'files', ...data.memory }
     });
@@ -639,9 +641,9 @@ function collectData() {
     disk: disk ? parseFloat(disk.trim()) : null,
   };
 
-  if (data.system.cpu != null) pushToHA('sensor.mac_mini_cpu_usage', { state: String(data.system.cpu), attributes: { friendly_name: 'Mac Mini CPU Usage', unit_of_measurement: '%', icon: 'mdi:cpu-64-bit' } });
-  if (data.system.ram != null) pushToHA('sensor.mac_mini_ram_usage', { state: String(data.system.ram), attributes: { friendly_name: 'Mac Mini RAM Usage', unit_of_measurement: '%', icon: 'mdi:memory' } });
-  if (data.system.disk != null) pushToHA('sensor.mac_mini_disk_usage', { state: String(data.system.disk), attributes: { friendly_name: 'Mac Mini Disk Usage', unit_of_measurement: '%', icon: 'mdi:harddisk' } });
+  if (data.system.cpu != null) publish('sensor.mac_mini_cpu_usage', { state: String(data.system.cpu), attributes: { friendly_name: 'Mac Mini CPU Usage', unit_of_measurement: '%', icon: 'mdi:cpu-64-bit' } });
+  if (data.system.ram != null) publish('sensor.mac_mini_ram_usage', { state: String(data.system.ram), attributes: { friendly_name: 'Mac Mini RAM Usage', unit_of_measurement: '%', icon: 'mdi:memory' } });
+  if (data.system.disk != null) publish('sensor.mac_mini_disk_usage', { state: String(data.system.disk), attributes: { friendly_name: 'Mac Mini Disk Usage', unit_of_measurement: '%', icon: 'mdi:harddisk' } });
 
   // Service checks
   const gwUp = !!run('curl -s --connect-timeout 2 http://localhost:18789/health');
@@ -650,9 +652,9 @@ function collectData() {
 
   data.services = { gateway: gwUp, ollama: ollamaUp, location_bridge: locBridgeUp };
 
-  pushToHA('binary_sensor.alfred_gateway', { state: gwUp ? 'on' : 'off', attributes: { friendly_name: 'Alfred Gateway', device_class: 'connectivity' } });
-  pushToHA('binary_sensor.alfred_ollama', { state: ollamaUp ? 'on' : 'off', attributes: { friendly_name: 'Alfred Ollama', device_class: 'connectivity' } });
-  pushToHA('binary_sensor.alfred_location_bridge', { state: locBridgeUp ? 'on' : 'off', attributes: { friendly_name: 'Alfred Location Bridge', device_class: 'connectivity' } });
+  publish('binary_sensor.alfred_gateway', { state: gwUp ? 'on' : 'off', attributes: { friendly_name: 'Alfred Gateway', device_class: 'connectivity' } });
+  publish('binary_sensor.alfred_ollama', { state: ollamaUp ? 'on' : 'off', attributes: { friendly_name: 'Alfred Ollama', device_class: 'connectivity' } });
+  publish('binary_sensor.alfred_location_bridge', { state: locBridgeUp ? 'on' : 'off', attributes: { friendly_name: 'Alfred Location Bridge', device_class: 'connectivity' } });
 
   // Gateway health + channel connectivity
   const statusRaw = gwUp ? run('curl -s --connect-timeout 2 http://localhost:18789/api/status') : null;
@@ -679,14 +681,14 @@ function collectData() {
     }
   }
 
-  pushToHA('sensor.alfred_gateway_health', { state: gwUp ? 'ok' : 'offline', attributes: gwAttrs });
-  pushToHA('sensor.alfred_gateway_status', { state: gwUp ? 'online' : 'offline', attributes: statusAttrs });
+  publish('sensor.alfred_gateway_health', { state: gwUp ? 'ok' : 'offline', attributes: gwAttrs });
+  publish('sensor.alfred_gateway_status', { state: gwUp ? 'online' : 'offline', attributes: statusAttrs });
 
   // Task stats from openclaw status + rolling 14d health
   if (ocStatus?.tasks) {
     const t = ocStatus.tasks;
     const sessionsCount = ocStatus.sessions?.count ?? ocStatus.agents?.totalSessions ?? null;
-    pushToHA('sensor.alfred_task_stats', {
+    publish('sensor.alfred_task_stats', {
       state: String(t.total || 0),
       attributes: {
         friendly_name: 'Alfred Task Stats',
@@ -704,7 +706,7 @@ function collectData() {
   // Token usage from session JSONL files
   data.tokenUsage = collectTokenUsage();
   if (data.tokenUsage) {
-    pushToHA('sensor.alfred_token_usage', {
+    publish('sensor.alfred_token_usage', {
       state: String(data.tokenUsage.today.totalTokens) + '.' + Date.now() % 1000,
       attributes: {
         friendly_name: 'Alfred Token Usage',
@@ -724,7 +726,7 @@ function collectData() {
     }
   }
   if (data.cron) {
-    pushToHA('sensor.alfred_cron_list', {
+    publish('sensor.alfred_cron_list', {
       state: String(data.cron.jobs.length),
       attributes: { friendly_name: 'Alfred Cron List', icon: 'mdi:clock-outline', jobs: data.cron.jobs }
     });
@@ -735,13 +737,7 @@ function collectData() {
 
 function createAlfredApiServer({ collectDataFn = collectData } = {}) {
   return http.createServer((req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
-
-    if (req.url === '/alfred' || req.url === '/alfred/refresh') {
+    if (req.method === 'GET' && req.url === '/alfred') {
       try {
         const data = collectDataFn();
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -764,11 +760,36 @@ function createAlfredApiServer({ collectDataFn = collectData } = {}) {
   });
 }
 
+function startLocalPublisher({
+  collectDataFn = collectData,
+  publishFn = pushToHA,
+  setIntervalFn = setInterval,
+  onError = (error) => console.error(`Alfred publication failed: ${error.message}`),
+} = {}) {
+  const publish = () => {
+    try {
+      collectDataFn({ publishFn });
+    } catch (error) {
+      onError(error);
+    }
+  };
+  publish();
+  return setIntervalFn(publish, 60_000);
+}
+
 if (require.main === module) {
   const server = createAlfredApiServer();
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Alfred API listening on http://0.0.0.0:${PORT}`);
+  server.listen(PORT, ALFRED_API_HOST, () => {
+    console.log(`Alfred API listening on http://${ALFRED_API_HOST}:${PORT}`);
+    startLocalPublisher();
   });
 }
 
-module.exports = { ALFRED_PUBLISH_PATHS, createAlfredApiServer, pushToHA };
+module.exports = {
+  ALFRED_PUBLISH_PATHS,
+  ALFRED_API_HOST,
+  collectData,
+  createAlfredApiServer,
+  pushToHA,
+  startLocalPublisher,
+};

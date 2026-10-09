@@ -3,9 +3,20 @@ const childProcess = require('node:child_process');
 const { afterEach, mock, test } = require('node:test');
 
 const execSyncMock = mock.method(childProcess, 'execSync', () => 'unexpected command invocation');
-const { ALFRED_PUBLISH_PATHS, createAlfredApiServer, pushToHA } = require('./alfred-api');
+const {
+  ALFRED_PUBLISH_PATHS,
+  ALFRED_API_HOST,
+  collectData,
+  createAlfredApiServer,
+  pushToHA,
+  startLocalPublisher,
+} = require('./alfred-api');
 
 let server;
+
+test('the diagnostic API is configured for loopback only', () => {
+  assert.equal(ALFRED_API_HOST, '127.0.0.1');
+});
 
 afterEach(async () => {
   if (!server) return;
@@ -53,25 +64,32 @@ test('health remains available without collecting status or running commands', a
   assert.equal(execSyncMock.mock.callCount(), 0);
 });
 
-test('Alfred status and refresh remain available through the same HTTP contract', async () => {
+test('loopback Alfred status is read-only and does not publish to Home Assistant', async () => {
   execSyncMock.mock.resetCalls();
   const baseUrl = await startServer({
     collectDataFn: () => ({ gateway: { status: 'available' } }),
   });
 
-  const responses = await Promise.all([
-    fetch(`${baseUrl}/alfred`),
-    fetch(`${baseUrl}/alfred/refresh`),
-  ]);
-  const bodies = await Promise.all(responses.map((response) => response.json()));
+  const response = await fetch(`${baseUrl}/alfred`);
+  const body = await response.json();
 
-  assert.deepEqual(responses.map(({ status }) => status), [200, 200]);
-  assert.deepEqual(bodies.map(({ ok }) => ok), [true, true]);
-  assert.deepEqual(bodies.map(({ gateway }) => gateway), [
-    { status: 'available' },
-    { status: 'available' },
-  ]);
+  assert.equal(response.status, 200);
+  assert.equal(body.ok, true);
+  assert.deepEqual(body.gateway, { status: 'available' });
   assert.equal(execSyncMock.mock.callCount(), 0);
+});
+
+test('the browser refresh route and cross-origin access are retired', async () => {
+  const baseUrl = await startServer();
+
+  const refresh = await fetch(`${baseUrl}/alfred/refresh`);
+  const preflight = await fetch(`${baseUrl}/alfred`, { method: 'OPTIONS' });
+  const status = await fetch(`${baseUrl}/alfred`);
+
+  assert.equal(refresh.status, 404);
+  assert.equal(preflight.status, 404);
+  assert.equal(status.headers.get('access-control-allow-origin'), null);
+  assert.equal(status.headers.get('access-control-allow-methods'), null);
 });
 
 test('Alfred publication is constrained to the thirteen owned targets', async () => {
@@ -93,4 +111,37 @@ test('Alfred publication is constrained to the thirteen owned targets', async ()
     () => pushToHA('switch.arbitrary_target', { state: 'on' }, { fetchFn, config }),
     /not owned/,
   );
+});
+
+test('local collection publishes only when the daemon supplies its publisher', () => {
+  const published = [];
+
+  const snapshot = collectData({
+    publishFn: (entityId, payload) => published.push({ entityId, payload }),
+  });
+
+  assert.ok(snapshot.ops);
+  assert.ok(published.some(({ entityId }) => entityId === 'sensor.alfred_ops_dashboard'));
+  assert.ok(published.some(({ entityId }) => entityId === 'binary_sensor.alfred_gateway'));
+});
+
+test('the local daemon publishes immediately and every minute', () => {
+  const publishFn = () => {};
+  const calls = [];
+  let scheduled;
+
+  const timer = startLocalPublisher({
+    collectDataFn: (options) => calls.push(options),
+    publishFn,
+    setIntervalFn: (callback, intervalMs) => {
+      scheduled = callback;
+      assert.equal(intervalMs, 60_000);
+      return 'publisher-timer';
+    },
+  });
+
+  assert.equal(timer, 'publisher-timer');
+  assert.deepEqual(calls, [{ publishFn }]);
+  scheduled();
+  assert.deepEqual(calls, [{ publishFn }, { publishFn }]);
 });
