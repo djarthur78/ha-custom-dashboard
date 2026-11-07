@@ -68,6 +68,7 @@ describe('SpaPage', () => {
     stateMap.set('switch.spa_lights', { state: 'off', attributes: {} });
     stateMap.set('switch.iport_area_4', { state: 'off', attributes: {} });
     stateMap.set('light.back_garden_back_garden', { state: 'off', attributes: {} });
+    stateMap.set('switch.gazebo_lights_sonoff_100026cdb4', { state: 'off', attributes: {} });
     stateMap.set('media_player.spa_sonos_port', {
       state: 'playing',
       attributes: {
@@ -102,7 +103,7 @@ describe('SpaPage', () => {
     expect(document.querySelectorAll('svg[role="img"] path').length).toBeGreaterThan(0);
   });
 
-  it('turns on both garden lighting systems from the spa controls', () => {
+  it('turns on all three garden lighting systems from the spa controls', () => {
     render(<SpaPage />);
 
     fireEvent.click(screen.getByRole('button', { name: /Garden Lights/ }));
@@ -111,12 +112,13 @@ describe('SpaPage', () => {
       entity_id: [
         'switch.iport_area_4',
         'light.back_garden_back_garden',
+        'switch.gazebo_lights_sonoff_100026cdb4',
       ],
     });
   });
 
-  it('turns off both garden lighting systems when either one is already on', () => {
-    stateMap.set('light.back_garden_back_garden', { state: 'on', attributes: {} });
+  it('turns off all three garden lighting systems when the gazebo light is already on', () => {
+    stateMap.set('switch.gazebo_lights_sonoff_100026cdb4', { state: 'on', attributes: {} });
     render(<SpaPage />);
 
     fireEvent.click(screen.getByRole('button', { name: /Garden Lights/ }));
@@ -125,6 +127,7 @@ describe('SpaPage', () => {
       entity_id: [
         'switch.iport_area_4',
         'light.back_garden_back_garden',
+        'switch.gazebo_lights_sonoff_100026cdb4',
       ],
     });
   });

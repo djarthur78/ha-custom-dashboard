@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.9.17] - 2026-11-07
+
+### Changes
+- Removed the Alfred dashboard tab, route, feature components, tests, and obsolete build specification. HA entities, telemetry publishers, and shared read/control boundaries remain in place.
+- Included the gazebo in the shared garden lighting controls and scene tests.
+- Show missing cold-plunge readings without NaN values on desktop and mobile.
+- Added desktop and mobile navigation regression coverage; keep local HA backups outside Git.
+
 ## [3.2.3] - 2026-03-22
 
 ### Changes

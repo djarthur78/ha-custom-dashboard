@@ -243,7 +243,8 @@
       "apLed": "light.games_room_uap_nanohd_led",
       "outdoor": {
         "lightSymphony": "switch.iport_area_4",
-        "hue": "light.back_garden_back_garden"
+        "hue": "light.back_garden_back_garden",
+        "gazebo": "switch.gazebo_lights_sonoff_100026cdb4"
       }
     },
     "power": {

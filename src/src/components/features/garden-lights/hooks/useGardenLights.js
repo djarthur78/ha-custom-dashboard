@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useEntity } from '../../../../hooks/useEntity';
 import { useServiceCall } from '../../../../hooks/useServiceCall';
 import {
+  GAZEBO_GARDEN_LIGHT,
   GARDEN_LIGHT_ENTITIES,
   HUE_GARDEN_LIGHT,
   LIGHT_SYMPHONY_GARDEN_LIGHT,
@@ -10,8 +11,9 @@ import {
 export function useGardenLights() {
   const lightSymphony = useEntity(LIGHT_SYMPHONY_GARDEN_LIGHT);
   const hue = useEntity(HUE_GARDEN_LIGHT);
+  const gazebo = useEntity(GAZEBO_GARDEN_LIGHT);
   const { callService, loading: serviceLoading, error } = useServiceCall();
-  const isOn = lightSymphony.state === 'on' || hue.state === 'on';
+  const isOn = lightSymphony.state === 'on' || hue.state === 'on' || gazebo.state === 'on';
 
   const setState = useCallback((service) => callService('homeassistant', service, {
     entity_id: GARDEN_LIGHT_ENTITIES,
@@ -23,7 +25,7 @@ export function useGardenLights() {
 
   return {
     isOn,
-    loading: serviceLoading || lightSymphony.loading || hue.loading,
+    loading: serviceLoading || lightSymphony.loading || hue.loading || gazebo.loading,
     error,
     toggle,
     turnOn,

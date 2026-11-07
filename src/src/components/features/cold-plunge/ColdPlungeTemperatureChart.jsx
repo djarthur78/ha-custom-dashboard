@@ -1,15 +1,11 @@
 import { useId, useMemo, useState } from 'react';
 import { Clock3, Thermometer } from 'lucide-react';
 import { useColdPlungeHistory } from './hooks/useColdPlungeHistory';
+import { parseNumericState } from './coldPlungeValues';
 
 const CHART_WIDTH = 600;
 const CHART_HEIGHT = 210;
 const PAD = { left: 54, right: 16, top: 16, bottom: 32 };
-
-function numberValue(value) {
-  const parsed = Number.parseFloat(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
 
 function historyTime(item) {
   const timestamp = item.last_changed || item.last_updated;
@@ -38,7 +34,7 @@ export function ColdPlungeTemperatureChart({ entityId, currentTemperature, color
     const start = end - 24 * 60 * 60 * 1000;
     const points = history.map((item) => ({
       time: historyTime(item),
-      value: numberValue(item.state ?? item.s),
+      value: parseNumericState(item.state ?? item.s),
     })).filter((point) => point.value != null && Number.isFinite(point.time) && point.time >= start && point.time <= end);
     const values = points.map((point) => point.value);
     if (currentTemperature != null) values.push(currentTemperature);

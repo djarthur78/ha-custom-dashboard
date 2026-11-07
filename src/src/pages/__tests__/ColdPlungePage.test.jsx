@@ -46,4 +46,13 @@ describe('ColdPlungePage', () => {
     const chart = screen.getByRole('img', { name: 'Cold plunge water temperature over the last 24 hours' });
     expect(chart.querySelector('path')).not.toBeNull();
   });
+
+  it('does not render NaN when Home Assistant reports the probe as unknown', () => {
+    stateMap.set('sensor.cold_plunge_temp_cold_plunge_water_temp', { state: 'unknown', attributes: {} });
+
+    render(<ColdPlungePage />);
+
+    expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
+    expect(screen.getByText('Current --')).toBeInTheDocument();
+  });
 });

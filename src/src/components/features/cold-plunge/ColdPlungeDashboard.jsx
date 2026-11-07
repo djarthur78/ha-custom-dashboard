@@ -9,6 +9,7 @@ import { useEntity } from '../../../hooks/useEntity';
 import haWebSocket from '../../../services/ha-websocket';
 import { getTriggerStats } from '../../../services/ha-rest';
 import { ColdPlungeTemperatureChart } from './ColdPlungeTemperatureChart';
+import { parseNumericState } from './coldPlungeValues';
 
 const COLD_PLUNGE = {
   chiller: 'switch.cold_plunge_devices_p304m_cold_plunge_chiller',
@@ -52,6 +53,7 @@ function DeviceToggleCard({ deviceKey, label, icon, color }) {
   const { state: power } = useEntity(COLD_PLUNGE_POWER[deviceKey]);
   const [toggling, setToggling] = useState(false);
   const isOn = state === 'on';
+  const powerValue = parseNumericState(power);
 
   const handleToggle = useCallback(async () => {
     setToggling(true);
@@ -90,8 +92,8 @@ function DeviceToggleCard({ deviceKey, label, icon, color }) {
           {isOn ? 'ON' : 'OFF'}
         </span>
       </div>
-      {power && power !== 'unavailable' && isOn && (
-        <span className="text-xs" style={{ color }}>{parseFloat(power).toFixed(1)}W</span>
+      {powerValue != null && isOn && (
+        <span className="text-xs" style={{ color }}>{powerValue.toFixed(1)}W</span>
       )}
     </button>
   );
@@ -112,8 +114,7 @@ export function ColdPlungeDashboard() {
   const anyOn = [chillerEntity, pumpEntity, fanEntity, ozoneEntity].some(e => e.state === 'on');
 
   // Chiller active detection via power consumption
-  const chillerPower = chillerPowerEntity.state && chillerPowerEntity.state !== 'unavailable'
-    ? parseFloat(chillerPowerEntity.state) : null;
+  const chillerPower = parseNumericState(chillerPowerEntity.state);
   const chillerIsOn = chillerEntity.state === 'on';
   const chillerActivelyChilling = chillerIsOn && chillerPower != null && chillerPower > CHILLER_ACTIVE_THRESHOLD;
 
@@ -121,9 +122,7 @@ export function ColdPlungeDashboard() {
   const activeCount = [chillerEntity, pumpEntity, fanEntity, ozoneEntity].filter(e => e.state === 'on').length;
 
   // Water temperature
-  const waterTemp = waterTempEntity.state && waterTempEntity.state !== 'unavailable'
-    ? parseFloat(waterTempEntity.state)
-    : null;
+  const waterTemp = parseNumericState(waterTempEntity.state);
   const tempColor = getTempColor(waterTemp);
   const motionDetected = motionEntity.state === 'on';
 

@@ -3,12 +3,13 @@
  * Vertical stack: status + master controls + device grid
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { createElement, useState, useCallback, useEffect } from 'react';
 import { Power, Snowflake, Waves, Wind, Sparkles, Thermometer } from 'lucide-react';
 import { MobilePageContainer } from '../../components/mobile/MobilePageContainer';
 import { useEntity } from '../../hooks/useEntity';
 import haWebSocket from '../../services/ha-websocket';
 import { getTriggerStats } from '../../services/ha-rest';
+import { parseNumericState } from '../../components/features/cold-plunge/coldPlungeValues';
 
 const COLD_PLUNGE = {
   chiller: 'switch.cold_plunge_devices_p304m_cold_plunge_chiller',
@@ -47,11 +48,12 @@ const DEVICES = [
   { key: 'ozone', label: 'Ozone', icon: Sparkles, color: '#9f5644' },
 ];
 
-function DeviceToggleCard({ deviceKey, label, icon: Icon, color }) {
+function DeviceToggleCard({ deviceKey, label, icon, color }) {
   const { state } = useEntity(COLD_PLUNGE[deviceKey]);
   const { state: power } = useEntity(COLD_PLUNGE_POWER[deviceKey]);
   const [toggling, setToggling] = useState(false);
   const isOn = state === 'on';
+  const powerValue = parseNumericState(power);
 
   const handleToggle = useCallback(async () => {
     setToggling(true);
@@ -77,7 +79,7 @@ function DeviceToggleCard({ deviceKey, label, icon: Icon, color }) {
         border: isOn ? '2px solid var(--ds-state-on)' : '1px solid var(--ds-border)',
       }}
     >
-      <Icon size={24} style={{ color: isOn ? color : '#9ca3af' }} />
+      {createElement(icon, { size: 24, style: { color: isOn ? color : '#9ca3af' } })}
       <span className="text-xs font-semibold text-[var(--color-text)]">{label}</span>
       <div className="flex items-center gap-1">
         <div className="rounded-full" style={{
@@ -89,8 +91,8 @@ function DeviceToggleCard({ deviceKey, label, icon: Icon, color }) {
           {isOn ? 'ON' : 'OFF'}
         </span>
       </div>
-      {power && power !== 'unavailable' && isOn && (
-        <span className="text-[10px]" style={{ color }}>{parseFloat(power).toFixed(1)}W</span>
+      {powerValue != null && isOn && (
+        <span className="text-[10px]" style={{ color }}>{powerValue.toFixed(1)}W</span>
       )}
     </button>
   );
@@ -111,15 +113,12 @@ export function MobileColdPlungePage() {
   const anyOn = [chillerEntity, pumpEntity, fanEntity, ozoneEntity].some(e => e.state === 'on');
 
   // Chiller active detection via power consumption
-  const chillerPower = chillerPowerEntity.state && chillerPowerEntity.state !== 'unavailable'
-    ? parseFloat(chillerPowerEntity.state) : null;
+  const chillerPower = parseNumericState(chillerPowerEntity.state);
   const chillerIsOn = chillerEntity.state === 'on';
   const chillerActivelyChilling = chillerIsOn && chillerPower != null && chillerPower > CHILLER_ACTIVE_THRESHOLD;
   const activeCount = [chillerEntity, pumpEntity, fanEntity, ozoneEntity].filter(e => e.state === 'on').length;
 
-  const waterTemp = waterTempEntity.state && waterTempEntity.state !== 'unavailable'
-    ? parseFloat(waterTempEntity.state)
-    : null;
+  const waterTemp = parseNumericState(waterTempEntity.state);
   const tempColor = getTempColor(waterTemp);
   const motionDetected = motionEntity.state === 'on';
 

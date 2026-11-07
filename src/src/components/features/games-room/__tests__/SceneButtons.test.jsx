@@ -22,7 +22,7 @@ describe('SceneButtons', () => {
     mockCallService.mockResolvedValue(undefined);
   });
 
-  it('turns on both garden lighting systems when starting an activity after dusk', async () => {
+  it('turns on all three garden lighting systems when starting an activity after dusk', async () => {
     render(<SceneButtons />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Movie' }));
@@ -32,6 +32,7 @@ describe('SceneButtons', () => {
         entity_id: expect.arrayContaining([
           'switch.iport_area_4',
           'light.back_garden_back_garden',
+          'switch.gazebo_lights_sonoff_100026cdb4',
         ]),
       });
     });

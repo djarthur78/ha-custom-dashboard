@@ -33,7 +33,7 @@ describe('PowerGrid', () => {
     mockCallService.mockReset();
   });
 
-  it('toggles both garden lighting systems from the garden lights button', () => {
+  it('toggles all three garden lighting systems from the garden lights button', () => {
     render(<PowerGrid />);
 
     fireEvent.click(screen.getByRole('button', { name: /Garden Lights/ }));
@@ -42,6 +42,7 @@ describe('PowerGrid', () => {
       entity_id: [
         'switch.iport_area_4',
         'light.back_garden_back_garden',
+        'switch.gazebo_lights_sonoff_100026cdb4',
       ],
     });
   });

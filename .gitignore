@@ -28,6 +28,7 @@ Thumbs.db
 .claude/
 
 # Backups
+HA/backups/
 *-backup-*/
 *.bak
 
