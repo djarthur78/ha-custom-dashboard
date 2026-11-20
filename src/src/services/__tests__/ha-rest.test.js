@@ -35,4 +35,17 @@ describe('HA REST boundaries', () => {
       ['/ha-control/api/services/input_boolean/toggle', { entity_id: 'input_boolean.guest_mode' }],
     ]);
   });
+
+  it.each(['Watch Movie', 'Watch Sky', 'Watch Netflix / Amazon', 'Listen to SONOS'])(
+    'routes native activity %s through the existing control boundary', async option => {
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => [] });
+      const data = { entity_id: 'select.192_168_1_230_activity', option };
+      await callService('select', 'select_option', data);
+      expect(globalThis.fetch).toHaveBeenCalledExactlyOnceWith(
+        '/ha-control/api/services/select/select_option',
+        expect.objectContaining({ method: 'POST', body: JSON.stringify(data) }),
+      );
+      expect(globalThis.fetch.mock.calls[0][1].headers.Authorization).toBeUndefined();
+    },
+  );
 });

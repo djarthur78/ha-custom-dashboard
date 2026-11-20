@@ -12,8 +12,8 @@ export const SCENES = [
     icon: 'Clapperboard',
     color: '#7c3aed',
     bgColor: '#ede9fe',
-    harmonyActivity: 'Kodi Movies',
-    activeWhen: ['Kodi Movies'],
+    activity: 'Watch Movie',
+    activeWhen: ['Watch Movie'],
   },
   {
     id: 'skytv',
@@ -21,8 +21,8 @@ export const SCENES = [
     icon: 'Satellite',
     color: '#0ea5e9',
     bgColor: '#e0f2fe',
-    harmonyActivity: 'SkyQ',
-    activeWhen: ['SkyQ'],
+    activity: 'Watch Sky',
+    activeWhen: ['Watch Sky'],
   },
   {
     id: 'netflix',
@@ -30,8 +30,8 @@ export const SCENES = [
     icon: 'MonitorPlay',
     color: '#dc2626',
     bgColor: '#fee2e2',
-    harmonyActivity: 'Netflix Amazon',
-    activeWhen: ['Netflix Amazon'],
+    activity: 'Watch Netflix / Amazon',
+    activeWhen: ['Watch Netflix / Amazon'],
   },
   {
     id: 'sonos',
@@ -39,8 +39,8 @@ export const SCENES = [
     icon: 'Music',
     color: '#16a34a',
     bgColor: '#dcfce7',
-    harmonyActivity: 'Listen to Sonos Inside',
-    activeWhen: ['Listen to Sonos Inside'],
+    activity: 'Listen to SONOS',
+    activeWhen: ['Listen to SONOS'],
   },
   {
     id: 'alloff',
@@ -53,14 +53,13 @@ export const SCENES = [
       service: 'trigger',
       data: { entity_id: 'automation.turn_off_games_room' },
     },
-    activeWhen: ['power_off'],
+    activeWhen: ['Powered Off'],
   },
 ];
 
-// ─── HARMONY ACTIVITY ─────────────────────────────────────────────────────────
+// ─── SOFABATON ACTIVITY ───────────────────────────────────────────────────────
 
-export const HARMONY_ACTIVITY_ENTITY = 'select.games_room_harmony_activities';
-export const HARMONY_REMOTE_ENTITY = 'remote.games_room_harmony';
+export const SOFABATON_ACTIVITY_ENTITY = 'select.192_168_1_230_activity';
 
 export const GAMES_ROOM_COMMON_POWER = [
   'switch.gr_avr',

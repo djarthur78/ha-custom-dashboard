@@ -4,13 +4,14 @@
  */
 
 import * as LucideIcons from 'lucide-react';
-import { useHarmonyActivity } from './hooks/useHarmonyActivity';
+import { useState } from 'react';
+import { useSofaBatonActivity } from './hooks/useSofaBatonActivity';
 import { useServiceCall } from '../../../hooks/useServiceCall';
 import { useEntity } from '../../../hooks/useEntity';
 import {
   GAMES_ROOM_ACTIVITY_LIGHTS,
   GAMES_ROOM_COMMON_POWER,
-  HARMONY_REMOTE_ENTITY,
+  SOFABATON_ACTIVITY_ENTITY,
   SCENES,
   SUN_ENTITY,
 } from './gamesRoomConfig';
@@ -29,6 +30,8 @@ function SceneButton({ scene, fullWidth = false, active, loading, onSceneClick }
     <button
       onClick={() => onSceneClick(scene)}
       disabled={loading}
+      aria-pressed={active}
+      title="Selection reported by SofaBaton; equipment readiness is not verified"
       className={`flex flex-col items-center justify-center gap-1.5 rounded-xl p-3
                  font-bold transition-all min-h-[60px] ${fullWidth ? 'w-full' : ''}
                  hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -52,36 +55,47 @@ function SceneButton({ scene, fullWidth = false, active, loading, onSceneClick }
 
 export function SceneButtons() {
   const { callService, loading } = useServiceCall();
-  const { currentActivity } = useHarmonyActivity();
+  const { currentActivity, options, available } = useSofaBatonActivity();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState(null);
   const sun = useEntity(SUN_ENTITY);
 
   const handleSceneClick = async (scene) => {
-    if (scene.harmonyActivity) {
-      const turnOnEntities = [
-        ...GAMES_ROOM_COMMON_POWER,
-        ...GAMES_ROOM_ACTIVITY_LIGHTS,
-      ];
+    if (pending || loading || (scene.activity && (!available || !options.includes(scene.activity)))) return;
+    setPending(true);
+    setError(null);
+    try {
+      if (scene.activity) {
+        const turnOnEntities = [
+          ...GAMES_ROOM_COMMON_POWER,
+          ...GAMES_ROOM_ACTIVITY_LIGHTS,
+        ];
 
-      if (isDuskOrDark(sun.state, sun.attributes)) {
-        turnOnEntities.push(...GARDEN_LIGHT_ENTITIES);
+        if (isDuskOrDark(sun.state, sun.attributes)) {
+          turnOnEntities.push(...GARDEN_LIGHT_ENTITIES);
+        }
+
+        await callService('homeassistant', 'turn_on', { entity_id: turnOnEntities });
+        await callService('select', 'select_option', {
+          entity_id: SOFABATON_ACTIVITY_ENTITY,
+          option: scene.activity,
+        });
+        return;
       }
 
-      await callService('homeassistant', 'turn_on', { entity_id: turnOnEntities });
-      await callService('remote', 'turn_on', {
-        entity_id: HARMONY_REMOTE_ENTITY,
-        activity: scene.harmonyActivity,
-      });
-      return;
+      await callService(scene.action.domain, scene.action.service, scene.action.data);
+    } catch (err) {
+      setError(err.message || 'Unable to change scene');
+    } finally {
+      setPending(false);
     }
-
-    await callService(scene.action.domain, scene.action.service, scene.action.data);
   };
 
   const mainScenes = SCENES.slice(0, 4);  // Movie, Sky TV, Netflix, Sonos
   const allOff = SCENES[4];               // All Off
 
   const isActive = (scene) => {
-    return scene.activeWhen.includes(currentActivity);
+    return available && scene.activeWhen.includes(currentActivity);
   };
 
   return (
@@ -95,7 +109,7 @@ export function SceneButtons() {
             key={scene.id}
             scene={scene}
             active={isActive(scene)}
-            loading={loading}
+            loading={loading || pending || !available || !options.includes(scene.activity)}
             onSceneClick={handleSceneClick}
           />
         ))}
@@ -106,9 +120,14 @@ export function SceneButtons() {
         scene={allOff}
         fullWidth
         active={isActive(allOff)}
-        loading={loading}
+        loading={loading || pending}
         onSceneClick={handleSceneClick}
       />
+      {(error || !available) && (
+        <p role="alert" className="text-sm text-[var(--color-error)]">
+          {error || 'SofaBaton activity selector unavailable.'}
+        </p>
+      )}
     </div>
   );
 }

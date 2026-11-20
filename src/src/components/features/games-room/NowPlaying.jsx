@@ -17,7 +17,7 @@ import {
   Tv,
 } from 'lucide-react';
 import { useMediaPlayers } from './hooks/useMediaPlayers';
-import { useHarmonyActivity } from './hooks/useHarmonyActivity';
+import { useSofaBatonActivity } from './hooks/useSofaBatonActivity';
 import { useServiceCall } from '../../../hooks/useServiceCall';
 import {
   SUPPORT_PAUSE,
@@ -32,7 +32,7 @@ const SOURCE_ICONS = { Kodi: Film, Sonos: Music, TV: Tv };
 
 export function NowPlaying() {
   const { callService } = useServiceCall();
-  const { currentActivity } = useHarmonyActivity();
+  const { currentActivity, available } = useSofaBatonActivity();
   const {
     activePlayer,
     activeEntity,
@@ -230,7 +230,7 @@ export function NowPlaying() {
       <Gamepad2 size={80} className="text-gray-300 mb-4" />
       <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Nothing Playing</h2>
       <p className="text-[var(--color-text-secondary)] mb-1">
-        Current mode: <span className="font-medium">{currentActivity.replace(/_/g, ' ')}</span>
+        Selected activity: <span className="font-medium">{available ? currentActivity : 'Unavailable'}</span>
       </p>
       <p className="text-sm text-[var(--color-text-secondary)]">
         Tap a scene button to get started
