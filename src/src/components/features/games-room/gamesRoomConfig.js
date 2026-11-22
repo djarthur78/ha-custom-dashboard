@@ -43,6 +43,20 @@ export const SCENES = [
     activeWhen: ['Listen to SONOS'],
   },
   {
+    id: 'ps5',
+    label: 'PS5',
+    icon: 'Gamepad2',
+    color: '#7c3aed',
+    bgColor: '#ede9fe',
+    activity: 'PlayStation 5',
+    activeWhen: ['PlayStation 5'],
+    action: {
+      domain: 'script',
+      service: 'games_room_prepare_source',
+      data: { source: 'PlayStation 5' },
+    },
+  },
+  {
     id: 'alloff',
     label: 'All Off',
     icon: 'PowerOff',

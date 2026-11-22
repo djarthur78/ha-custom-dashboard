@@ -1,6 +1,6 @@
 /**
  * SceneButtons Component
- * 5 scene mode buttons (2x2 grid + full-width All Off).
+ * Four scene buttons in a 2x2 grid, then full-width PS5 and All Off.
  */
 
 import * as LucideIcons from 'lucide-react';
@@ -38,12 +38,12 @@ function SceneButton({ scene, fullWidth = false, active, loading, onSceneClick }
       style={
         active
           ? {
-              backgroundColor: 'var(--ds-accent)',
+              backgroundColor: scene.id === 'ps5' ? scene.color : 'var(--ds-accent)',
               color: 'white',
             }
           : {
-              backgroundColor: 'var(--ds-warm-inactive-bg)',
-              color: 'var(--ds-warm-inactive-text)',
+              backgroundColor: scene.id === 'ps5' ? scene.bgColor : 'var(--ds-warm-inactive-bg)',
+              color: scene.id === 'ps5' ? scene.color : 'var(--ds-warm-inactive-text)',
             }
       }
     >
@@ -65,6 +65,11 @@ export function SceneButtons() {
     setPending(true);
     setError(null);
     try {
+      if (scene.action) {
+        await callService(scene.action.domain, scene.action.service, scene.action.data);
+        return;
+      }
+
       if (scene.activity) {
         const turnOnEntities = [
           ...GAMES_ROOM_COMMON_POWER,
@@ -82,8 +87,6 @@ export function SceneButtons() {
         });
         return;
       }
-
-      await callService(scene.action.domain, scene.action.service, scene.action.data);
     } catch (err) {
       setError(err.message || 'Unable to change scene');
     } finally {
@@ -92,7 +95,8 @@ export function SceneButtons() {
   };
 
   const mainScenes = SCENES.slice(0, 4);  // Movie, Sky TV, Netflix, Sonos
-  const allOff = SCENES[4];               // All Off
+  const ps5 = SCENES[4];                 // PS5
+  const allOff = SCENES[5];              // All Off
 
   const isActive = (scene) => {
     return available && scene.activeWhen.includes(currentActivity);
@@ -114,6 +118,14 @@ export function SceneButtons() {
           />
         ))}
       </div>
+
+      <SceneButton
+        scene={ps5}
+        fullWidth
+        active={isActive(ps5)}
+        loading={loading || pending || !available || !options.includes(ps5.activity)}
+        onSceneClick={handleSceneClick}
+      />
 
       {/* Full-width All Off button */}
       <SceneButton

@@ -2,6 +2,7 @@ import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { SceneButtons } from '../SceneButtons';
+import { SCENES } from '../gamesRoomConfig';
 import { GamesRoomPage } from '../../../../pages/GamesRoomPage';
 import { MobileGamesRoomPage } from '../../../../pages/mobile/MobileGamesRoomPage';
 
@@ -35,7 +36,7 @@ beforeEach(() => {
   mocks.callService.mockReset().mockResolvedValue(undefined);
   mocks.entities = {
     [selector]: {
-      state: 'Powered Off', attributes: { options: ['Powered Off', ...activities.map(([, option]) => option)] },
+      state: 'Powered Off', attributes: { options: ['Powered Off', ...activities.map(([, option]) => option), 'PlayStation 5'] },
       loading: false, error: null,
     },
     'sun.sun': { state: 'below_horizon', attributes: { elevation: -5 } },
@@ -155,3 +156,80 @@ describe('SceneButtons safeguards', () => {
     ]));
   });
 });
+
+
+describe.each([['desktop', GamesRoomPage], ['mobile', MobileGamesRoomPage]])(
+  '%s PS5 source', (layout, Component) => {
+    it(`${layout}: renders four existing sources then full-width purple PS5 and Off`, () => {
+      render(createElement(Component));
+      const ps5 = screen.getByRole('button', { name: 'PS5' });
+      const off = screen.getByRole('button', { name: 'All Off' });
+      const grid = screen.getByRole('button', { name: 'Movie' }).parentElement;
+      expect(grid).toHaveClass('grid', 'grid-cols-2');
+      expect([...grid.children].map(button => button.textContent)).toEqual(['Movie', 'Sky TV', 'Netflix', 'Sonos']);
+      expect(ps5.parentElement).toBe(grid.parentElement);
+      expect(ps5.previousElementSibling).toBe(grid);
+      expect(ps5.nextElementSibling).toBe(off);
+      expect(ps5).toHaveClass('w-full');
+      expect(off).toHaveClass('w-full');
+      expect(ps5).toHaveStyle({ backgroundColor: '#ede9fe', color: '#7c3aed' });
+      expect(SCENES.find(scene => scene.id === 'ps5')).toMatchObject({ icon: 'Gamepad2', activity: 'PlayStation 5' });
+    });
+    it(`${layout}: calls only the shared preparation script and tracks native selection`, async () => {
+      let finish;
+      mocks.callService.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+      const { rerender } = render(createElement(Component));
+      fireEvent.click(screen.getByRole('button', { name: 'PS5' }));
+      expect(mocks.callService.mock.calls).toEqual([
+        ['script', 'games_room_prepare_source', { source: 'PlayStation 5' }],
+      ]);
+      for (const label of ['Movie', 'Sky TV', 'Netflix', 'Sonos', 'PS5', 'All Off']) {
+        expect(screen.getByRole('button', { name: label })).toBeDisabled();
+      }
+      expect(screen.getByRole('button', { name: 'PS5' })).toHaveAttribute('aria-pressed', 'false');
+      await act(async () => finish());
+      expect(screen.getByRole('button', { name: 'PS5' })).toBeEnabled();
+      mocks.entities[selector].state = 'PlayStation 5';
+      rerender(createElement(Component));
+      expect(screen.getByRole('button', { name: 'PS5' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByRole('button', { name: 'PS5' })).toHaveStyle({ backgroundColor: '#7c3aed', color: 'rgb(255, 255, 255)' });
+      expect(screen.getByRole('button', { name: 'All Off' })).toHaveAttribute('aria-pressed', 'false');
+      expect(mocks.callService).toHaveBeenCalledTimes(1);
+    });
+    it.each(['unavailable', 'unknown', undefined, 'missing', 'absent-option', 'absent-options', 'invalid-case', 'loading', 'error'])(
+      `${layout}: blocks PS5 when native selector is %s`, condition => {
+        if (condition === 'missing') mocks.entities[selector] = { loading: false };
+        else if (condition === 'absent-option') mocks.entities[selector].attributes.options = ['Powered Off', ...activities.map(([, option]) => option)];
+        else if (condition === 'absent-options') delete mocks.entities[selector].attributes.options;
+        else if (condition === 'invalid-case') mocks.entities[selector].attributes.options = ['Playstation 5'];
+        else if (condition === 'loading') mocks.entities[selector].loading = true;
+        else if (condition === 'error') mocks.entities[selector].error = 'Read failed';
+        else mocks.entities[selector].state = condition;
+        render(createElement(Component));
+        const ps5 = screen.getByRole('button', { name: 'PS5' });
+        expect(ps5).toBeDisabled();
+        if (condition === 'absent-option') expect(screen.getByRole('button', { name: 'Movie' })).toBeEnabled();
+        if (['unavailable', 'unknown', undefined, 'missing', 'loading', 'error'].includes(condition)) {
+          expect(screen.getByRole('alert')).toHaveTextContent(/unavailable/i);
+        }
+        fireEvent.click(ps5);
+        expect(mocks.callService).not.toHaveBeenCalled();
+        expect(screen.getByRole('button', { name: 'All Off' })).toBeEnabled();
+      },
+    );
+    it(`${layout}: reports script failure and retries without a direct native fallback`, async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      mocks.callService.mockRejectedValueOnce(new Error('PS5 preparation failed'));
+      render(createElement(Component));
+      fireEvent.click(screen.getByRole('button', { name: 'PS5' }));
+      await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('PS5 preparation failed'));
+      expect(screen.getByRole('button', { name: 'PS5' })).toBeEnabled();
+      fireEvent.click(screen.getByRole('button', { name: 'PS5' }));
+      await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+      expect(mocks.callService.mock.calls).toEqual([
+        ['script', 'games_room_prepare_source', { source: 'PlayStation 5' }],
+        ['script', 'games_room_prepare_source', { source: 'PlayStation 5' }],
+      ]);
+    });
+  },
+);
