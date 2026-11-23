@@ -100,14 +100,14 @@ describe.each([['desktop', GamesRoomPage], ['mobile', MobileGamesRoomPage]])(
 );
 describe('SceneButtons safeguards', () => {
   it.each([
-    ['above_horizon', 10, false], ['above_horizon', 3, true], ['below_horizon', 10, true],
+    ['above_horizon', 10, false], ['above_horizon', 3, false], ['below_horizon', 10, true],
   ])('preserves garden lighting at %s elevation %s', async (state, elevation, includeGarden) => {
     mocks.entities['sun.sun'] = { state, attributes: { elevation } };
     render(<SceneButtons />);
     fireEvent.click(screen.getByRole('button', { name: 'Movies' }));
     await waitFor(() => expect(mocks.callService).toHaveBeenCalledTimes(2));
     expect(mocks.callService.mock.calls[0]).toEqual([
-      'homeassistant', 'turn_on', { entity_id: [...preparation, ...(includeGarden ? garden : [])] },
+      'homeassistant', 'turn_on', { entity_id: includeGarden ? [...preparation, ...garden] : preparation.slice(0, 7) },
     ]);
   });
   it.each(['unavailable', 'unknown', undefined])('blocks preparation when selector is %s', state => {
@@ -250,6 +250,56 @@ describe.each([['desktop', GamesRoomPage], ['mobile', MobileGamesRoomPage]])(
         ['script', 'games_room_prepare_source', { source: 'PlayStation 5' }],
         ['script', 'games_room_prepare_source', { source: 'PlayStation 5' }],
       ]);
+    });
+  },
+);
+
+
+const sunCases = [
+  ['daytime', 'above_horizon', 30, false],
+  ['sunrise', 'above_horizon', 0, false],
+  ['low daytime sun', 'above_horizon', 3, false],
+  ['daytime stale elevation', 'above_horizon', -10, false],
+  ['midnight', 'below_horizon', -30, true],
+  ['before sunrise', 'below_horizon', -1, true],
+  ['unknown zero', 'unknown', 0, false],
+  ['unknown negative', 'unknown', -10, false],
+  ['unavailable negative', 'unavailable', -10, false],
+  ['missing state null elevation', undefined, null, false],
+  ['missing state negative elevation', undefined, -10, false],
+  ['missing entity', undefined, undefined, false],
+];
+
+describe.each([['desktop', GamesRoomPage], ['mobile', MobileGamesRoomPage]])(
+  '%s startup lighting', (layout, Component) => {
+    describe.each(sunCases)('%s', (sunCase, state, elevation, night) => {
+      beforeEach(() => {
+        if (sunCase === 'missing entity') delete mocks.entities['sun.sun'];
+        else mocks.entities['sun.sun'] = { state, attributes: { elevation } };
+      });
+      it.each(activities)(`${layout}: %s keeps AV power and selects its original source`, async (label, option) => {
+        render(createElement(Component));
+        fireEvent.click(screen.getByRole('button', { name: label }));
+        await waitFor(() => expect(mocks.callService).toHaveBeenCalledTimes(2));
+        expect(mocks.callService.mock.calls).toEqual([
+          ['homeassistant', 'turn_on', { entity_id: night ? [...preparation, ...garden] : preparation.slice(0, 7) }],
+          ['select', 'select_option', { entity_id: selector, option }],
+        ]);
+      });
+      it(`${layout}: PS5 still delegates once to its existing shared script`, async () => {
+        render(createElement(Component));
+        fireEvent.click(screen.getByRole('button', { name: 'PS5' }));
+        await waitFor(() => expect(mocks.callService.mock.calls).toEqual([
+          ['script', 'games_room_prepare_source', { source: 'PlayStation 5' }],
+        ]));
+      });
+      it(`${layout}: All Off still invokes only its existing automation`, async () => {
+        render(createElement(Component));
+        fireEvent.click(screen.getByRole('button', { name: 'All Off' }));
+        await waitFor(() => expect(mocks.callService.mock.calls).toEqual([
+          ['automation', 'trigger', { entity_id: 'automation.turn_off_games_room' }],
+        ]));
+      });
     });
   },
 );

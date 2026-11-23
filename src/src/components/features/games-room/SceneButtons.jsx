@@ -17,12 +17,6 @@ import {
 } from './gamesRoomConfig';
 import { GARDEN_LIGHT_ENTITIES } from '../garden-lights/gardenLightsConfig';
 
-function isDuskOrDark(sunState, sunAttributes) {
-  if (sunState === 'below_horizon') return true;
-  const elevation = Number(sunAttributes?.elevation);
-  return Number.isFinite(elevation) && elevation <= 3;
-}
-
 function SceneButton({ scene, fullWidth = false, active, loading, onSceneClick }) {
   const Icon = LucideIcons[scene.icon];
 
@@ -71,13 +65,10 @@ export function SceneButtons() {
       }
 
       if (scene.activity) {
-        const turnOnEntities = [
-          ...GAMES_ROOM_COMMON_POWER,
-          ...GAMES_ROOM_ACTIVITY_LIGHTS,
-        ];
+        const turnOnEntities = [...GAMES_ROOM_COMMON_POWER];
 
-        if (isDuskOrDark(sun.state, sun.attributes)) {
-          turnOnEntities.push(...GARDEN_LIGHT_ENTITIES);
+        if (sun.state === 'below_horizon') {
+          turnOnEntities.push(...GAMES_ROOM_ACTIVITY_LIGHTS, ...GARDEN_LIGHT_ENTITIES);
         }
 
         await callService('homeassistant', 'turn_on', { entity_id: turnOnEntities });
