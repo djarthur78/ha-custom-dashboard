@@ -8,7 +8,7 @@
 export const SCENES = [
   {
     id: 'movie',
-    label: 'Movie',
+    label: 'Movies',
     icon: 'Clapperboard',
     color: '#7c3aed',
     bgColor: '#ede9fe',

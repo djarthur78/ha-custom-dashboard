@@ -1,6 +1,6 @@
 /**
  * SceneButtons Component
- * Four scene buttons in a 2x2 grid, then full-width PS5 and All Off.
+ * Full-width Movies, four sources in a 2x2 grid, then full-width All Off.
  */
 
 import * as LucideIcons from 'lucide-react';
@@ -38,12 +38,12 @@ function SceneButton({ scene, fullWidth = false, active, loading, onSceneClick }
       style={
         active
           ? {
-              backgroundColor: scene.id === 'ps5' ? scene.color : 'var(--ds-accent)',
+              backgroundColor: 'var(--ds-accent)',
               color: 'white',
             }
           : {
-              backgroundColor: scene.id === 'ps5' ? scene.bgColor : 'var(--ds-warm-inactive-bg)',
-              color: scene.id === 'ps5' ? scene.color : 'var(--ds-warm-inactive-text)',
+              backgroundColor: 'var(--ds-warm-inactive-bg)',
+              color: 'var(--ds-warm-inactive-text)',
             }
       }
     >
@@ -94,9 +94,9 @@ export function SceneButtons() {
     }
   };
 
-  const mainScenes = SCENES.slice(0, 4);  // Movie, Sky TV, Netflix, Sonos
-  const ps5 = SCENES[4];                 // PS5
-  const allOff = SCENES[5];              // All Off
+  const movies = SCENES[0];                 // Movies
+  const mainScenes = SCENES.slice(1, 5);    // Sky TV, Netflix, Sonos, PS5
+  const allOff = SCENES[5];                 // All Off
 
   const isActive = (scene) => {
     return available && scene.activeWhen.includes(currentActivity);
@@ -106,7 +106,15 @@ export function SceneButtons() {
     <div
       className="ds-card h-full flex flex-col gap-2"
     >
-      {/* 2x2 Grid for first 4 scenes */}
+      <SceneButton
+        scene={movies}
+        fullWidth
+        active={isActive(movies)}
+        loading={loading || pending || !available || !options.includes(movies.activity)}
+        onSceneClick={handleSceneClick}
+      />
+
+      {/* 2x2 grid for the remaining sources */}
       <div className="grid grid-cols-2 gap-2 flex-1">
         {mainScenes.map((scene) => (
           <SceneButton
@@ -118,14 +126,6 @@ export function SceneButtons() {
           />
         ))}
       </div>
-
-      <SceneButton
-        scene={ps5}
-        fullWidth
-        active={isActive(ps5)}
-        loading={loading || pending || !available || !options.includes(ps5.activity)}
-        onSceneClick={handleSceneClick}
-      />
 
       {/* Full-width All Off button */}
       <SceneButton

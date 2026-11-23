@@ -9,7 +9,7 @@ import { MobileGamesRoomPage } from '../../../../pages/mobile/MobileGamesRoomPag
 const mocks = vi.hoisted(() => ({ callService: vi.fn(), entities: {} }));
 const selector = 'select.192_168_1_230_activity';
 const activities = [
-  ['Movie', 'Watch Movie'], ['Sky TV', 'Watch Sky'],
+  ['Movies', 'Watch Movie'], ['Sky TV', 'Watch Sky'],
   ['Netflix', 'Watch Netflix / Amazon'], ['Sonos', 'Listen to SONOS'],
 ];
 const preparation = [
@@ -104,7 +104,7 @@ describe('SceneButtons safeguards', () => {
   ])('preserves garden lighting at %s elevation %s', async (state, elevation, includeGarden) => {
     mocks.entities['sun.sun'] = { state, attributes: { elevation } };
     render(<SceneButtons />);
-    fireEvent.click(screen.getByRole('button', { name: 'Movie' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Movies' }));
     await waitFor(() => expect(mocks.callService).toHaveBeenCalledTimes(2));
     expect(mocks.callService.mock.calls[0]).toEqual([
       'homeassistant', 'turn_on', { entity_id: [...preparation, ...(includeGarden ? garden : [])] },
@@ -131,7 +131,7 @@ describe('SceneButtons safeguards', () => {
   it('blocks only activities missing from native options', () => {
     mocks.entities[selector].attributes.options = ['Powered Off', 'Watch Sky'];
     render(<SceneButtons />);
-    expect(screen.getByRole('button', { name: 'Movie' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Movies' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Sky TV' })).toBeEnabled();
   });
   it.each([1, 2])('shows failure at service step %s and allows retry without fallback', async step => {
@@ -139,13 +139,13 @@ describe('SceneButtons safeguards', () => {
     if (step === 2) mocks.callService.mockResolvedValueOnce(undefined);
     mocks.callService.mockRejectedValueOnce(new Error('Service rejected'));
     render(<SceneButtons />);
-    fireEvent.click(screen.getByRole('button', { name: 'Movie' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Movies' }));
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Service rejected'));
     expect(mocks.callService).toHaveBeenCalledTimes(step);
-    fireEvent.click(screen.getByRole('button', { name: 'Movie' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Movies' }));
     await waitFor(() => expect(mocks.callService).toHaveBeenCalledTimes(step + 2));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Movie' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Movies' })).toBeEnabled();
     expect(mocks.callService.mock.calls.every(([domain]) => ['homeassistant', 'select'].includes(domain))).toBe(true);
   });
   it('preserves the shutdown automation without frontend power commands', async () => {
@@ -160,21 +160,41 @@ describe('SceneButtons safeguards', () => {
 
 describe.each([['desktop', GamesRoomPage], ['mobile', MobileGamesRoomPage]])(
   '%s PS5 source', (layout, Component) => {
-    it(`${layout}: renders four existing sources then full-width purple PS5 and Off`, () => {
+    it(`${layout}: renders full-width Movies, the four-source grid, then full-width Off`, () => {
       render(createElement(Component));
+      const movies = screen.getByRole('button', { name: 'Movies' });
       const ps5 = screen.getByRole('button', { name: 'PS5' });
       const off = screen.getByRole('button', { name: 'All Off' });
-      const grid = screen.getByRole('button', { name: 'Movie' }).parentElement;
+      const grid = screen.getByRole('button', { name: 'Sky TV' }).parentElement;
+      const card = grid.parentElement;
+      expect(card.firstElementChild).toBe(movies);
+      expect(movies.nextElementSibling).toBe(grid);
+      expect(grid.nextElementSibling).toBe(off);
+      expect(card.lastElementChild).toBe(off);
       expect(grid).toHaveClass('grid', 'grid-cols-2');
-      expect([...grid.children].map(button => button.textContent)).toEqual(['Movie', 'Sky TV', 'Netflix', 'Sonos']);
-      expect(ps5.parentElement).toBe(grid.parentElement);
-      expect(ps5.previousElementSibling).toBe(grid);
-      expect(ps5.nextElementSibling).toBe(off);
-      expect(ps5).toHaveClass('w-full');
+      expect([...grid.children].map(button => button.textContent)).toEqual(['Sky TV', 'Netflix', 'Sonos', 'PS5']);
+      expect(movies).toHaveClass('w-full');
       expect(off).toHaveClass('w-full');
-      expect(ps5).toHaveStyle({ backgroundColor: '#ede9fe', color: '#7c3aed' });
+      for (const button of grid.children) expect(button).not.toHaveClass('w-full');
+      expect(ps5.parentElement).toBe(grid);
       expect(SCENES.find(scene => scene.id === 'ps5')).toMatchObject({ icon: 'Gamepad2', activity: 'PlayStation 5' });
+      expect(SCENES.find(scene => scene.id === 'movie')).toMatchObject({ label: 'Movies', activity: 'Watch Movie' });
     });
+    it.each([...activities, ['PS5', 'PlayStation 5'], ['All Off', 'Powered Off']])(
+      `${layout}: gives %s the same inactive and active theme as every source`, (label, activity) => {
+        mocks.entities[selector].state = activity === 'Watch Movie' ? 'Watch Sky' : 'Watch Movie';
+        const { rerender } = render(createElement(Component));
+        const button = screen.getByRole('button', { name: label });
+        expect(button).toHaveAttribute('aria-pressed', 'false');
+        expect(button.style.backgroundColor).toBe('var(--ds-warm-inactive-bg)');
+        expect(button.style.color).toBe('var(--ds-warm-inactive-text)');
+        mocks.entities[selector].state = activity;
+        rerender(createElement(Component));
+        expect(button).toHaveAttribute('aria-pressed', 'true');
+        expect(button.style.backgroundColor).toBe('var(--ds-accent)');
+        expect(button.style.color).toBe('white');
+      },
+    );
     it(`${layout}: calls only the shared preparation script and tracks native selection`, async () => {
       let finish;
       mocks.callService.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
@@ -183,7 +203,7 @@ describe.each([['desktop', GamesRoomPage], ['mobile', MobileGamesRoomPage]])(
       expect(mocks.callService.mock.calls).toEqual([
         ['script', 'games_room_prepare_source', { source: 'PlayStation 5' }],
       ]);
-      for (const label of ['Movie', 'Sky TV', 'Netflix', 'Sonos', 'PS5', 'All Off']) {
+      for (const label of ['Movies', 'Sky TV', 'Netflix', 'Sonos', 'PS5', 'All Off']) {
         expect(screen.getByRole('button', { name: label })).toBeDisabled();
       }
       expect(screen.getByRole('button', { name: 'PS5' })).toHaveAttribute('aria-pressed', 'false');
@@ -192,7 +212,7 @@ describe.each([['desktop', GamesRoomPage], ['mobile', MobileGamesRoomPage]])(
       mocks.entities[selector].state = 'PlayStation 5';
       rerender(createElement(Component));
       expect(screen.getByRole('button', { name: 'PS5' })).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.getByRole('button', { name: 'PS5' })).toHaveStyle({ backgroundColor: '#7c3aed', color: 'rgb(255, 255, 255)' });
+      expect(screen.getByRole('button', { name: 'PS5' })).toHaveStyle({ backgroundColor: 'var(--ds-accent)', color: 'rgb(255, 255, 255)' });
       expect(screen.getByRole('button', { name: 'All Off' })).toHaveAttribute('aria-pressed', 'false');
       expect(mocks.callService).toHaveBeenCalledTimes(1);
     });
@@ -208,7 +228,7 @@ describe.each([['desktop', GamesRoomPage], ['mobile', MobileGamesRoomPage]])(
         render(createElement(Component));
         const ps5 = screen.getByRole('button', { name: 'PS5' });
         expect(ps5).toBeDisabled();
-        if (condition === 'absent-option') expect(screen.getByRole('button', { name: 'Movie' })).toBeEnabled();
+        if (condition === 'absent-option') expect(screen.getByRole('button', { name: 'Movies' })).toBeEnabled();
         if (['unavailable', 'unknown', undefined, 'missing', 'loading', 'error'].includes(condition)) {
           expect(screen.getByRole('alert')).toHaveTextContent(/unavailable/i);
         }
